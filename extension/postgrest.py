@@ -5,6 +5,12 @@ flask_app = None
 server_url = None
 
 
+def proxy_request(method, url, json, headers):
+    global flask_app, server_url
+    response = requests.request(method=method, url=server_url + url, json=json, headers=headers)
+    return response
+
+
 def proxy():
     global flask_app, server_url
 
@@ -12,14 +18,10 @@ def proxy():
     if not flask_app or request.url_rule:
         return
 
-    # get proxy config
-    if not server_url and request.url_rule:
-        return
-
     # proxy
     headers = {h[0]: h[1] for h in request.headers}
     headers['Authorization'] = None
-    response = requests.request(request.method, server_url + request.path, data=request.json, headers=headers)
+    response = proxy_request(request.method, request.full_path, json=request.json, headers=headers)
 
     headers = {key: response.headers.get(key) for key in response.headers if
                key not in ['Transfer-Encoding', 'Content-Encoding', 'Content-Location']}
@@ -30,6 +32,10 @@ def init_app(app):
     global flask_app, server_url
     flask_app = app
     server_url = flask_app.config.get("PROXY_SERVER_URL")
+
+    # get proxy config
+    if not server_url:
+        return
 
     @app.before_request
     def app_proxy():

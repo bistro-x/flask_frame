@@ -38,7 +38,7 @@ def license_check():
 
     try:
         response = requests.get(
-            url=user_auth_url + "/auth/license/check"
+            url=user_auth_url + "/license/check"
         )
         print('Response HTTP Status Code: {status_code}'.format(
             status_code=response.status_code))
