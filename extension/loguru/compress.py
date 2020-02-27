@@ -1,10 +1,5 @@
 # !/usr/local/python/bin/python
-# -*- coding: utf-8 -*-
-# (C) Wu Dong, 2019
-# All rights reserved
-# @Author: 'Wu Dong <wudong@eastwu.cn>'
-# @Time: '2019-08-09 12:29'
-# sys
+
 import datetime
 import os
 import zipfile

@@ -4,9 +4,9 @@ Common reusable Parameters classes
 ----------------------------------
 """
 
+from flask_marshmallow import base_fields
 from marshmallow import validate
 
-from flask_marshmallow import base_fields
 from ...lib.flask_restplus_patched import Parameters
 
 

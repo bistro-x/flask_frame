@@ -1,9 +1,4 @@
 # !/usr/local/python/bin/python
-# -*- coding: utf-8 -*-
-# (C) Wu Dong, 2019
-# All rights reserved
-# @Author: 'Wu Dong <wudong@eastwu.cn>'
-# @Time: '2019-08-09 12:30'
 
 # log 输入路径
 k_log_path = "LOG_PATH"
@@ -22,3 +17,9 @@ k_log_enqueue = "LOG_ENQUEUE"
 
 # 是否序列化
 k_log_serialize = "LOG_SERIALIZE"
+
+# 保存日期
+k_log_retention = "LOG_RETENTION"
+
+# 分离文件
+k_log_rotation = "LOG_ROTATION"

@@ -5,9 +5,8 @@ Extended Api implementation with an application-specific helpers
 """
 from six import iteritems
 
-from ...lib.flask_restplus_patched import Api as BaseApi
-
 from .namespace import Namespace
+from ...lib.flask_restplus_patched import Api as BaseApi
 
 
 class Api(BaseApi):

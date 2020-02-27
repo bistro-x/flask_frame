@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import MetaData
 
 db = None
 db_schema = "public"

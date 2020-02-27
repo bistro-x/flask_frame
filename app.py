@@ -1,14 +1,12 @@
-import logging
 import os
 from http import HTTPStatus
 
 import flask
 from flask import Flask
 from flask import request
+
 from config import config
 from .exception import BusiError
-from loguru import logger
-
 
 
 def create_app(flask_config_name="default", **kwargs):
@@ -32,19 +30,18 @@ def create_app(flask_config_name="default", **kwargs):
 
     @app.errorhandler(404)
     def page_not_found(error):
-        logger.error("url:%s,%s" % (request.base_url, error.description))
+        app.logger.error("url:%s,%s" % (request.base_url, error.description))
 
         return "url:%s,%s" % (request.base_url, error.description)
 
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
-        app.logger.error(error)
-
+        app.logger.exception(error)
         if isinstance(error, BusiError):
             return error
         elif hasattr(error, "description") and hasattr(error, "code"):
-            return error.description, error.code
+            return flask.jsonify(error.description), error.code
         else:
             return flask.jsonify({"message": "后台服务出错", "detail": str(error)}), HTTPStatus.INTERNAL_SERVER_ERROR
 

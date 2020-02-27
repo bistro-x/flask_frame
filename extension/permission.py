@@ -17,7 +17,7 @@ def get_current_user(token_string):
 
     try:
         response = requests.get(
-            url=user_auth_url + "/auth/current_user",
+            url=user_auth_url + "/user/current",
             headers={
                 "Authorization": "Bearer {token_string}".format(token_string=token_string),
             },
@@ -45,7 +45,7 @@ def license_check():
         print('Response HTTP Response Body: {content}'.format(
             content=response.content))
         if not response.ok:
-            abort(HTTPStatus.UNAUTHORIZED, {"message": response.text})
+            abort(HTTPStatus.UNAUTHORIZED, response.json())
 
     except requests.exceptions.RequestException:
         print('HTTP Request failed')
