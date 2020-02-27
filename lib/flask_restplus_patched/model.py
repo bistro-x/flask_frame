@@ -1,8 +1,7 @@
-from apispec.ext.marshmallow.swagger import fields2jsonschema, field2property
 import flask_marshmallow
-from werkzeug import cached_property
-
+from apispec.ext.marshmallow.swagger import fields2jsonschema, field2property
 from flask_restplus.model import Model as OriginalModel
+from werkzeug import cached_property
 
 
 class SchemaMixin(object):

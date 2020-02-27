@@ -1,4 +1,3 @@
-from flask_restplus import *
 from .api import Api
 from .model import Schema, DefaultHTTPErrorSchema
 try:
