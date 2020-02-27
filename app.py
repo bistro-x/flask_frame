@@ -9,6 +9,7 @@ from config import config
 from .exception import BusiError
 
 
+
 def create_app(flask_config_name="default", **kwargs):
     """
     create the app

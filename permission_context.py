@@ -26,7 +26,7 @@ def check_permission(uri, method, usr_roles):
 
 # 加载角色权限
 def load_permission():
-    from app import app
+    from run import app
 
     global permission_map
     permission_map = {}
