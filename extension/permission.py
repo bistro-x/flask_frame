@@ -38,7 +38,10 @@ def license_check():
 
     try:
         response = requests.get(
-            url=user_auth_url + "/license/check"
+            url=user_auth_url + "/license/check",
+            params={
+                "product_key": app.config.get("PRODUCT_KEY")
+            }
         )
         print('Response HTTP Status Code: {status_code}'.format(
             status_code=response.status_code))
@@ -72,7 +75,7 @@ def check_user_permission(token_string=None):
     user = response if response else None
 
     # 超级用户
-    if user.get("name") == "admin":
+    if user and user.get("name") == "admin":
         return user
 
     check_path = request.url_rule.rule if request.url_rule else request.path

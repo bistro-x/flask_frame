@@ -131,8 +131,8 @@ class Namespace(BaseNamespace):
             func = func_or_class
 
             # Avoid circilar dependency
-            from app.extensions import oauth2
-            from app.modules.users import permissions
+            from run.extensions import oauth2
+            from run.modules.users import permissions
 
             # Automatically apply `permissions.ActiveUserRolePermisson`
             # guard if none is yet applied.
@@ -226,7 +226,7 @@ class Namespace(BaseNamespace):
             A helper wrapper.
             """
             # Avoid circilar dependency
-            from app.modules.users import permissions
+            from run.modules.users import permissions
 
             if getattr(permission, '_partial', False):
                 # We don't apply partial permissions, we only use them for
@@ -297,7 +297,7 @@ class Namespace(BaseNamespace):
         """
         if not parameters:
             # Use default parameters if None specified
-            from app.extensions.api.parameters import PaginationParameters
+            from run.extensions.api.parameters import PaginationParameters
             parameters = PaginationParameters()
 
         if not all(
