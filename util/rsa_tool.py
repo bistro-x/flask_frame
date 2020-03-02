@@ -2,7 +2,7 @@ import os
 
 from rsa import common, transform, core, PrivateKey, PublicKey
 
-from frame.busi_exception import BusiError
+from frame.http.exception import BusiError
 
 try:
     current_path = os.path.abspath(__file__)

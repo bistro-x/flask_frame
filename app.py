@@ -6,7 +6,7 @@ from flask import Flask
 from flask import request
 
 from config import config
-from .exception import BusiError
+from frame.http.exception import BusiError
 
 
 
