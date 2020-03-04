@@ -1,8 +1,11 @@
 # 原生sql分页查询
 def mysql_page(db, sql, offset, limit, sort=None):
+    if not sort:
+        sort = "id"
+
     total = db.session.execute("select count(*) from (" + sql + ") t").fetchall()[0][0]
     page_sql = "select * from ( %s) t " % sql
-    asc = " asc "
+    asc = " desc "
     if sort:
         if sort[0] == "-":
             sort = sort[1:]

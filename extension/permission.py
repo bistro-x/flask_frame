@@ -3,13 +3,13 @@ from http import HTTPStatus
 import requests
 from authlib.flask.oauth2 import ResourceProtector
 from authlib.oauth2.rfc6750 import BearerTokenValidator
-from flask import request, abort
+from flask import request, abort, g
 
 require_oauth = ResourceProtector()
 app = None
 
 
-def get_current_user(token_string):
+def fetch_current_user(token_string):
     # get users
     user_auth_url = app.config.get("USER_AUTH_URL")
     if not user_auth_url:
@@ -33,9 +33,8 @@ def get_current_user(token_string):
 
 def license_check():
     user_auth_url = app.config.get("USER_AUTH_URL")
-    if not user_auth_url:
+    if not user_auth_url or not app.config.get("LICENSE_CHECK"):
         return True
-
     try:
         response = requests.get(
             url=user_auth_url + "/license/check",
@@ -71,10 +70,11 @@ def check_user_permission(token_string=None):
     license_check()
 
     # 权限验证
-    response = get_current_user(token_string)
+    response = fetch_current_user(token_string)
     user = response if response else None
 
     # 超级用户
+    g.current_user = user
     if user and user.get("name") == "admin":
         return user
 
@@ -95,6 +95,10 @@ class _BearerTokenValidator(BearerTokenValidator):
 def config_oauth(app):
     # protect resource
     require_oauth.register_token_validator(_BearerTokenValidator())
+
+
+def get_current_user():
+    return g.current_user
 
 
 def init_app(flask_app):
