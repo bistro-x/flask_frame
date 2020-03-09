@@ -1,9 +1,13 @@
 # 原生sql分页查询
-def mysql_page(db, sql, offset, limit, sort=None):
+def mysql_page(db, sql, offset, limit, sort=None, db_schema=None):
     if not sort:
         sort = "id"
 
-    total = db.session.execute("select count(*) from (" + sql + ") t").fetchall()[0][0]
+    path = ""
+    if db_schema:
+        path = f"set search_path ={db_schema};"
+
+    total = db.session.execute(f"{path} select count(*) from (" + sql + ") t").fetchall()[0][0]
     page_sql = "select * from ( %s) t " % sql
     asc = " desc "
     if sort:
@@ -12,7 +16,7 @@ def mysql_page(db, sql, offset, limit, sort=None):
             asc = " desc "
     page_sql = page_sql + "order by %s %s" % (sort, asc)
     page_sql = page_sql + " limit %s offset %s " % (limit, offset)
-    res = db.session.execute(page_sql).fetchall()
+    res = db.session.execute(path + page_sql).fetchall()
     return res, total
 
 

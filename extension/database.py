@@ -1,9 +1,15 @@
+import json
+
 from flask_sqlalchemy import SQLAlchemy
 
 db = None
 db_schema = "public"
 BaseModel = None
 AutoMapModel = None
+
+
+def json_dumps(*data, **kwargs):
+    return json.dumps(*data, ensure_ascii=False, **kwargs)
 
 
 def init_app(app):
@@ -16,5 +22,7 @@ def init_app(app):
         """
         __table_args__ = {'extend_existing': True, 'schema': db_schema}
 
-    db = SQLAlchemy(app)
+    db = SQLAlchemy(app, engine_options={
+        "json_serializer": json_dumps
+    })
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)

@@ -131,7 +131,7 @@ class Namespace(BaseNamespace):
             func = func_or_class
 
             # Avoid circilar dependency
-            from run.extensions import oauth2
+            from run.extension import oauth2
             from run.modules.users import permissions
 
             # Automatically apply `permissions.ActiveUserRolePermisson`
@@ -297,7 +297,7 @@ class Namespace(BaseNamespace):
         """
         if not parameters:
             # Use default parameters if None specified
-            from run.extensions.api.parameters import PaginationParameters
+            from run.extension.api.parameters import PaginationParameters
             parameters = PaginationParameters()
 
         if not all(
