@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 import requests
-from authlib.flask.oauth2 import ResourceProtector
+from authlib.integrations.flask_oauth2 import ResourceProtector
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import request, abort, g
 
@@ -10,6 +10,10 @@ app = None
 
 
 def fetch_current_user(token_string):
+    from authlib.integrations.flask_oauth2 import current_token
+    if current_token and current_token.user:
+        return current_token.user
+
     # get users
     user_auth_url = app.config.get("USER_AUTH_URL")
     if not user_auth_url:
@@ -61,13 +65,19 @@ def check_user_permission(token_string=None):
     """
     method = request.method
 
-    # get users
-    user_auth_url = app.config.get("USER_AUTH_URL")
-    if not user_auth_url:
-        return {}
+    user_auth_local = app.config.get("USER_AUTH_LOCAL")
+    if user_auth_local and request.url_rule:
+        return True
 
-    # 证书校验
-    license_check()
+    if not user_auth_local:
+
+        # get users
+        user_auth_url = app.config.get("USER_AUTH_URL")
+        if not user_auth_url:
+            return {}
+
+        # 证书校验
+        license_check()
 
     # 权限验证
     response = fetch_current_user(token_string)

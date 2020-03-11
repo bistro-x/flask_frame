@@ -7,8 +7,8 @@ from frame.http.exception import BusiError
 try:
     current_path = os.path.abspath(__file__)
     grader_father = os.path.abspath(os.path.dirname(current_path) + os.path.sep + "..")
-    pubkey = PublicKey.load_pkcs1(open(os.path.join(grader_father, "resource/public.pem")).read())
-    privkey = PrivateKey.load_pkcs1(open(os.path.join(grader_father, "resource/private.pem")).read())
+    pubkey = PublicKey.load_pkcs1(open("resource/public.pem").read())
+    privkey = PrivateKey.load_pkcs1(open("resource/private.pem").read())
 except:
     raise BusiError("证书文件路径错误！")
 
