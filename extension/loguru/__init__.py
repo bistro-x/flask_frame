@@ -32,6 +32,9 @@ def _set_logger(app, config):
             else:
                 logger.log(record.levelname, record.getMessage())
 
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+
     for handler in list(app.logger.handlers):
         app.logger.removeHandler(handler)
 
