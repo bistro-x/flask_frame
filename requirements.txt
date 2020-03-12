@@ -7,6 +7,8 @@ requests==2.20.1
 flask-restplus~=0.13.0
 Werkzeug==0.16.0
 apispec>=0.20.0,<0.39
+Authlib~=0.14.1
+
 
 marshmallow>=2.13.5,<3
 flask-marshmallow>=0.7,<0.8
