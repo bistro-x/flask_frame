@@ -39,6 +39,9 @@ def unzip_file(src_file, dest_dir, password=None):
     zf = zipfile.ZipFile(src_file)
 
     temp_path = dest_dir + "/__temp"
+    if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
+
     try:
         for file_path in zf.namelist():
             # apple cache skip
