@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 import requests
 from authlib.integrations.flask_oauth2 import ResourceProtector
+from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import request, abort, g
 
@@ -69,6 +70,7 @@ def check_user_permission(token_string=None):
     if user_auth_local and request.url_rule:
         return True
 
+    # get current user
     if not user_auth_local:
 
         # get users

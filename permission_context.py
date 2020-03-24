@@ -1,5 +1,5 @@
+from frame.extension.database import db, db_schema
 from frame.http import JsonResult as js
-from frame.extension.database import db
 
 permission_map = None
 
@@ -31,11 +31,9 @@ def load_permission():
     global permission_map
     permission_map = {}
     with app.app_context():
-        sql = """select p.name,p.url,p.method ,string_agg(cast(r.id as text),',') as role_ids,string_agg(r.name,',') as role_names from sys_permission p 
-                    join sys_permission_group_rel gr on gr.permission_id = p.id
-                    join sys_permission_group_role pr on gr.permission_group_id = pr.permission_group_id 
-                    join sys_role r on r.id = pr.role_id
-                group by p.name,p.url,p.method
+        sql = f"""
+            SET search_path to {db_schema};
+            select * from permission_role
             """
         res = db.session.execute(sql).fetchall()
         permission_list = js.queryToDict(res)
