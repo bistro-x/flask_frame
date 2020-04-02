@@ -50,9 +50,15 @@ def unzip_file(src_file, dest_dir, password=None):
 
             # get the real path
             try:
-                file_path_final = file_path.encode('cp437').decode('utf-8')
+                file_path_final = file_path
+
+                try:
+                    file_path_final = file_path.encode('cp437').decode('utf-8')
+                except e:
+                    file_path_final = file_path.encode('cp437').decode('gbk', 'ignore')
             except:
-                file_path_final = file_path.encode('cp437').decode('gbk', 'ignore')
+                pass
+
             file_path_final = dest_dir + "/" + file_path_final
 
             # extract
