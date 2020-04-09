@@ -22,5 +22,6 @@ gunicorn>=19.9.0
 # todo need chech to delete
 psutil~=5.7.0
 rsa~=4.0
+sentry-sdk[flask]==0.10.2
 
 

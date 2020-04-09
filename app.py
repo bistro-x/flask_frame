@@ -9,7 +9,6 @@ from config import config
 from frame.http.exception import BusiError
 
 
-
 def create_app(flask_config_name="default", **kwargs):
     """
     create the app
@@ -49,5 +48,9 @@ def create_app(flask_config_name="default", **kwargs):
     @app.route('/', methods=['GET'])
     def index():
         return "app is running"
+
+    @app.route('/debug-sentry')
+    def trigger_error():
+        division_by_zero = 1 / 0
 
     return app
