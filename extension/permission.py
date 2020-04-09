@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import requests
 from authlib.integrations.flask_oauth2 import ResourceProtector
-from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import request, abort, g
 
@@ -38,7 +37,7 @@ def fetch_current_user(token_string):
 
 def license_check():
     user_auth_url = app.config.get("USER_AUTH_URL")
-    if not user_auth_url or not app.config.get("LICENSE_CHECK"):
+    if not user_auth_url or app.config.get("LICENSE_CHECK") is False:
         return True
     try:
         response = requests.get(
