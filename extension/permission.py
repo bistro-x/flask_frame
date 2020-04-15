@@ -5,15 +5,17 @@ from authlib.integrations.flask_oauth2 import ResourceProtector
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import request, abort, g
 
-from module.auth.extension.oauth2 import require_oauth
-from module.user.service import get_user_extend_info
+require_oauth = ResourceProtector()
 
 app = None
 
 
 def fetch_current_user(token_string):
     from authlib.integrations.flask_oauth2 import current_token
-    if current_token and current_token.user:
+    user_auth_local = app.config.get("USER_AUTH_LOCAL")
+
+    if current_token and current_token.user and user_auth_local:
+        from module.user.service import get_user_extend_info
         return get_user_extend_info(current_token.user)
 
     # get users
@@ -59,9 +61,9 @@ def license_check():
         print('HTTP Request failed')
 
 
-@require_oauth('profile')
-def local_oauth():
-    pass
+def config_oauth(app):
+    # protect resource
+    require_oauth.register_token_validator(_BearerTokenValidator())
 
 
 def check_user_permission(token_string=None):
@@ -78,6 +80,12 @@ def check_user_permission(token_string=None):
         return True
 
     if user_auth_local:
+        from module.auth.extension.oauth2 import require_oauth
+
+        @require_oauth('profile')
+        def local_oauth():
+            pass
+
         local_oauth()
 
     # get current user
@@ -112,11 +120,6 @@ def check_user_permission(token_string=None):
 class _BearerTokenValidator(BearerTokenValidator):
     def authenticate_token(self, token_string):
         check_user_permission(token_string)
-
-
-def config_oauth(app):
-    # protect resource
-    require_oauth.register_token_validator(_BearerTokenValidator())
 
 
 def get_current_user():
