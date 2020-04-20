@@ -1,6 +1,7 @@
 import decimal
 from datetime import date, time
 from datetime import datetime as cdatetime  # 有时候会返回datatime类型
+from http import HTTPStatus
 
 from flask import jsonify
 from flask_sqlalchemy import Model
@@ -20,7 +21,7 @@ class JsonResult:
         return jsonify(result)
 
     def error(msg=None, result=None):
-        return jsonify({'code': ERROR_CODE, 'msg': msg, 'data': result})
+        return jsonify({'code': ERROR_CODE, 'message': msg, 'data': result}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     def queryResult(result=None):
         return jsonify(queryToDict(result))
