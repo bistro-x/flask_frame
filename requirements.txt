@@ -25,3 +25,4 @@ rsa~=4.0
 sentry-sdk[flask]==0.10.2
 
 
+numpy~=1.18.2
