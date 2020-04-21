@@ -13,11 +13,10 @@ ARG INCLUDE_POSTGRESQL=false
 ARG INCLUDE_UWSGI=false
 
 RUN echo 'https://mirrors.aliyun.com/alpine/v3.10/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.10/community/' >>/etc/apk/repositories &&  \
-    apk add --no-cache --virtual=.build_dependencies musl-dev libevent-dev linux-headers  openssl-dev libxslt libxslt-dev g++ && \
-    apk --no-cache add tzdata  postgresql-dev gcc python3-dev  py3-cffi  libffi-dev yasm ffmpeg && \
+    apk add --no-cache --virtual=.build_dependencies musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ && \
+    apk --no-cache add tzdata  postgresql-dev gcc python3-dev  libffi-dev yasm ffmpeg && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone  &&  \
     cd /opt/www && \
     pip3 --default-timeout=1000 install -U  -i https://mirrors.aliyun.com/pypi/simple/  pip && \
-    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt   &&   \
-    apk del .build_dependencies
+    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt
