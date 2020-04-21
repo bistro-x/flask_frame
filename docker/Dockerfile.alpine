@@ -1,6 +1,6 @@
 FROM frolvlad/alpine-python3
 
-
+\
 ENV API_SERVER_HOME=/opt/www
 
 WORKDIR "$API_SERVER_HOME"
@@ -13,8 +13,8 @@ ARG INCLUDE_POSTGRESQL=false
 ARG INCLUDE_UWSGI=false
 
 RUN echo 'https://mirrors.aliyun.com/alpine/v3.10/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.10/community/' >>/etc/apk/repositories &&  \
-    apk add --no-cache --virtual=.build_dependencies musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ && \
-    apk --no-cache add tzdata  postgresql-dev gcc python3-dev  libffi-dev yasm ffmpeg && \
+    apk --no-cache add tzdata postgresql-dev gcc libffi-dev yasm ffmpeg && \
+    apk add --no-cache --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone  &&  \
     cd /opt/www && \

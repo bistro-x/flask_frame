@@ -2,7 +2,7 @@ FROM  server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest
 
 COPY "./" "./"
 
-RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt  &&  apk del .build_dependencies
+RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 CMD gunicorn -w 4 -b 0.0.0.0:5000 run:app
