@@ -1,4 +1,4 @@
-FROM  server.aiknown.cn:31003/flask_rest_frame/aplie-python3
+FROM  server.aiknown.cn:31003/z_ai_frame/aplie-python3
 
 COPY "./" "./"
 
