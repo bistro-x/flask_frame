@@ -3,8 +3,10 @@ FROM  server.aiknown.cn:31003/z_ai_frame/alpine-python3
 COPY "./" "./"
 
 
-RUN apk add --no-cache --virtual=.build_dependencies musl-dev  gcc python3-dev  py3-cffi libevent-dev linux-headers  openssl-dev libxslt libxslt-dev g++ && \
+RUN apk add --no-cache --virtual=.build_dependencies musl-dev  gcc  py3-cffi libevent-dev linux-headers  openssl-dev libxslt libxslt-dev g++ && \
     pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt   &&   \
     apk del .build_dependencies
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 CMD gunicorn -w 4 -b 0.0.0.0:5000 run:app

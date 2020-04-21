@@ -8,4 +8,9 @@
 docker build -f ./frame/docker/Dockerfile.source  .
 ```
 
+编译基本容器
+```shell
+docker build . -f ./docker/Dockerfile.apline -t server.aiknown.cn:31003/z_ai_frame/alpine-python3
+```
+
 加密版本使用 Dockerfile.encrypt
