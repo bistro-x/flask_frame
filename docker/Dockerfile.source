@@ -4,7 +4,7 @@ COPY "./" "./"
 
 
 RUN apk add --no-cache --virtual=.build_dependencies musl-dev gcc py3-cffi libevent-dev linux-headers  openssl-dev libxslt libxslt-dev g++ && \
-    apk --no-cache add tzdata  postgresql-dev   libffi-dev yasm ffmpeg && \
+    apk --no-cache add tzdata  postgresql-dev python3-dev  libffi-dev yasm ffmpeg && \
     pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt  &&   \
     apk del .build_dependencies
 
