@@ -81,6 +81,15 @@ def init(origin_str, compare_str):
 
 
 def str_compare(origin_str, compare_str):
+    if origin_str == '' and compare_str == '':
+        return {
+            "mark_different": "", "length_different": 0, "origin_str_valid": "",
+            "mark_same": "", "compare_str_valid": "",
+            "accuracy": 1,
+            "ratio_insert": 0,
+            "ratio_delete": 0,
+            "ratio_update": 0}
+
     origin_str = re.sub('[,.，。 \n?!？！]', '', origin_str)
     compare_str = re.sub('[,.，。 \n?!？！]', '', compare_str)
 

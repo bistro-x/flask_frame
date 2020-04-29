@@ -18,7 +18,10 @@ class JsonResult:
         return jsonify({'code': code, 'msg': msg, 'data': result})
 
     def success(msg=None, result=None):
-        return jsonify(result)
+        if result:
+            return jsonify(result)
+        else:
+            return jsonify({"message": msg})
 
     def error(msg=None, result=None):
         return jsonify({'code': ERROR_CODE, 'message': msg, 'data': result}), HTTPStatus.INTERNAL_SERVER_ERROR
