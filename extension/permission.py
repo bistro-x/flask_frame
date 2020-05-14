@@ -109,7 +109,7 @@ def check_user_permission(token_string=None):
         return user
 
     check_path = request.url_rule.rule if request.url_rule else request.path
-    if user and any(
+    if user and user.get("permissions") and any(
             permission.get(
                 "url") == check_path and permission.get(
                 "method") == method for permission in
