@@ -111,7 +111,7 @@ def get_ground_avg(arr, begin, end):
     :return:
     """
 
-    audio_avg = check_avg(arr, begin, end)
+    audio_avg = check_avg(arr, begin, end)/2
 
     avg_en = 0
     add_num = 0
@@ -134,7 +134,7 @@ def vad_cut(wave_path, save_path, audio_rate=None):
     """
 
     min_audio_second = 0.2  # 最小语音秒数
-    min_silent_second = 1  # 最小间隔长度
+    min_silent_second = 0.5  # 最小间隔长度
 
     temp_wave_path = os.path.join(save_path, "audio.wav")
     stream = ffmpeg.input(wave_path)
@@ -166,7 +166,7 @@ def vad_cut(wave_path, save_path, audio_rate=None):
         interval_avg = check_avg(wave_data, current_check, current_check + interval_step)
 
         # 无声
-        if ground_avg > interval_avg * 0.1:
+        if ground_avg > interval_avg * 0.5:
             # 还未说话
             if not start:
                 current_check = current_check + interval_step
