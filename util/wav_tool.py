@@ -124,17 +124,16 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000):
+def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5):
     """
     根据音量进行断句
     :param wave_path: 音频文件
     :param save_path:
     :param audio_rate: 音频采样率
+    :param min_audio_second: 最小语音秒数
+    :param min_silent_second: 最小间隔长度
     :return:
     """
-
-    min_audio_second = 0.2  # 最小语音秒数
-    min_silent_second = 0.5  # 最小间隔长度
 
     temp_wave_path = os.path.join(save_path, "audio.wav")
     stream = ffmpeg.input(wave_path)
