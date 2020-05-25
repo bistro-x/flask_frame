@@ -18,6 +18,7 @@ loguru~=0.4.1
 invoke~=1.4.1
 
 gunicorn>=19.9.0
+pandas==1.0.3
 
 # todo need chech to delete
 psutil~=5.7.0
