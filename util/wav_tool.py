@@ -111,7 +111,7 @@ def get_ground_avg(arr, begin, end):
     :return:
     """
 
-    audio_avg = check_avg(arr, begin, end)/2
+    audio_avg = check_avg(arr, begin, end) / 2
 
     avg_en = 0
     add_num = 0
@@ -124,7 +124,7 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def vad_cut(wave_path, save_path, audio_rate=None):
+def vad_cut(wave_path, save_path, audio_rate=16000):
     """
     根据音量进行断句
     :param wave_path: 音频文件
