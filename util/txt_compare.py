@@ -193,17 +193,18 @@ def str_compare(origin_str, compare_str):
     mark_different, m, origin_str_valid, mark_same, compare_str_valid = mark_different[::-1], m[m.shape[0] - 1][
         m.shape[1] - 1], ss1[::-1], mark_same[::-1], ss2[::-1]
 
-    ref_length = len(origin_str_valid.replace(" ", '').replace("**", '*'))
+    length_ref = len(origin_str_valid.replace(" ", '').replace("**", '*'))
 
-    ratio_insert = mark_different.count('I') / ref_length
-    ratio_delete = mark_different.count('D') / ref_length
-    ratio_update = mark_different.count('S') / ref_length
+    ratio_insert = mark_different.count('I') / length_ref
+    ratio_delete = mark_different.count('D') / length_ref
+    ratio_update = mark_different.count('S') / length_ref
 
     length_different = int(m)
-    accuracy = 1 - (length_different / ref_length)
+    accuracy = 1 - (length_different / length_ref)
 
     return {
-        "mark_different": mark_different, "length_different": int(m), "origin_str_valid": origin_str_valid,
+        "mark_different": mark_different, "length_different": length_different, "length_ref": length_ref,
+        "origin_str_valid": origin_str_valid,
         "mark_same": mark_same, "compare_str_valid": compare_str_valid,
         "accuracy": accuracy,
         "ratio_insert": ratio_insert,
