@@ -6,6 +6,14 @@ server_url = None
 
 
 def proxy_request(method="GET", url="", headers=None, **kwargs):
+    """
+    创建代理请求
+    :param method:
+    :param url:
+    :param headers:
+    :param kwargs:
+    :return:
+    """
     global flask_app, server_url
 
     send_headers = {}
@@ -24,6 +32,10 @@ def proxy_response(response):
 
 
 def proxy():
+    """
+    发送代理请求
+    :return: 返回
+    """
     global flask_app, server_url
 
     # request.url_rule
