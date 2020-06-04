@@ -7,6 +7,13 @@ class PermissionError(HTTPException):
     pass
 
 
+class BetweenServiceError(HTTPException):
+    """
+    服务间调用异常
+    """
+    pass
+
+
 class BusiError(HTTPException):
     code = 500
     msg = "this is message!"
