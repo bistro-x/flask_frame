@@ -6,7 +6,6 @@ import wave
 import ffmpeg
 import numpy as np
 
-from run import app
 
 
 def get_wav_info(wav_path):
@@ -148,7 +147,6 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
             wave_data = np.fromstring(str_data, dtype=np.int16)
     except wave.Error as e:  # parent of IOError, OSError *and* WindowsError where available
         message = "vad_cut file: " + wave_path + "  error: " + str(e)
-        app.logger.error(message)
         raise Exception(message)
 
         return None, None
