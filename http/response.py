@@ -17,11 +17,17 @@ class JsonResult:
     def custom(code=None, msg=None, result=None):
         return jsonify({'code': code, 'msg': msg, 'data': result})
 
-    def success(msg=None, result=None):
+    def success(msg=None, result=False):
+        """
+        返回结果数据
+        :param msg: 说明
+        :param result: 数据
+        :return:
+        """
         if result:
             return jsonify(result)
         else:
-            return jsonify({"message": msg})
+            return jsonify({"message": msg}) if msg else jsonify(None)
 
     def error(msg=None, result=None):
         return jsonify({'code': ERROR_CODE, 'message': msg, 'data': result}), HTTPStatus.INTERNAL_SERVER_ERROR
