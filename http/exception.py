@@ -2,16 +2,24 @@ from flask import request, json
 from werkzeug.exceptions import HTTPException
 
 
-class PermissionError(HTTPException):
-    code = 403
-    pass
-
-
-class BetweenServiceError(HTTPException):
+class ResourceError(HTTPException):
     """
-    服务间调用异常
+    服务调用异常
     """
-    pass
+    code = 500  # http代码
+    error_code = None  # 标准错误代码
+
+    def __init__(self, description=None, response=None, error_code=None):
+        super(ResourceError, self).__init__(description, response)
+        self.error_code = error_code
+
+        if response.json:
+            self.error_code = response.json.get("error_code", self.error_code)
+            self.description = response.json.get("description", self.description)
+
+    def __str__(self):
+        error_code = self.error_code if self.error_code is not None else "???"
+        return "代码 %s, 信息 %s" % (error_code, self.description)
 
 
 class BusiError(HTTPException):
