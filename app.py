@@ -6,7 +6,7 @@ from flask import Flask
 from flask import request
 
 from config import config
-from frame.http.exception import BusiError
+from frame.http.exception import BusiError, ResourceError
 
 
 def create_app(flask_config_name="default", **kwargs):
@@ -40,8 +40,8 @@ def create_app(flask_config_name="default", **kwargs):
         app.logger.exception(error)
         if isinstance(error, BusiError):
             return error
-        if isinstance(error, Resouc):
-
+        if isinstance(error, ResourceError):
+            return error
         elif hasattr(error, "description") and hasattr(error, "code"):
             return flask.jsonify(error.description), error.code
         else:
