@@ -15,7 +15,7 @@ class ResourceError(HTTPException):
 
         if response.json:
             self.error_code = response.json.get("error_code", self.error_code)
-            self.description = response.json.get("description", self.description)
+            self.pa = response.json.get("description", self.description)
 
     def __str__(self):
         error_code = self.error_code if self.error_code is not None else "???"
