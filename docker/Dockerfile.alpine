@@ -24,7 +24,7 @@ RUN  echo "**** install Python ****" && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 RUN  apk add --no-cache  --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ && \
-    apk add --no-cache  tzdata postgresql-dev gcc libffi-dev yasm ffmpeg && \
+    apk add --no-cache  tzdata postgresql-dev gcc libffi-dev yasm ffmpeg make && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone  &&  \
     pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt

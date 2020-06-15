@@ -6,7 +6,7 @@ from flask import Flask
 from flask import request
 
 from config import config
-from frame.http.exception import BusiError
+from frame.http.exception import BusiError, ResourceError
 
 
 def create_app(flask_config_name="default", **kwargs):
@@ -40,10 +40,12 @@ def create_app(flask_config_name="default", **kwargs):
         app.logger.exception(error)
         if isinstance(error, BusiError):
             return error
+        if isinstance(error, ResourceError):
+            return error
         elif hasattr(error, "description") and hasattr(error, "code"):
             return flask.jsonify(error.description), error.code
         else:
-            return flask.jsonify({"message": "后台服务出错", "detail": str(error)}), HTTPStatus.INTERNAL_SERVER_ERROR
+            return flask.jsonify({"message": error.message, "code": error.code}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     @app.route('/', methods=['GET'])
     def index():

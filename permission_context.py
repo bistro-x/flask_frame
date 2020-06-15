@@ -1,5 +1,5 @@
 from frame.extension.database import db, db_schema
-from frame.http import JsonResult as js
+from frame.http.response import queryToDict
 
 permission_map = None
 
@@ -36,7 +36,7 @@ def load_permission():
             select * from permission_role
             """
         res = db.session.execute(sql).fetchall()
-        permission_list = js.queryToDict(res)
+        permission_list = queryToDict(res)
         for permission in permission_list:
             permission["role_ids"] = permission["role_ids"].split(",")
             permission["role_names"] = permission["role_names"].split(",")

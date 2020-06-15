@@ -13,6 +13,7 @@ from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_re
 from .macro import k_log_rotation, k_log_serialize
 
 
+
 def _set_logger(app, config):
     """ Config logru
     """
@@ -31,6 +32,8 @@ def _set_logger(app, config):
                 logger.exception(record.getMessage())
             else:
                 logger.log(record.levelname, record.getMessage())
+
+
 
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers

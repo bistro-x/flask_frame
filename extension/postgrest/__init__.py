@@ -6,9 +6,22 @@ server_url = None
 
 
 def proxy_request(method="GET", url="", headers=None, **kwargs):
+    """
+    创建代理请求
+    :param method:
+    :param url:
+    :param headers:
+    :param kwargs:
+    :return:
+    """
     global flask_app, server_url
-    response = requests.request(method=method, url=server_url + url, headers=headers, **kwargs)
 
+    send_headers = {}
+    if headers:
+        send_headers = {h[0]: h[1] for h in headers}
+        send_headers['Authorization'] = None
+
+    response = requests.request(method=method, url=server_url + url, headers=send_headers, **kwargs)
     return response
 
 
@@ -19,6 +32,10 @@ def proxy_response(response):
 
 
 def proxy():
+    """
+    发送代理请求
+    :return: 返回
+    """
     global flask_app, server_url
 
     # request.url_rule
@@ -26,13 +43,12 @@ def proxy():
         return
 
     # proxy
-    headers = {h[0]: h[1] for h in request.headers}
-    headers['Authorization'] = None
+
     other_param = {}
     if request.data:
         other_param["json"] = request.json
 
-    response = proxy_request(request.method, request.full_path, headers=headers, **other_param)
+    response = proxy_request(request.method, request.full_path, request.headers, **other_param)
 
     return proxy_response(response)
 

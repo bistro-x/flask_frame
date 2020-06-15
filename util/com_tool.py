@@ -53,8 +53,8 @@ def unzip_file(src_file, dest_dir, password=None):
                 file_path_final = file_path
 
                 try:
-                    file_path_final = file_path.encode('cp437').decode('utf-8')
-                except e:
+                    file_path_final = file_path.encode('cp437').decode('utf-8', errors='strict')
+                except:
                     file_path_final = file_path.encode('cp437').decode('gbk', 'ignore')
             except:
                 pass
