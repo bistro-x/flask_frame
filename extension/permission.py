@@ -6,11 +6,16 @@ from authlib.oauth2.rfc6750 import BearerTokenValidator
 from flask import request, abort, g
 
 require_oauth = ResourceProtector()
-
 app = None
+check_api = True  # 检查 API 权限
 
 
 def fetch_current_user(token_string):
+    """
+    获取当前用户
+    :param token_string:
+    :return:
+    """
     from authlib.integrations.flask_oauth2 import current_token
     user_auth_local = app.config.get("USER_AUTH_LOCAL")
 
@@ -109,7 +114,7 @@ def check_user_permission(token_string=None):
         return user
 
     check_path = request.url_rule.rule if request.url_rule else request.path
-    if user and user.get("permissions") and any(
+    if user and check_api and user.get("permissions") and any(
             permission.get(
                 "url") == check_path and permission.get(
                 "method") == method for permission in
@@ -126,9 +131,32 @@ def get_current_user():
     return g.current_user
 
 
+def param_add_department_filter(params={}):
+    """
+    添加组织权限过滤
+    :param params: 当前参数
+    :return:
+    """
+    user = g.current_user
+
+    depart_list = []
+    for item in user.get('department_key') or []:
+        depart_list.append(f'department_key.like.{item}*')
+
+    if len(depart_list) > 0:
+        depart_str = ",".join(depart_list)
+        params["or"] = f"(department_key.is.null,{depart_str})"
+    else:
+        params["department_key"] = f"is.null"
+
+    return params
+
+
 def init_app(flask_app):
-    global app
+    global app, check_api
+
     app = flask_app
+    check_api = app.config.get("CHECK_API", True)
 
     @app.before_request
     def app_proxy():
