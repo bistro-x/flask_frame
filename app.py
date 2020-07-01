@@ -44,8 +44,8 @@ def create_app(flask_config_name="default", **kwargs):
             return error
         elif hasattr(error, "description") and hasattr(error, "code"):
             return flask.jsonify(error.description), error.code
-        else:
-            return flask.jsonify({"message": error.message, "code": error.code}), HTTPStatus.INTERNAL_SERVER_ERROR
+        elif hasattr(error, "message") and hasattr(error, "code"):
+            return flask.jsonify({"message": str(error), "code": HTTPStatus.INTERNAL_SERVER_ERROR}), HTTPStatus.INTERNAL_SERVER_ERROR
 
     @app.route('/', methods=['GET'])
     def index():
