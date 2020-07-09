@@ -1,14 +1,16 @@
 # coding=utf-8
-
+import math
 import os
 import wave
 
 import ffmpeg
 import numpy as np
 
-
-
 def get_wav_info(wav_path):
+    """
+    获取 wave 文件信息
+    :param wav_path: 文件路径
+    """
     with wave.open(wav_path, "rb") as f:
         params = f.getparams()
         # print(params)
@@ -16,6 +18,11 @@ def get_wav_info(wav_path):
 
 
 def check_wav_format(wav_path):
+    """
+    检测是否是单声道
+    :param wav_path: 文件路径
+    """
+
     params = get_wav_info(wav_path)
     # 判断音频是否是单声道
     if params.nchannels != 1:
@@ -65,7 +72,7 @@ def cut_wav_by_length(file, save_path, length=100):
 
 def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=None, file_save_path=None):
     """
-    # 音频切割
+    根据音频 开始结束 进行音频切割
     :param wave_data:
     :param begin:
     :param end:
@@ -93,7 +100,14 @@ def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=No
     return file_name
 
 
-def check_avg(arr, begin, end):
+def volume_ave(arr, begin, end):
+    """
+    获取当前数据的平均音调
+    :param arr: 数据组
+    :param begin: 开始位置
+    :param end: 结束位置
+    :return: 平均音调
+    """
     avg_en = 0
     for i in range(begin, end):
         avg_en = avg_en + abs(arr[i])
@@ -103,14 +117,14 @@ def check_avg(arr, begin, end):
 
 def get_ground_avg(arr, begin, end):
     """
-    获取低噪音量
-    :param arr:
-    :param begin:
-    :param end:
-    :return:
+    获取底噪量
+    :param arr: 数据组
+    :param begin: 开始位置
+    :param end: 结束位置
+    :return: 底噪音调
     """
 
-    audio_avg = check_avg(arr, begin, end) / 2
+    audio_avg = volume_ave(arr, begin, end) / 2
 
     avg_en = 0
     add_num = 0
