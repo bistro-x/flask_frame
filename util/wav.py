@@ -6,6 +6,7 @@ import wave
 import ffmpeg
 import numpy as np
 
+
 def get_wav_info(wav_path):
     """
     获取 wave 文件信息
@@ -174,7 +175,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
 
     silent_length = 0
     while current_check < wave_data.shape[0] - interval_step:
-        interval_avg = check_avg(wave_data, current_check, current_check + interval_step)
+        interval_avg = volume_ave(wave_data, current_check, current_check + interval_step)
 
         # 无声
         if ground_avg > interval_avg * 0.5:

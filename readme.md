@@ -9,8 +9,13 @@ docker build -f ./frame/docker/Dockerfile.source  .
 ```
 
 编译基本容器
+
 ```shell
 docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest
 ```
 
 加密版本使用 Dockerfile.encrypt
+
+## 文件夹文件
+
+- http: 网络请求相关文件
