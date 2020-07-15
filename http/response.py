@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from flask import jsonify
 from flask_sqlalchemy import Model
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_dump
 from sqlalchemy import DateTime, Numeric, Date, Time  # 有时又是DateTime
 
 # 返回结果： 成功code=100； 失败：code=-1
@@ -117,12 +117,21 @@ def convert_datetime(value):
         return ""
 
 
-class HttpErrorSchema(Schema):
+class HttpResponseSchema(Schema):
+    SKIP_VALUES = set([None])
+
     """错误格式"""
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str()  # 统一编码 来自数据库 dict
     provider_code = fields.Str()
     message = fields.Str(default="操作成功")  # 说明信息
 
+    @post_dump
+    def remove_skip_values(self, data, many=None):
+        return {
+            key: value for key, value in data.items()
+            if value not in self.SKIP_VALUES
+        }
 
-http_error_schema = HttpErrorSchema()
+
+http_response_schema = HttpResponseSchema()
