@@ -118,8 +118,6 @@ def convert_datetime(value):
 
 
 class HttpResponseSchema(Schema):
-    SKIP_VALUES = set([None])
-
     """错误格式"""
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str()  # 统一编码 来自数据库 dict
@@ -129,8 +127,7 @@ class HttpResponseSchema(Schema):
     @post_dump
     def remove_skip_values(self, data, many=None):
         return {
-            key: value for key, value in data.items()
-            if isinstance(value, dict) or value not in self.SKIP_VALUES
+            key: value for key, value in data.items() if value
         }
 
 
