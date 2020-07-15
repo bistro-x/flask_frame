@@ -130,7 +130,7 @@ class HttpResponseSchema(Schema):
     def remove_skip_values(self, data, many=None):
         return {
             key: value for key, value in data.items()
-            if value not in self.SKIP_VALUES
+            if isinstance(value, dict) or value not in self.SKIP_VALUES
         }
 
 
