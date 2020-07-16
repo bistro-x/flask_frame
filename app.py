@@ -57,3 +57,11 @@ def create_app(flask_config_name="default", **kwargs):
         division_by_zero = 1 / 0
 
     return app
+
+
+# remote debug
+pycharm_ip = os.environ.get('PYCHARM_IP')
+pycharm_port = os.environ.get('PYCHARM_PORT')
+if pycharm_ip:
+    import pydevd_pycharm
+    pydevd_pycharm.settrace(pycharm_ip, port=pycharm_port, stdoutToServer=True, stderrToServer=True)
