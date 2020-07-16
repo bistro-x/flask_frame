@@ -64,4 +64,4 @@ pycharm_ip = os.environ.get('PYCHARM_IP')
 pycharm_port = os.environ.get('PYCHARM_PORT')
 if pycharm_ip:
     import pydevd_pycharm
-    pydevd_pycharm.settrace(pycharm_ip, port=pycharm_port, stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace(pycharm_ip, port=int(pycharm_port), stdoutToServer=True, stderrToServer=True)
