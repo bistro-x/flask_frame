@@ -121,6 +121,8 @@ def check_user_permission(token_string=None):
             user.get("permissions")):
         return user
 
+    return user
+
 
 class _BearerTokenValidator(BearerTokenValidator):
     def authenticate_token(self, token_string):
