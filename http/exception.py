@@ -40,7 +40,7 @@ class BusiError(HTTPException):
     traceback = None
     error_code = 1001
 
-    def __init__(self, msg=None, traceback=None, error_code=None, code=None, ):
+    def __init__(self, msg=None, traceback=None, error_code=None, code=None, **kwargs):
         if code:
             self.code = code
         if error_code:
