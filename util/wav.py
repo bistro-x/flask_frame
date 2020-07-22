@@ -4,6 +4,7 @@ import wave
 
 import ffmpeg
 import numpy as np
+from pydub import AudioSegment
 
 
 def get_wav_info(wav_path):
@@ -111,6 +112,7 @@ def volume_ave(arr, begin, end):
     avg_en = 0
     for i in range(begin, end):
         avg_en = avg_en + abs(arr[i])
+
     avg_en = avg_en / (end - begin)
     return avg_en
 
@@ -133,6 +135,7 @@ def get_ground_avg(arr, begin, end):
         if value < audio_avg:
             avg_en += value
             add_num += 1
+
     avg_en = avg_en if add_num == 0 else avg_en / add_num
     return avg_en
 
@@ -148,10 +151,12 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     :return:
     """
 
+    # 读取数据
     temp_wave_path = os.path.join(save_path, "audio.wav")
     stream = ffmpeg.input(wave_path)
     stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate)
     ffmpeg.run(stream, overwrite_output=True)
+    file_obj = AudioSegment.from_file(temp_wave_path)
 
     try:
         with wave.open(temp_wave_path) as file:
@@ -175,10 +180,10 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
 
     silent_length = 0
     while current_check < wave_data.shape[0] - interval_step:
-        interval_avg = volume_ave(wave_data, current_check, current_check + interval_step)
+        interval_avg = volume_ave(wave_data, current_check, current_check + interval_step)  # 平均音量
 
-        # 无声
-        if ground_avg > interval_avg * 0.5:
+        # 音频大于1秒，并且底噪大于音量的80%
+        if ground_avg > interval_avg * 0.8 and file_obj.duration_seconds > 2:
             # 还未说话
             if not start:
                 current_check = current_check + interval_step
