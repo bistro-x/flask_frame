@@ -1,5 +1,4 @@
 # coding=utf-8
-import math
 import os
 import wave
 
@@ -142,7 +141,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.05, min_s
     """
     根据音量进行断句
     :param wave_path: 音频文件
-    :param save_path:
+    :param save_path: 保存路径
     :param audio_rate: 音频采样率
     :param min_audio_second: 最小语音秒数
     :param min_silent_second: 最小间隔长度
@@ -171,6 +170,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.05, min_s
     start = None
     end = None
     current_check = 0  # 当前位置
+
     ground_avg = get_ground_avg(wave_data, 0, wave_data.shape[0])  # 底噪
 
     silent_length = 0
@@ -219,7 +219,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.05, min_s
 
     # 结尾
     end = wave_data.shape[0]
-    if start and (end - start) / framerate > 1:
+    if start and (end - start) / framerate > min_audio_second:
         path = cut_wav(wave_data, start, end, nchannels, sampwidth, framerate, save_path)
         item = {"start_time": int(start * 1000 / framerate),
                 "end_time": int(end * 1000 / framerate), "path": path}
