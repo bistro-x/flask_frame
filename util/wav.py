@@ -138,7 +138,7 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5):
+def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.05, min_silent_second=0.5):
     """
     根据音量进行断句
     :param wave_path: 音频文件
