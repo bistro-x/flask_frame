@@ -179,7 +179,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     ground_avg = get_ground_avg(wave_data, 0, wave_data.shape[0])  # 底噪
 
     silent_length = 0
-    while True:
+    while current_check < wave_data.shape[0] - interval_step:
         interval_avg = volume_ave(wave_data, current_check, current_check + interval_step)  # 平均音量
 
         # 音频大于1秒，并且底噪大于音量的80%
@@ -224,8 +224,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
             break
 
         current_check = current_check + interval_step
-        current_check = current_check if current_check < wave_data.shape[0] - interval_step else wave_data.shape[
-                                                                                                     0] - interval_step
+
 
         # 结尾
     end = wave_data.shape[0]
