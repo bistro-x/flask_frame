@@ -185,7 +185,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
         # 音频大于1秒，并且底噪大于音量的80%
         if ground_avg > interval_avg * 0.5 and file_obj.duration_seconds > 2:
             # 还未说话
-            if not start:
+            if start is None:
                 current_check = current_check + interval_step
                 continue
 
