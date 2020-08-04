@@ -16,6 +16,10 @@ docker build . --force-rm=true -f ./docker/Dockerfile.alpine.3.6 -t server.aikno
 
 #3.7
 docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest
+
+#tensorflow
+docker build . --force-rm=true -f ./docker/Dockerfile.alpine.tensorflow -t server.aiknown.cn:31003/z_ai_frame/alpine-python3:tensorflow && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:tensorflow
+
 ```
 
 加密版本使用 Dockerfile.encrypt
