@@ -5,10 +5,12 @@ from http import HTTPStatus
 
 from flask import jsonify
 from flask_sqlalchemy import Model
-from marshmallow import Schema, fields, post_dump
+from marshmallow import fields, post_dump, INCLUDE
 from sqlalchemy import DateTime, Numeric, Date, Time  # 有时又是DateTime
 
 # 返回结果： 成功code=100； 失败：code=-1
+from frame.schema import BaseSchema
+
 SUCCESS_CODE = 100
 ERROR_CODE = -1
 
@@ -117,12 +119,15 @@ def convert_datetime(value):
         return ""
 
 
-class HttpResponseSchema(Schema):
+class HttpResponseSchema(BaseSchema):
     """错误格式"""
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str()  # 统一编码 来自数据库 dict
     provider_code = fields.Str()
     message = fields.Str(default="操作成功")  # 说明信息
+
+    class Meta:
+        unknown = INCLUDE
 
     def load_by_key(self, code=0, data=None, message=None, provider_code=None):
         """构造函数"""
