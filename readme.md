@@ -20,6 +20,9 @@ docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.c
 #tensorflow
 docker build . --force-rm=true -f ./docker/Dockerfile.alpine.tensorflow -t server.aiknown.cn:31003/z_ai_frame/alpine-python3:tensorflow && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:tensorflow
 
+# tensorflow opencv
+docker build . --force-rm=true -f ./docker/Dockerfile.tensorflow_opencv -t server.aiknown.cn:31003/z_ai_frame/python3:tensorflow_opencv && docker push server.aiknown.cn:31003/z_ai_frame/python3:tensorflow_opencv
+
 ```
 
 加密版本使用 Dockerfile.encrypt

@@ -1,0 +1,13 @@
+FROM yoanlin/opencv-python3-tensorflow
+
+ENV PYTHONUNBUFFERED=1
+ENV API_SERVER_HOME=/opt/www
+
+WORKDIR "$API_SERVER_HOME"
+
+COPY "./requirements.txt" "./requirements.txt"
+
+EXPOSE 5000
+
+RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements.txt
+
