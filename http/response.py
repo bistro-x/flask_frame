@@ -124,6 +124,10 @@ class HttpResponseSchema(Schema):
     provider_code = fields.Str()
     message = fields.Str(default="操作成功")  # 说明信息
 
+    def load_by_key(self, code=0, data=None, message=None, provider_code=None):
+        """构造函数"""
+        return self.load({code: code, data: data, message: message, provider_code: provider_code})
+
     @post_dump
     def remove_skip_values(self, data, many=None):
         return {
