@@ -1,4 +1,4 @@
-FROM yoanlin/opencv-python3
+FROM jjanzic/docker-python3-opencv
 
 ENV PYTHONUNBUFFERED=1
 ENV API_SERVER_HOME=/opt/www
