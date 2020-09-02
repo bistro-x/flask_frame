@@ -136,7 +136,7 @@ class HttpResponseSchema(BaseSchema):
     @post_dump
     def remove_skip_values(self, data, many=None):
         return {
-            key: value for key, value in data.items() if value
+            key: value for key, value in data.items() if value is not None
         }
 
 
