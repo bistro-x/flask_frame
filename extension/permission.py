@@ -162,8 +162,9 @@ def init_app(flask_app):
 
     @app.before_request
     def app_proxy():
+
         # check permission
         token_string = request.headers.environ.get('HTTP_AUTHORIZATION')
         token_string = token_string.split(" ")[1] if token_string else None
-        if not check_user_permission(token_string):
+        if check_api and not check_user_permission(token_string):
             abort(HTTPStatus.METHOD_NOT_ALLOWED, {"message": "API未授权"})
