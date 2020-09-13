@@ -140,7 +140,7 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5):
+def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5, sound_track=1):
     """
     根据音量进行断句
     :param wave_path: 音频文件
@@ -148,17 +148,29 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     :param audio_rate: 音频采样率
     :param min_audio_second: 最小语音秒数
     :param min_silent_second: 最小间隔长度
+    :param sound_track: 声道信息 1就是单声道，2就是立体声
     :return:
     """
 
     # 读取数据
     temp_wave_path = os.path.join(save_path, "audio.wav")
-    stream = ffmpeg.input(wave_path)
-    stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate)
-    ffmpeg.run(stream, overwrite_output=True)
-    file_obj = AudioSegment.from_file(temp_wave_path)
+    try:
+        if os.path.splitext(wave_path)[-1].lower() == ".pcm":
+            stream = ffmpeg.input(wave_path,
+                                  f="s16le",
+                                  ar=audio_rate)
+        else:
+            stream = ffmpeg.input(wave_path)
+
+        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track)
+        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+    except ffmpeg.Error as e:
+        print('stdout:', e.stdout.decode('utf8'))
+        print('stderr:', e.stderr.decode('utf8'))
+        raise e
 
     try:
+        file_obj = AudioSegment.from_file(temp_wave_path)
         with wave.open(temp_wave_path) as file:
             nchannels, sampwidth, framerate, nframes = file.getparams()[:4]
             interval_step = int(framerate / 50)  # 检测间隔
