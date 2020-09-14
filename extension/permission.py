@@ -87,7 +87,7 @@ def check_user_permission(token_string=None):
     if user_auth_local:
         from module.auth.extension.oauth2 import require_oauth
 
-
+        @require_oauth('profile')
         def local_oauth():
             pass
 
