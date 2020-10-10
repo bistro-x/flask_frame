@@ -1,5 +1,6 @@
 # coding=utf-8
 import os
+import time
 import wave
 
 import ffmpeg
@@ -140,6 +141,37 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
+def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_track=None):
+    """
+    抓换音频文件为 wave 文件
+    :param file_path: 文件路径
+    :param save_path: 保存路径
+    :param file_name: 文件名
+    :param audio_rate: 音频采样率
+    :param sound_track: 声道信息 1就是单声道，2就是立体声
+    :return: 转换后的wav文件路径
+
+    """
+
+    # 读取数据
+    temp_wave_path = os.path.join(save_path, file_name or str(time.time()) + ".wav")
+    try:
+        if os.path.splitext(file_path)[-1].lower() == ".pcm":
+            stream = ffmpeg.input(file_path,
+                                  f="s16le",
+                                  ar=audio_rate)
+        else:
+            stream = ffmpeg.input(file_path)
+
+        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track)
+        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+        return temp_wave_path
+    except ffmpeg.Error as e:
+        print('stdout:', e.stdout.decode('utf8'))
+        print('stderr:', e.stderr.decode('utf8'))
+        raise e
+
+
 def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5, sound_track=1):
     """
     根据音量进行断句
@@ -153,22 +185,9 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     """
 
     # 读取数据
-    temp_wave_path = os.path.join(save_path, "audio.wav")
-    try:
-        if os.path.splitext(wave_path)[-1].lower() == ".pcm":
-            stream = ffmpeg.input(wave_path,
-                                  f="s16le",
-                                  ar=audio_rate)
-        else:
-            stream = ffmpeg.input(wave_path)
+    temp_wave_path = convert_to_wav(wave_path, save_path, audio_rate=audio_rate, sound_track=sound_track)
 
-        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track)
-        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
-    except ffmpeg.Error as e:
-        print('stdout:', e.stdout.decode('utf8'))
-        print('stderr:', e.stderr.decode('utf8'))
-        raise e
-
+    # 切割
     try:
         file_obj = AudioSegment.from_file(temp_wave_path)
         with wave.open(temp_wave_path) as file:
