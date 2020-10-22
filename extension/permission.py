@@ -7,15 +7,21 @@ from flask import request, abort, g
 
 require_oauth = ResourceProtector()
 app = None
-check_api = True  # 检查 API 权限
+
+# 配置参数
+check_api = True  # 检查API权限
+fetch_user = True  # 是否获取用户
 
 
 def fetch_current_user(token_string):
+
     """
     获取当前用户
     :param token_string:
     :return:
     """
+    global app
+
     from authlib.integrations.flask_oauth2 import current_token
     user_auth_local = app.config.get("USER_AUTH_LOCAL")
 
@@ -40,7 +46,8 @@ def fetch_current_user(token_string):
         print('Response HTTP Response Body: {content}'.format(
             content=response.content))
         return response.json()
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        app.logger.error(e)
         print('HTTP Request failed')
 
 
@@ -155,16 +162,16 @@ def param_add_department_filter(params={}):
 
 
 def init_app(flask_app):
-    global app, check_api
+    global app, check_api, fetch_user
 
     app = flask_app
     check_api = app.config.get("CHECK_API", True)
+    fetch_user = app.config.get("FETCH_USER", True)
 
     @app.before_request
     def app_proxy():
-
         # check permission
         token_string = request.headers.environ.get('HTTP_AUTHORIZATION')
         token_string = token_string.split(" ")[1] if token_string else None
-        if check_api and not check_user_permission(token_string):
+        if fetch_user and not check_user_permission(token_string):
             abort(HTTPStatus.METHOD_NOT_ALLOWED, {"message": "API未授权"})

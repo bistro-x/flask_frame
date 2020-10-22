@@ -1,5 +1,10 @@
 # flask_rest_frame flask 的 rest 快速开发框架
 
+## 环境变量
+- CHECK_API 检测API的权限 默认 True
+- LICENSE_CHECK 检测证书是否过期 默认 True
+- FETCH_USER 获取当前用户到会话中 默认 True
+
 #### 编译 docker 镜像
 
 假设 flask_rest_frame 被作为子模块引入到当前项目的 frame 文件夹下
