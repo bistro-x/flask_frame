@@ -7,13 +7,13 @@ class ResourceError(HTTPException):
     服务调用异常
     """
     code = 500  # http代码
-    error_code = None  # 标准错误代码
+    error_code = 500  # 标准错误代码
 
     def __init__(self, description=None, response=None, error_code=None):
         super(ResourceError, self).__init__(description, response)
         self.error_code = error_code
 
-        if response.json:
+        if response and response.json:
             self.error_code = response.json.get("error_code", self.error_code)
             self.pa = response.json.get("description", self.description)
 
@@ -23,8 +23,8 @@ class ResourceError(HTTPException):
 
     def get_body(self, environ=None):
         body = dict(
-            description=self.description,
-            error_code=self.error_code
+            message=self.description,
+            code=self.error_code
         )
         text = json.dumps(body)
         return text
@@ -33,8 +33,8 @@ class ResourceError(HTTPException):
         """Get a list of headers."""
         return [('Content-Type', 'application/json')]
 
-
 class BusiError(HTTPException):
+    """deprecated"""
     code = 500
     msg = "this is message!"
     traceback = None

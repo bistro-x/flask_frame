@@ -34,10 +34,23 @@ def create_app(flask_config_name="default", **kwargs):
 
         return "url:%s,%s" % (request.base_url, error.description)
 
+    @app.teardown_request
+    def teardown(e):
+
+        from frame.extension.database import db
+        if db:
+            db.session.commit()
+            db.session.remove()
+
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
         app.logger.exception(error)
+
+        from frame.extension.database import db
+        if db:
+            db.session.rollback()
+
         if isinstance(error, BusiError):
             return error
         if isinstance(error, ResourceError):
@@ -64,4 +77,5 @@ pycharm_ip = os.environ.get('PYCHARM_IP')
 pycharm_port = os.environ.get('PYCHARM_PORT')
 if pycharm_ip:
     import pydevd_pycharm
+
     pydevd_pycharm.settrace(pycharm_ip, port=int(pycharm_port), stdoutToServer=True, stderrToServer=True)
