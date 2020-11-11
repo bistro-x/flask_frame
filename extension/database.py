@@ -23,6 +23,6 @@ def init_app(app):
         __table_args__ = {'extend_existing': True, 'schema': db_schema}
 
     db = SQLAlchemy(app, engine_options={
-        "json_serializer": json_dumps
+        "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30
     })
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)

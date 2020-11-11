@@ -7,14 +7,12 @@ import os
 # 3p
 from loguru import logger
 
-# project
-from .compress import zip_logs
-from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_retention
-from .macro import k_log_rotation, k_log_serialize
-
-
 
 def _set_logger(app, config):
+    # project
+    from .compress import zip_logs
+    from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_retention
+    from .macro import k_log_rotation, k_log_serialize
     """ Config logru
     """
     path = config[k_log_name]
@@ -33,8 +31,6 @@ def _set_logger(app, config):
             else:
                 logger.log(record.levelname, record.getMessage())
 
-
-
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
 
@@ -45,6 +41,10 @@ def _set_logger(app, config):
 
 
 def init_app(app):
+    # project
+    from .compress import zip_logs
+    from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_retention
+    from .macro import k_log_rotation, k_log_serialize
     """This is used to initialize logger with your app object
     """
     config = {
