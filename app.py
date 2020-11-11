@@ -9,7 +9,7 @@ from config import config
 from frame.http.exception import BusiError, ResourceError
 
 
-def create_app(flask_config_name="default", **kwargs):
+def create_app(flask_config_name=None, **kwargs):
     """
     create the app
     :param flask_config_name:
@@ -19,7 +19,7 @@ def create_app(flask_config_name="default", **kwargs):
     app = Flask(__name__, root_path=os.getcwd())
 
     # 初始化app
-    config_name = os.getenv('FLASK_CONFIG', flask_config_name)
+    config_name = flask_config_name if flask_config_name else os.getenv('FLASK_CONFIG', "default")
     app.config.from_object(config[config_name])
 
     # 加载配置文件
