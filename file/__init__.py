@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import filetype
+from pydub.utils import mediainfo
 
 from frame.file.audio import get_file_info_audio, is_audio
 
@@ -28,4 +29,4 @@ def get_file_info(file_path):
         audio_info = get_file_info_audio(file_path)
         result = {**audio_info, **result, "type": FileType.audio}
 
-    return result
+    return {**mediainfo(file_path), **result}
