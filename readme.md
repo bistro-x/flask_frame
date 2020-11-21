@@ -35,3 +35,11 @@ docker build . --force-rm=true -f ./docker/Dockerfile.tensorflow_opencv -t serve
 ## 文件夹文件
 
 - http: 网络请求相关文件
+
+
+## config
+
+### permission 权限
+- FETCH_USER 是否获取用户
+- CHECK_API API接口检查
+

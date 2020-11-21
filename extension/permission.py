@@ -14,7 +14,6 @@ fetch_user = True  # 是否获取用户
 
 
 def fetch_current_user(token_string):
-
     """
     获取当前用户
     :param token_string:
@@ -137,6 +136,7 @@ class _BearerTokenValidator(BearerTokenValidator):
 
 
 def get_current_user():
+    """获取当前用户"""
     return g.current_user
 
 
