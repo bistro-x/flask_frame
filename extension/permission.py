@@ -137,7 +137,10 @@ class _BearerTokenValidator(BearerTokenValidator):
 
 def get_current_user():
     """获取当前用户"""
-    return g.current_user
+    if hasattr(g, 'current_user'):
+        return g.current_user
+
+    return None
 
 
 def param_add_department_filter(params={}):

@@ -19,7 +19,7 @@ class ResourceError(HTTPException):
 
     def __str__(self):
         error_code = self.error_code if self.error_code is not None else "???"
-        return "代码 %s, 信息 %s" % (error_code, self.description)
+        return "代码:%s, 信息%s" % (error_code, self.description)
 
     def get_body(self, environ=None):
         body = dict(
