@@ -177,4 +177,5 @@ def init_app(flask_app):
         token_string = request.headers.environ.get('HTTP_AUTHORIZATION')
         token_string = token_string.split(" ")[1] if token_string else None
         if fetch_user and not check_user_permission(token_string):
-            abort(HTTPStatus.METHOD_NOT_ALLOWED, {"message": "API未授权"})
+            if check_api:
+                abort(HTTPStatus.METHOD_NOT_ALLOWED, {"message": "API未授权"})
