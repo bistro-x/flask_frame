@@ -142,3 +142,34 @@ class HttpResponseSchema(BaseSchema):
 
 
 http_response_schema = HttpResponseSchema()
+
+
+class Response(object):
+    """返回对应"""
+
+    def __init__(self, result=True, data=None, code=0, message="成功", provider_code=0, task_id=None, response_time=None,
+                 service_id=None):
+        """
+        构造函数
+        :param result:
+        :param data:
+        :param code:
+        :param message:
+        :param service_id: 服务ID
+        :param kwargs:
+        """
+
+        self.task_id = task_id  # 结果 True or False
+        self.result = result  # 结果 True or False
+        self.data = data  # 数据 json or string or Boolean
+        self.code = code or "0"  # 统一编码 来自数据库 dict
+        self.service = service_id
+        self.provider_code = provider_code
+        self.message = message  # 说明信息
+        self.response_time = response_time
+
+    def get_response(self):
+        if self.result:
+            return http_response_schema.dumps(self)
+        else:
+            return http_response_schema.dumps(self), HTTPStatus.INTERNAL_SERVER_ERROR
