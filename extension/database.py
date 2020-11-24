@@ -41,18 +41,23 @@ def update_table(db, schema, init_file_list):
     first_sql = f"set search_path to {schema}; "
 
     schema_exist = db.engine.execute(
-        f"select *  from pg_tables where tablename='param' and schemaname='{schema}';").fetchone()
+        f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'").fetchone()
 
+    # 获取版本
     version = None
     if schema_exist:
-        version = db.engine.execute(
-            first_sql + "select value from param where key='version';").fetchone()
+        table_exist = db.engine.execute(
+            f"select *  from pg_tables where tablename='param' and schemaname='{schema}'").fetchone()
+        if table_exist:
+            version = db.engine.execute(
+                first_sql + "select value from param where key='version';").fetchone()
         if version:
             version = version[0]
 
     # 初始化
     if not version:
-        db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+        if schema_exist:
+            db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
         db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
 
         for file_path in init_file_list:
