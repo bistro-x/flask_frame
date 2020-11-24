@@ -114,7 +114,7 @@ def volume_ave(arr, begin, end):
     for i in range(begin, end):
         avg_en = avg_en + abs(arr[i])
 
-    avg_en = avg_en / (end - begin)
+    avg_en = avg_en / ((end - begin) or 1)
     return avg_en
 
 
