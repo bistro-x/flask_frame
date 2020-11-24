@@ -3,6 +3,8 @@ import json
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
+from frame.util.lock import Lock
+
 db = None
 db_schema = "public"
 BaseModel = None
@@ -38,30 +40,35 @@ def init_app(app):
 
 def update_table(db, schema, init_file_list):
     """更新数据库到当前"""
-    first_sql = f"set search_path to {schema}; "
+    lock = Lock.get_file_lock()  ##给app注入一个外部锁
+    lock.acquire()
+    try:
+        first_sql = f"set search_path to {schema}; "
 
-    schema_exist = db.engine.execute(
-        f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'").fetchone()
+        schema_exist = db.engine.execute(
+            f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'").fetchone()
 
-    # 获取版本
-    version = None
-    if schema_exist:
-        table_exist = db.engine.execute(
-            f"select *  from pg_tables where tablename='param' and schemaname='{schema}'").fetchone()
-        if table_exist:
-            version = db.engine.execute(
-                first_sql + "select value from param where key='version';").fetchone()
-        if version:
-            version = version[0]
-
-    # 初始化
-    if not version:
+        # 获取版本
+        version = None
         if schema_exist:
-            db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
-        db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
+            table_exist = db.engine.execute(
+                f"select *  from pg_tables where tablename='param' and schemaname='{schema}'").fetchone()
+            if table_exist:
+                version = db.engine.execute(
+                    first_sql + "select value from param where key='version';").fetchone()
+            if version:
+                version = version[0]
 
-        for file_path in init_file_list:
-            run_sql(file_path, db, first_sql)
+        # 初始化
+        if not version:
+            if schema_exist:
+                db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+            db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
+
+            for file_path in init_file_list:
+                run_sql(file_path, db, first_sql)
+    finally:
+        lock.release()
 
 
 def run_sql(file_path, db, first_sql):
