@@ -15,8 +15,8 @@ except:
 
 class Lock(object):
     @staticmethod
-    def get_file_lock():
-        return FileLock()
+    def get_file_lock(lock_file='FLASK_LOCK'):
+        return FileLock(lock_file)
 
 
 class FileLock(object):

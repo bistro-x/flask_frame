@@ -9,6 +9,7 @@ db = None
 db_schema = "public"
 BaseModel = None
 AutoMapModel = None
+current_app = None
 
 
 def json_dumps(*data, **kwargs):
@@ -16,7 +17,8 @@ def json_dumps(*data, **kwargs):
 
 
 def init_app(app):
-    global db, db_schema, BaseModel, AutoMapModel
+    global db, db_schema, BaseModel, AutoMapModel, current_app
+    current_app = app
     db_schema = app.config.get("DB_SCHEMA")
     db = SQLAlchemy(app, engine_options={
         "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30
@@ -28,6 +30,7 @@ def init_app(app):
         init_file_list = app.config.get("DB_INIT_FILE")
         if init_file_list:
             init_db(db, db_schema, init_file_list)
+
 
         update_file_list = app.config.get("DB_UPDATE_FILE")
         if update_file_list:
@@ -44,10 +47,12 @@ def init_app(app):
 
 def update_db(db, schema, update_file_list):
     """更新数据库到当前"""
-    lock = Lock.get_file_lock()
+    lock = Lock.get_file_lock("update_db")
 
     if lock.locked():
         return
+
+    current_app.logger.info("更新数据库")
 
     lock.acquire()
     try:
@@ -82,12 +87,16 @@ def init_db(db, schema, init_file_list):
 
         # 初始化
         if not version:
+            current_app.logger.info("初始化数据库")
+
             if schema_exist:
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
 
             for file_path in init_file_list:
                 run_sql(file_path, db, first_sql)
+        # todo 根据版本运行更新脚本
+
     finally:
         lock.release()
 
