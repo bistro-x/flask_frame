@@ -29,7 +29,6 @@ class FileLock(object):
 
         self.file = '%s%s%s' % (lock_dir, os.sep, lock_file)
         self._fn = None
-        self.release()
 
     def locked(self):
         """判断锁是否已经申请"""
@@ -39,6 +38,7 @@ class FileLock(object):
 
     def acquire(self):
         """请求锁"""
+        self.release()
         if SYSTEM == WINDOWS:
             while os.path.exists(self.file):
                 time.sleep(0.01)  # wait 10ms
