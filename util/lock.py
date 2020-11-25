@@ -20,18 +20,25 @@ class Lock(object):
 
 
 class FileLock(object):
-    def __init__(self):
-        lock_file = 'FLASK_LOCK'
+    def __init__(self, lock_file='FLASK_LOCK'):
+
         if SYSTEM == WINDOWS:
             lock_dir = os.environ['tmp']
         else:
-            lock_dir = '/tmp'
+            lock_dir = './'
 
         self.file = '%s%s%s' % (lock_dir, os.sep, lock_file)
         self._fn = None
         self.release()
 
+    def locked(self):
+        """判断锁是否已经申请"""
+        if not os.path.exists(self.file):
+            return False
+        return True
+
     def acquire(self):
+        """请求锁"""
         if SYSTEM == WINDOWS:
             while os.path.exists(self.file):
                 time.sleep(0.01)  # wait 10ms
@@ -45,6 +52,7 @@ class FileLock(object):
             self._fn.write('1')
 
     def release(self):
+        """释放锁"""
         if SYSTEM == WINDOWS:
             if os.path.exists(self.file):
                 os.remove(self.file)
@@ -54,3 +62,6 @@ class FileLock(object):
                     self._fn.close()
                 except:
                     pass
+
+            if os.path.exists(self.file):
+                os.remove(self.file)

@@ -27,7 +27,11 @@ def init_app(app):
     if auto_update:
         init_file_list = app.config.get("DB_INIT_FILE")
         if init_file_list:
-            update_table(db, db_schema, init_file_list)
+            init_db(db, db_schema, init_file_list)
+
+        update_file_list = app.config.get("DB_UPDATE_FILE")
+        if update_file_list:
+            update_db(db, db_schema, update_file_list)
 
     class BaseModel:
         """
@@ -38,8 +42,25 @@ def init_app(app):
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
 
-def update_table(db, schema, init_file_list):
+def update_db(db, schema, update_file_list):
     """更新数据库到当前"""
+    lock = Lock.get_file_lock()
+
+    if lock.locked():
+        return
+
+    lock.acquire()
+    try:
+        first_sql = f"set search_path to {schema}; "
+
+        for file_path in update_file_list:
+            run_sql(file_path, db, first_sql)
+    finally:
+        lock.release()
+
+
+def init_db(db, schema, init_file_list):
+    """初始化数据库到当前"""
     lock = Lock.get_file_lock()  ##给app注入一个外部锁
     lock.acquire()
     try:
@@ -81,7 +102,7 @@ def run_sql(file_path, db, first_sql):
         # Iterate over all lines in the sql file
         for line in sql_file:
             # Ignore commented lines
-            if not line.startswith('--') and line.strip('\n'):
+            if not line.lstrip().startswith('--') and line.strip('\n'):
                 # Append line to the command string
                 sql_command += " " + line.strip('\n')
 
