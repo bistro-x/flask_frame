@@ -31,7 +31,6 @@ def init_app(app):
         if init_file_list:
             init_db(db, db_schema, init_file_list)
 
-
         update_file_list = app.config.get("DB_UPDATE_FILE")
         if update_file_list:
             update_db(db, db_schema, update_file_list)
@@ -107,25 +106,19 @@ def run_sql(file_path, db, first_sql):
 
     sql_command = ''
     with open(file_path) as sql_file:
+        try:
+            # Iterate over all lines in the sql file
+            for line in sql_file:
+                # Ignore commented lines
+                if not line.lstrip().startswith('--') and line.strip('\n'):
+                    # Append line to the command string
+                    sql_command += " " + line.strip('\n')
 
-        # Iterate over all lines in the sql file
-        for line in sql_file:
-            # Ignore commented lines
-            if not line.lstrip().startswith('--') and line.strip('\n'):
-                # Append line to the command string
-                sql_command += " " + line.strip('\n')
-
-                # If the command string ends with ';', it is a full statement
-                if sql_command.endswith(';'):
-                    # Try to execute statement and commit it
-                    try:
+                    # If the command string ends with ';', it is a full statement
+                    if sql_command.endswith(';'):
                         db.session.execute(sqlalchemy.text(sql_command))
-                        db.session.commit()
 
-                    # Assert in case of error
-                    except Exception as e:
-                        raise Exception("脚本执行出差" + e.get("message"))
-
-                    # Finally, clear command string
-                    finally:
-                        sql_command = ''
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise Exception("脚本执行出差" + e.get("message"))
