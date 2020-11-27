@@ -90,6 +90,7 @@ def init_db(db, schema, init_file_list):
 
             if schema_exist:
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
 
             for file_path in init_file_list:
@@ -117,8 +118,10 @@ def run_sql(file_path, db, first_sql):
                     # If the command string ends with ';', it is a full statement
                     if sql_command.endswith(';'):
                         db.session.execute(sqlalchemy.text(sql_command))
+                        sql_command = ""
 
             db.session.commit()
+
         except Exception as e:
             db.session.rollback()
             raise Exception("脚本执行出差" + e.get("message"))
