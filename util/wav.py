@@ -256,12 +256,15 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
 
         current_check = current_check + interval_step
 
-        # 结尾
+    # 结尾
     end = wave_data.shape[0]
     if start is not None and (end - start) / framerate > min_audio_second:
         path = cut_wav(wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path)
         item = {"start_time": int(start * 1000 / framerate),
-                "end_time": int(end * 1000 / framerate), "path": path}
+                "end_time": int(
+                    end * 1000 / framerate) if end / framerate < file_obj.duration_seconds else int(
+                    file_obj.duration_seconds * 1000),
+                "path": path}
         items.append(item)
 
     return items, framerate
