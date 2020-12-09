@@ -19,7 +19,7 @@ def get_file_info_audio(file_path):
     """
     header = sndhdr.what(file_path)
     if not header:
-        return header
+        return {}
 
     rate = header.framerate * header.nchannels * header.sampwidth / 8
     return {
