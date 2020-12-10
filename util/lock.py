@@ -15,12 +15,12 @@ except:
 
 class Lock(object):
     @staticmethod
-    def get_file_lock(lock_file='FLASK_LOCK'):
-        return FileLock(lock_file)
+    def get_file_lock(lock_file='FLASK_LOCK', timeout=600):
+        return FileLock(lock_file, timeout)
 
 
 class FileLock(object):
-    def __init__(self, lock_file='FLASK_LOCK'):
+    def __init__(self, lock_file='FLASK_LOCK', timeout=600):
 
         if SYSTEM == WINDOWS:
             lock_dir = os.environ['tmp']
@@ -28,11 +28,14 @@ class FileLock(object):
             lock_dir = './'
 
         self.file = '%s%s%s' % (lock_dir, os.sep, lock_file)
+        self.timeout = timeout
         self._fn = None
 
     def locked(self):
         """判断锁是否已经申请"""
         if not os.path.exists(self.file):
+            return False
+        if check_file(self.file) > self.timeout:
             return False
         return True
 
@@ -65,3 +68,9 @@ class FileLock(object):
 
             if os.path.exists(self.file):
                 os.remove(self.file)
+
+
+def check_file(file_path):
+    """检测文件的修改时间"""
+
+    return time.time() - os.path.getmtime(file_path)
