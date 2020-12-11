@@ -53,20 +53,20 @@ def cut_wav_by_length(file, save_path, length=100):
         interval = int(framerate * (length / 1000))
 
         # 初始化数据
-        start_time = 44
-        end_time = start_time + interval
+        begin_time = 44
+        end_time = begin_time + interval
         wav_data = file.readframes(nframes)
         wave_data = np.fromstring(wav_data, dtype=np.int16)
 
         # 切割
         while end_time < len(wave_data):
-            result.append(cut_wav(wave_data, start_time, end_time, nchannels, sampwidth, framerate, save_path))
-            start_time = end_time + 1
-            end_time = start_time + interval
+            result.append(cut_wav(wave_data, begin_time, end_time, nchannels, sampwidth, framerate, save_path))
+            begin_time = end_time + 1
+            end_time = begin_time + interval
 
         # 最后一段
         result.append(
-            cut_wav(wave_data, start_time, len(wave_data), nchannels, sampwidth, framerate, save_path))
+            cut_wav(wave_data, begin_time, len(wave_data), nchannels, sampwidth, framerate, save_path))
 
     # 返回
     return result
@@ -227,7 +227,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
             # 说话段落
             if end and ((end - start) / framerate) >= min_audio_second and silent_second >= min_silent_second:
                 path = cut_wav(wave_data, start, end, nchannels, sampwidth, framerate, save_path)
-                item = {"start_time": int(start * 1000 / framerate),
+                item = {"begin_time": int(start * 1000 / framerate),
                         "end_time": int(end * 1000 / framerate), "path": path}
                 items.append(item)
                 start = None
@@ -260,7 +260,7 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     end = wave_data.shape[0]
     if start is not None and (end - start) / framerate > min_audio_second:
         path = cut_wav(wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path)
-        item = {"start_time": int(start * 1000 / framerate),
+        item = {"begin_time": int(start * 1000 / framerate),
                 "end_time": int(
                     end * 1000 / framerate) if end / framerate < file_obj.duration_seconds else int(
                     file_obj.duration_seconds * 1000),
