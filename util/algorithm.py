@@ -27,7 +27,7 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
         j = base_record[base_index]
 
         # 当前检查项为空跳过
-        if j.get("text", "").strip() == "":
+        if j.get("text", "").strip().lower() in ["", "unk"]:
             base_index += 1
             continue
 
@@ -103,7 +103,7 @@ def get_asr_report_old(base_record, check_record, clauses_tolerance=50):
         j = base_record[base_index]
 
         # 当前检查项为空跳过
-        if j.get("content", "").strip() == "":
+        if j.get("text", "").strip().lower() in ["", "unk"]:
             base_index += 1
             continue
 
