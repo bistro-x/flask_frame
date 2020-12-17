@@ -23,7 +23,14 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
     check_claus_error_last_index = None  # 上一次分句错误索引
     hit = False  # 曾经命中质检项
     while base_index < len(base_record):
-        i = check_record[check_index] if check_index < len(check_record) else check_record[len(check_record) - 1]
+        if len(check_record) > 0:
+            i = check_record[check_index] if check_index < len(check_record) else check_record[len(check_record) - 1]
+        else:
+            i = {
+                "begin_time": 0,
+                "end_time": 0,
+                "text": "",
+            }
         j = base_record[base_index]
 
         # 当前检查项为空跳过

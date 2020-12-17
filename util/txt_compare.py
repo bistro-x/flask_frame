@@ -195,12 +195,12 @@ def str_compare(origin_str, compare_str):
 
     length_ref = len(origin_str_valid.replace(" ", '').replace("**", ''))
 
-    ratio_insert = mark_different.count('I') / length_ref
-    ratio_delete = mark_different.count('D') / length_ref
-    ratio_update = mark_different.count('S') / length_ref
+    ratio_insert = mark_different.count('I') / (length_ref or 1)
+    ratio_delete = mark_different.count('D') / (length_ref or 1)
+    ratio_update = mark_different.count('S') / (length_ref or 1)
 
     length_different = int(m)
-    accuracy = 1 - (length_different / length_ref)
+    accuracy = 1 - (length_different / (length_ref or 1))
 
     return {
         "mark_different": mark_different, "length_different": length_different, "length_ref": length_ref,
