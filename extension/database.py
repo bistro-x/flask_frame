@@ -1,4 +1,6 @@
 import json
+import random
+import time
 
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
@@ -47,13 +49,14 @@ def init_app(app):
 def update_db(db, schema, update_file_list):
     """更新数据库到当前"""
     lock = Lock.get_file_lock("update_db")
-
+    time.sleep(random.randint(0, 3))
     if lock.locked():
         return
 
+    current_app.logger.info("获取锁")
+    lock.acquire()
     current_app.logger.info("更新数据库")
 
-    lock.acquire()
     try:
         first_sql = f"set search_path to {schema}; "
 
