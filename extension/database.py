@@ -61,7 +61,10 @@ def update_db(db, schema, update_file_list):
         first_sql = f"set search_path to {schema}; "
 
         for file_path in update_file_list:
+            current_app.logger.info("run: " + file_path + " begin")
             run_sql(file_path, db, first_sql)
+            current_app.logger.info("run: " + file_path + " end")
+
     finally:
         lock.release()
 
