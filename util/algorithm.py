@@ -115,7 +115,7 @@ def get_asr_report_old(base_record, check_record, clauses_tolerance=50):
             continue
 
         # 超过检查项，直接跳过
-        if j.get("end_time") < i.get("start_time") or check_index >= len(check_record):
+        if (j.get("end_time", 0) or 0) < i.get("start_time", 0) or check_index >= len(check_record):
             base_index += 1
             if not hit and check_claus_error_last_index != base_index:
                 check_claus_error_last_index = base_index
@@ -124,7 +124,7 @@ def get_asr_report_old(base_record, check_record, clauses_tolerance=50):
             continue
 
         # 在检查项之前，匹配下一个检查项
-        if i.get("end_time") < j.get("start_time"):
+        if (i.get("end_time", 0) or 0) < j.get("start_time", 0):
             check_index += 1
             continue
 
@@ -134,8 +134,8 @@ def get_asr_report_old(base_record, check_record, clauses_tolerance=50):
 
         # 检测分句是否错误
         if check_claus_error_last_index != base_index and (abs(
-                i.get("start_time") - j.get("start_time")) > clauses_tolerance or abs(
-            i.get("end_time") - j.get("end_time")) > clauses_tolerance):
+                i.get("start_time", 0) - j.get("start_time", 0)) > clauses_tolerance or abs(
+            (i.get("end_time", 0) or 0) - (j.get("end_time", 0) or 0)) > clauses_tolerance):
             check_claus_error_last_index = base_index
             check_claus_error_num += 1
 
