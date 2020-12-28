@@ -41,7 +41,6 @@ class FileLock(object):
 
     def acquire(self):
         """请求锁"""
-        self.release()
         if SYSTEM == WINDOWS:
             while os.path.exists(self.file):
                 time.sleep(0.01)  # wait 10ms
