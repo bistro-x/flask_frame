@@ -9,6 +9,7 @@ from marshmallow import fields, post_dump, INCLUDE
 from sqlalchemy import DateTime, Numeric, Date, Time  # 有时又是DateTime
 
 # 返回结果： 成功code=100； 失败：code=-1
+from frame.annotation import deprecated
 from frame.schema import BaseSchema
 
 SUCCESS_CODE = 100
@@ -17,9 +18,11 @@ ERROR_CODE = -1
 
 class JsonResult:
 
+    @deprecated
     def custom(code=None, msg=None, result=None):
         return jsonify({'code': code, 'msg': msg, 'data': result})
 
+    @deprecated
     def success(msg=None, result=False):
         """
         返回结果数据
@@ -32,22 +35,26 @@ class JsonResult:
         else:
             return jsonify({"message": msg}) if msg else jsonify(None)
 
+    @deprecated
     def error(msg=None, result=None):
         return jsonify({'code': ERROR_CODE, 'message': msg, 'data': result}), HTTPStatus.INTERNAL_SERVER_ERROR
 
+    @deprecated
     def queryResult(result=None):
         return jsonify(queryToDict(result))
 
+    @deprecated
     def res_page(list, total):
         result = {"total": total, "list": queryToDict(list)}
         return jsonify(result)
 
+    @deprecated
     def page(page):
         items = queryToDict(page.items)
         result = {"total": page.total, "list": items}
         return jsonify(result)
 
-
+@deprecated
 def queryToDict(models):
     if (isinstance(models, list)):
         if (len(models) == 0):
@@ -76,6 +83,7 @@ def queryToDict(models):
 
 
 # 当结果为result对象列表时，result有key()方法
+@deprecated
 def result_to_dict(results):
     res = [dict(zip(r.keys(), r)) for r in results]
     # 这里r为一个字典，对象传递直接改变字典属性
@@ -83,7 +91,7 @@ def result_to_dict(results):
         data_chg(r)
     return res
 
-
+@deprecated
 def model_to_dict(model):  # 这段来自于参考资源
     for col in model.__table__.columns:
         if getattr(model, col.name) == None:
@@ -98,7 +106,7 @@ def model_to_dict(model):  # 这段来自于参考资源
             value = getattr(model, col.name)
         yield (col.name, value)
 
-
+@deprecated
 def data_chg(value):
     for v in value:
         if (isinstance(value[v], cdatetime)):
@@ -106,7 +114,7 @@ def data_chg(value):
         elif isinstance(value[v], decimal.Decimal):
             value[v] = float(value[v])
 
-
+@deprecated
 def convert_datetime(value):
     if value:
         if (isinstance(value, (cdatetime, DateTime))):
@@ -147,7 +155,7 @@ http_response_schema = HttpResponseSchema()
 class Response(object):
     """返回对应"""
 
-    def __init__(self, result=True, data=None, code=0, message="成功", provider_code=0, task_id=None, response_time=None,
+    def __init__(self, result=True, data=None, code=0, message="操作成功", provider_code=0, task_id=None, response_time=None,
                  service_id=None):
         """
         构造函数
