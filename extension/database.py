@@ -23,9 +23,13 @@ def init_app(app):
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
-    db = SQLAlchemy(app, engine_options={
-        "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30, "pool_pre_ping": True
-    })
+
+    if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
+        db = SQLAlchemy(app)
+    else:
+        db = SQLAlchemy(app, engine_options={
+            "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30, "pool_pre_ping": True
+        })
 
     # init_database
     auto_update = app.config.get("AUTO_UPDATE", False)

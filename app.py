@@ -9,10 +9,11 @@ from config import config
 from frame.http.exception import BusiError, ResourceError
 
 
-def create_app(flask_config_name=None, **kwargs):
+def create_app(flask_config_name=None, config_custom=None, **kwargs):
     """
     create the app
     :param flask_config_name:
+    :param config_custom
     :param kwargs:
     :return:
     """
@@ -21,6 +22,8 @@ def create_app(flask_config_name=None, **kwargs):
     # 初始化app
     config_name = flask_config_name if flask_config_name else os.getenv('FLASK_CONFIG', "default")
     app.config.from_object(config[config_name])
+    if config_custom:
+        app.config = {**app.config, **config_custom}
 
     # 加载配置文件
     os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
