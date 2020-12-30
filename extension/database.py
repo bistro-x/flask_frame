@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import time
 
@@ -29,10 +30,16 @@ def init_app(app):
     # init_database
     auto_update = app.config.get("AUTO_UPDATE", False)
     if auto_update:
+        # 初始化数据库
         init_file_list = app.config.get("DB_INIT_FILE")
-        if init_file_list:
-            init_db(db, db_schema, init_file_list)
 
+        #  开发版本更新
+        version_file_list = app.config.get("DB_VERSION_FILE")
+
+        if init_file_list:
+            init_db(db, db_schema, init_file_list, version_file_list)
+
+        # 更新开发脚本
         update_file_list = app.config.get("DB_UPDATE_FILE")
         if update_file_list:
             update_db(db, db_schema, update_file_list)
@@ -46,32 +53,15 @@ def init_app(app):
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
 
-def update_db(db, schema, update_file_list):
-    """更新数据库到当前"""
-    lock = Lock.get_file_lock("update_db")
-    time.sleep(random.randint(0, 3))
-    if lock.locked():
-        return
-
-    current_app.logger.info("获取锁")
-    lock.acquire()
-    current_app.logger.info("更新数据库")
-
-    try:
-        first_sql = f"set search_path to {schema}; "
-
-        for file_path in update_file_list:
-            current_app.logger.info("run: " + file_path + " begin")
-            run_sql(file_path, db, first_sql)
-            current_app.logger.info("run: " + file_path + " end")
-
-    finally:
-        lock.release()
-
-
-def init_db(db, schema, init_file_list):
-    """初始化数据库到当前"""
-    lock = Lock.get_file_lock()  ##给app注入一个外部锁
+def init_db(db, schema, file_list, version_file_list):
+    """
+    初始化数据库到当前
+    :param db: 数据库实例
+    :param schema: schema
+    :param file_list: 文件列表
+    :param version_file_list: 版本文件列表
+    """
+    lock = Lock.get_file_lock()  # 给app注入一个外部锁
     lock.acquire()
     try:
         first_sql = f"set search_path to {schema}; "
@@ -99,15 +89,58 @@ def init_db(db, schema, init_file_list):
 
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
 
-            for file_path in init_file_list:
+            for file_path in file_list:
                 run_sql(file_path, db, first_sql)
-        # todo 根据版本运行更新脚本
+        elif version_file_list:
+            #  根据版本运行更新脚本
+            version = float(version)
+            for version_file in sorted(version_file_list):
+                (file_path, temp_file_name) = os.path.split(version_file)
+                (current_version, extension) = os.path.splitext(temp_file_name)
+
+                # 小于当前版本 不执行
+                if float(current_version) <= version:
+                    continue
+                run_sql(version_file, db, first_sql)
+    finally:
+        lock.release()
+
+
+def update_db(db, schema, file_list):
+    """
+   初始化数据库到当前
+   :param db: 数据库实例
+   :param schema: schema
+   :param file_list: 文件列表
+   """
+    lock = Lock.get_file_lock("update_db")
+    time.sleep(random.randint(0, 3))
+    if lock.locked():
+        return
+
+    current_app.logger.info("获取锁")
+    lock.acquire()
+    current_app.logger.info("更新数据库")
+
+    try:
+        first_sql = f"set search_path to {schema}; "
+
+        for file_path in file_list:
+            current_app.logger.info("run: " + file_path + " begin")
+            run_sql(file_path, db, first_sql)
+            current_app.logger.info("run: " + file_path + " end")
 
     finally:
         lock.release()
 
 
 def run_sql(file_path, db, first_sql):
+    """
+    对数据库云信脚本文件
+    :param file_path: 文件路径
+    :param db: 数据库对象
+    :param first_sql: 估计头部语句
+    """
     # Create an empty command string
     db.session.execute(first_sql)
 
@@ -125,9 +158,7 @@ def run_sql(file_path, db, first_sql):
                     if sql_command.endswith(';'):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
-
             db.session.commit()
-
         except Exception as e:
             db.session.rollback()
             raise Exception("脚本执行出差" + e.get("message"))
