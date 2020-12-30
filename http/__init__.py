@@ -11,17 +11,17 @@ def proxy(server_url):
     :param server_url:
     :return:
     """
-    url = request.url
     method = request.method
     data = request.data or request.form or None
     headers = dict()
     for name, value in request.headers:
-        if not value or name == 'Cache-Control':
+        if not value or name in ['Cache-Control']:
             continue
         headers[name] = value
 
     with closing(
             requests.request(method, urljoin(server_url, request.full_path), headers=headers, data=data,
+                             files=request.files,
                              stream=True)
     ) as r:
         resp_headers = []
