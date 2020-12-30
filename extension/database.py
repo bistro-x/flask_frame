@@ -24,7 +24,7 @@ def init_app(app):
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
     db = SQLAlchemy(app, engine_options={
-        "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30
+        "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30, "pool_pre_ping": True
     })
 
     # init_database
