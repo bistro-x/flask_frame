@@ -56,7 +56,7 @@ def init_app(app):
 
     config.setdefault(k_log_path, None)
     config.setdefault(k_log_name, "")
-    config.setdefault(k_log_format, "")
+    config.setdefault(k_log_format, "{time} {level} {message}")
     config.setdefault(k_log_enqueue, True)
     config.setdefault(k_log_serialize, False)
     config.setdefault(k_log_rotation, "12:00")
