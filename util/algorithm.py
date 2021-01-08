@@ -34,7 +34,7 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
         j = base_record[base_index]
 
         # 当前检查项为空跳过
-        if (j.get("content", "") or "").strip().lower() in ["", "unk"]:
+        if (j.get("text", "") or "").strip().lower() in ["", "unk"]:
             base_index += 1
             continue
 
