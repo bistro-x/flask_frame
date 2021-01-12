@@ -70,14 +70,10 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
     base_text = ''.join([i.get('text') if i.get('text') is not None else '' for i in base_record])
     check_text = ''.join([i.get('text') if i.get('text') is not None else '' for i in check_record_real])
 
-    result = None
-    try:
-        result = txt_compare.str_compare(str(base_text), str(check_text))
-        result["check_claus_error_num"] = check_claus_error_num  # 分句错误数
-        result["statement_num"] = len(base_record)  # 句数
-        result["check_claus_error_ratio"] = round(check_claus_error_num / (len(base_record) or 1), 4)  # 分句错误率
-    except Exception as e:
-        print(e)
+    result = txt_compare.str_compare(str(base_text), str(check_text))
+    result["check_claus_error_num"] = check_claus_error_num  # 分句错误数
+    result["statement_num"] = len(base_record)  # 句数
+    result["check_claus_error_ratio"] = round(check_claus_error_num / (len(base_record) or 1), 4)  # 分句错误率
 
     return result
 
