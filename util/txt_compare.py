@@ -199,7 +199,7 @@ def str_compare(origin_str, compare_str):
     ratio_delete = mark_different.count('D') / (length_ref or 1)
     ratio_update = mark_different.count('S') / (length_ref or 1)
 
-    length_different = int(m)
+    length_different = int(m) or 0
     accuracy = 1 - (length_different / (length_ref or 1))
 
     return {
