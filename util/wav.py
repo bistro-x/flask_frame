@@ -7,6 +7,8 @@ import ffmpeg
 import numpy as np
 from pydub import AudioSegment
 
+from frame.http.exception import ResourceError
+
 
 def get_wav_info(wav_path):
     """
@@ -153,6 +155,8 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
     :return: 转换后的wav文件路径
 
     """
+    if not os.path.exists(file_path):
+        raise ResourceError(f"{file_path}文件不存在！")
 
     # 读取数据
     temp_wave_path = os.path.join(save_path, file_name or str(time.time()) + ".wav")
@@ -164,8 +168,17 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
         else:
             stream = ffmpeg.input(file_path)
 
-        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track,
-                               bits_per_raw_sample=bits_per_raw_sample)
+        # 处理参数
+        param = {
+            "ar": audio_rate,
+            "ac": sound_track,
+            "bits_per_raw_sample": bits_per_raw_sample
+        }
+        for key in list(param.keys()):
+            if not param.get(key):
+                param.pop(key)
+
+        stream = ffmpeg.output(stream, temp_wave_path, **param)
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
         return temp_wave_path
     except ffmpeg.Error as e:
