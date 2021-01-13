@@ -179,7 +179,7 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
                 param.pop(key)
 
         stream = ffmpeg.output(stream, temp_wave_path, **param)
-        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+        ffmpeg.run(stream, overwrite_output=True, capture_stdout=True, capture_stderr=True)
         return temp_wave_path
     except ffmpeg.Error as e:
         print('stdout:', e.stdout.decode('utf8'))
