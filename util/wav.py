@@ -141,14 +141,15 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_track=None):
+def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_track=None, bits_per_raw_sample=None):
     """
-    抓换音频文件为 wave 文件
+    音频文件为 wave 文件
     :param file_path: 文件路径
     :param save_path: 保存路径
     :param file_name: 文件名
     :param audio_rate: 音频采样率
     :param sound_track: 声道信息 1就是单声道，2就是立体声
+    :param bits_per_raw_sample: 采样位数
     :return: 转换后的wav文件路径
 
     """
@@ -163,7 +164,8 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
         else:
             stream = ffmpeg.input(file_path)
 
-        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track)
+        stream = ffmpeg.output(stream, temp_wave_path, ar=audio_rate, ac=sound_track,
+                               bits_per_raw_sample=bits_per_raw_sample)
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
         return temp_wave_path
     except ffmpeg.Error as e:
