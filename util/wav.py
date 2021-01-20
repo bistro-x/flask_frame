@@ -160,26 +160,26 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
 
     # 读取数据
     temp_wave_path = os.path.join(save_path, file_name or str(time.time()) + ".wav")
-        if os.path.splitext(file_path)[-1].lower() == ".pcm":
-            stream = ffmpeg.input(file_path,
-                                  f="s16le",
-                                  ar=audio_rate)
-        else:
-            stream = ffmpeg.input(file_path)
+    if os.path.splitext(file_path)[-1].lower() == ".pcm":
+        stream = ffmpeg.input(file_path,
+                              f="s16le",
+                              ar=audio_rate)
+    else:
+        stream = ffmpeg.input(file_path)
 
-        # 处理参数
-        param = {
-            "ar": audio_rate,
-            "ac": sound_track,
-            "bits_per_raw_sample": bits_per_raw_sample
-        }
-        for key in list(param.keys()):
-            if not param.get(key):
-                param.pop(key)
+    # 处理参数
+    param = {
+        "ar": audio_rate,
+        "ac": sound_track,
+        "bits_per_raw_sample": bits_per_raw_sample
+    }
+    for key in list(param.keys()):
+        if not param.get(key):
+            param.pop(key)
 
-        stream = ffmpeg.output(stream, temp_wave_path, **param)
+    stream = ffmpeg.output(stream, temp_wave_path, **param)
     ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
-        return temp_wave_path
+    return temp_wave_path
 
 
 def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5, sound_track=1):

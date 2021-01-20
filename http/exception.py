@@ -11,7 +11,7 @@ class ResourceError(HTTPException):
 
     def __init__(self, description=None, response=None, error_code=None):
         super(ResourceError, self).__init__(description, response)
-        self.error_code = error_code
+        self.error_code = error_code or self.error_code
 
         if response and response.json:
             self.error_code = response.json.get("error_code", self.error_code)
@@ -32,6 +32,7 @@ class ResourceError(HTTPException):
     def get_headers(self, environ=None):
         """Get a list of headers."""
         return [('Content-Type', 'application/json')]
+
 
 class BusiError(HTTPException):
     """deprecated"""
