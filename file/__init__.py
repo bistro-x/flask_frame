@@ -29,4 +29,6 @@ def get_file_info(file_path):
         audio_info = get_file_info_audio(file_path)
         result = {**audio_info, **result, "type": FileType.audio}
 
-    return {**mediainfo(file_path), **result}
+    media_info = mediainfo(file_path)
+    result["framerate"] = result.get("framerate", int(media_info.get("sample_rate")))
+    return {**media_info, **result}
