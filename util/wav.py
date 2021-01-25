@@ -1,5 +1,6 @@
 # coding=utf-8
 import os
+import shutil
 import time
 import wave
 
@@ -7,6 +8,7 @@ import ffmpeg
 import numpy as np
 from pydub import AudioSegment
 
+from frame.file import get_file_info
 from frame.http.exception import ResourceError
 
 
@@ -19,6 +21,36 @@ def get_wav_info(wav_path):
         params = f.getparams()
         # print(params)
     return params
+
+
+def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=None, file_save_path=None):
+    """
+    根据音频 开始结束 进行音频切割
+    :param wave_data:
+    :param begin:
+    :param end:
+    :param nchannels:
+    :param sampwidth:
+    :param framerate:
+    :param save_path:
+    :return:
+    """
+    # print("cut_wav: %s----%s len:%s" % (begin,end,(end-begin)/16000))
+    file_name = file_save_path or os.path.join(save_path,
+                                               "%s_%s.wav" % (
+                                                   round(begin * 1000 / framerate), round(end * 1000 / framerate)))
+    temp_dataTemp = wave_data[begin:end]
+    temp_dataTemp.shape = 1, -1
+    temp_dataTemp = temp_dataTemp.astype(np.short)  # 打开WAV文档
+    with wave.open(r"" + file_name, "wb") as f:
+        # 配置声道数、量化位数和取样频率
+        f.setnchannels(nchannels)
+        f.setsampwidth(sampwidth)
+        f.setframerate(framerate)
+        # 将wav_data转换为二进制数据写入文件
+        f.writeframes(temp_dataTemp.tostring())
+
+    return file_name
 
 
 def check_wav_format(wav_path):
@@ -72,36 +104,6 @@ def cut_wav_by_length(file, save_path, length=100):
 
     # 返回
     return result
-
-
-def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=None, file_save_path=None):
-    """
-    根据音频 开始结束 进行音频切割
-    :param wave_data:
-    :param begin:
-    :param end:
-    :param nchannels:
-    :param sampwidth:
-    :param framerate:
-    :param save_path:
-    :return:
-    """
-    # print("cut_wav: %s----%s len:%s" % (begin,end,(end-begin)/16000))
-    file_name = file_save_path or os.path.join(save_path,
-                                               "%s_%s.wav" % (
-                                                   round(begin * 1000 / framerate), round(end * 1000 / framerate)))
-    temp_dataTemp = wave_data[begin:end]
-    temp_dataTemp.shape = 1, -1
-    temp_dataTemp = temp_dataTemp.astype(np.short)  # 打开WAV文档
-    with wave.open(r"" + file_name, "wb") as f:
-        # 配置声道数、量化位数和取样频率
-        f.setnchannels(nchannels)
-        f.setsampwidth(sampwidth)
-        f.setframerate(framerate)
-        # 将wav_data转换为二进制数据写入文件
-        f.writeframes(temp_dataTemp.tostring())
-
-    return file_name
 
 
 def volume_ave(arr, begin, end):
@@ -180,6 +182,34 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
     stream = ffmpeg.output(stream, temp_wave_path, **param)
     ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
     return temp_wave_path
+
+
+def wav_standardized(file_path, result_path, framerate=None):
+    """
+    根据系统要求 标准化音频
+    :param file_path:
+    :param result_path:
+    :param framerate:
+    :return:
+    """
+    import ffmpeg
+
+    if os.path.splitext(file_path)[-1].lower() == ".pcm":
+        stream = ffmpeg.input(file_path,
+                              f="s16le",
+                              ar=framerate,
+                              # todo ac 是声道数 需指定
+                              ac=1)
+        stream = ffmpeg.output(stream, result_path)
+        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
+
+    item_file_info = get_file_info(file_path)
+    if item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
+        shutil.copy(file_path, result_path)
+    else:
+        stream = ffmpeg.input(file_path)
+        stream = ffmpeg.output(stream, result_path)
+        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
 
 
 def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5, sound_track=1):
