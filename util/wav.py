@@ -204,7 +204,7 @@ def wav_standardized(file_path, result_path, framerate=None):
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
 
     item_file_info = get_file_info(file_path)
-    if item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
+    if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
         shutil.copy(file_path, result_path)
     else:
         stream = ffmpeg.input(file_path)
