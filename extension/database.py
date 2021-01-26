@@ -122,10 +122,10 @@ def update_db(db, schema, file_list):
     if lock.locked():
         return
 
-    current_app.logger.info("获取锁")
     lock.acquire()
-    current_app.logger.info("更新数据库")
-
+    if Lock.get_file_lock("update_db_end").locked():
+        return
+    
     try:
         first_sql = f"set search_path to {schema}; "
 
@@ -135,6 +135,7 @@ def update_db(db, schema, file_list):
             current_app.logger.info("run: " + file_path + " end")
 
     finally:
+        Lock.get_file_lock("update_db_end").acquire()
         lock.release()
 
 
