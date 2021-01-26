@@ -123,9 +123,9 @@ def update_db(db, schema, file_list):
         return
 
     lock.acquire()
-    if Lock.get_file_lock("update_db_end").locked():
+    if Lock.get_file_lock("update_db_end", timeout=999999).locked():
         return
-    
+
     try:
         first_sql = f"set search_path to {schema}; "
 
