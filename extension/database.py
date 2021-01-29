@@ -122,9 +122,9 @@ def update_db(db, schema, file_list):
     if lock.locked():
         return
 
-    current_app.logger.info("获取锁")
     lock.acquire()
-    current_app.logger.info("更新数据库")
+    if Lock.get_file_lock("update_db_end", timeout=999999).locked():
+        return
 
     try:
         first_sql = f"set search_path to {schema}; "
@@ -135,6 +135,7 @@ def update_db(db, schema, file_list):
             current_app.logger.info("run: " + file_path + " end")
 
     finally:
+        Lock.get_file_lock("update_db_end").acquire()
         lock.release()
 
 
@@ -162,7 +163,30 @@ def run_sql(file_path, db, first_sql):
                     if sql_command.endswith(';'):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
+
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             raise Exception("脚本执行出差" + e.get("message"))
+
+
+def sql_concat(file_path, param):
+    """
+    sql 语句拼接
+    :param file_path: 文件路径
+    :param param: 传入参数
+    :return: 返回完整的 sql 语句
+    """
+    sql_command = ""
+
+    with open(file_path) as sql_file:
+        for line in sql_file:
+            text = line.strip()
+            if text.startswith('--{'):
+                text = line.replace("--", "").format(**param)
+            elif text.startswith('--') and text:
+                continue
+
+            sql_command += " " + text
+
+    return sql_command
