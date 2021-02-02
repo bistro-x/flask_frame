@@ -42,18 +42,16 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
 
         from frame.extension.database import db
         if db:
-            db.session.commit()
+            if e:
+                db.session.rollback()
+            else:
+                db.session.commit()
             db.session.remove()
 
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
         app.logger.exception(error)
-
-        from frame.extension.database import db
-        if db:
-            db.session.rollback()
-
         if isinstance(error, BusiError):
             return error
         if isinstance(error, ResourceError):
