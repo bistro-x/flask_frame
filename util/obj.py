@@ -5,6 +5,8 @@ def attribute_copy(obj_from, obj_to, include=None, exclude=None):
             continue
         if exclude and n in exclude:
             continue
+        if n.startswith("_"):
+            continue
 
         if hasattr(obj_to, n):
             setattr(obj_to, n, v)
