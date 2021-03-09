@@ -26,3 +26,4 @@ def str_is_not_empty(str):
 
 def get_curr_time():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
