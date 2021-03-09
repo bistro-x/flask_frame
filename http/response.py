@@ -178,6 +178,6 @@ class Response(object):
 
     def get_response(self):
         if self.result:
-            return http_response_schema.dumps(self)
+            return http_response_schema.dump(self)
         else:
-            return http_response_schema.dumps(self), HTTPStatus.INTERNAL_SERVER_ERROR
+            return http_response_schema.dump(self), HTTPStatus.INTERNAL_SERVER_ERROR

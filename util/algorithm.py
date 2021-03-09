@@ -77,3 +77,29 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
 
     return result
 
+
+def get_intersection_data(check_data: list, result_data: list) -> list:
+    """
+    计算两个时间区域的交集
+    :param check_data: 标注数据
+    :param result_data: 结果数据
+    :return: 结果数据
+    """
+
+    result = list()
+    for ia in result_data:
+        for ib in check_data:
+            if ib.get("end_time") < ia.get("begin_time"):
+                continue
+            if ib.get("begin_time") > ia.get("end_time"):
+                break
+            if ia.get("begin_time") > ib.get("begin_time") and ia.get("end_time") < ib.get("end_time"):
+                result.append({"begin_time": ia.get("begin_time"), "end_time": ia.get("end_time")})
+            elif ia.get("begin_time") < ib.get("begin_time") and ia.get("end_time") > ib.get("end_time"):
+                result.append({"begin_time": ib.get("begin_time"), "end_time": ib.get("end_time")})
+            else:
+                result.append(
+                    {"begin_time": max(ia.get("begin_time"), ib.get("begin_time")),
+                     "end_time": min(ia.get("end_time"), ib.get("end_time"))})
+
+    return result

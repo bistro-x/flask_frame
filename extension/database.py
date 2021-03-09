@@ -182,7 +182,7 @@ def sql_concat(file_path, param):
     with open(file_path) as sql_file:
         for line in sql_file:
             text = line.strip()
-            if text.startswith('--{'):
+            if text.startswith('--{') and text.replace("--{", "").replace("}", "") in param.keys():
                 text = line.replace("--", "").format(**param)
             elif text.startswith('--') and text:
                 continue

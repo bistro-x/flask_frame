@@ -48,11 +48,9 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
-        app.logger.exception(error)
-
         from frame.extension.database import db
-        if db:
-            db.session.rollback()
+        db.session.rollback()
+        app.logger.exception(error)
 
         if isinstance(error, BusiError):
             return error
