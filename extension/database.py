@@ -95,9 +95,9 @@ def init_db(db, schema, file_list, version_file_list):
 
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
+
         elif version_file_list:
             #  根据版本运行更新脚本
-            version = version
             for version_file in sorted(version_file_list):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
