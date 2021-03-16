@@ -34,6 +34,9 @@ def fetch_current_user(token_string):
         return None
 
     try:
+        if not token_string:
+            return None
+
         response = requests.get(
             url=user_auth_url + "/user/current",
             headers={
