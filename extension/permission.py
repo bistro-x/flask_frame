@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+import flask
 import requests
 from authlib.integrations.flask_oauth2 import ResourceProtector
 from authlib.oauth2.rfc6750 import BearerTokenValidator
@@ -140,13 +141,11 @@ class _BearerTokenValidator(BearerTokenValidator):
 
 def get_current_user():
     """获取当前用户"""
-    global app
-    if not app:
+    if not flask.has_request_context():
         return None
 
-    with app.app_context():
-        if hasattr(g, 'current_user'):
-            return g.current_user
+    if hasattr(g, 'current_user'):
+        return g.current_user
 
     return None
 
