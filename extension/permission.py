@@ -140,8 +140,13 @@ class _BearerTokenValidator(BearerTokenValidator):
 
 def get_current_user():
     """获取当前用户"""
-    if hasattr(g, 'current_user'):
-        return g.current_user
+    global app
+    if not app:
+        return None
+
+    with app.app_context():
+        if hasattr(g, 'current_user'):
+            return g.current_user
 
     return None
 
