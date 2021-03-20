@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+import os
+
 import filetype
 from pydub.utils import mediainfo
 
@@ -16,16 +18,18 @@ def get_file_info(file_path):
     :return:
     """
     kind = filetype.guess(file_path)
+
     if kind is None:
-        print('Cannot guess file type!')
-        return
+        result = {
+            "ext": os.path.splitext(file_path)[-1].replace(".", "")
+        }
+    else:
+        result = {
+            "mimetype": kind.mime,
+            "ext": kind.extension
+        }
 
-    result = {
-        "mimetype": kind.mime,
-        "ext": kind.extension
-    }
-
-    if is_audio(kind.extension):
+    if is_audio(result.get("ext")):
         audio_info = get_file_info_audio(file_path)
         result = {**audio_info, **result, "type": FileType.audio}
 
