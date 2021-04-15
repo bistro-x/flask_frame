@@ -157,7 +157,7 @@ def run_sql(file_path, db, first_sql):
                 # Ignore commented lines
                 if not line.lstrip().startswith('--') and line.strip('\n'):
                     # Append line to the command string
-                    sql_command += " " + line.strip('\n')
+                    sql_command += " " + line
 
                     # If the command string ends with ';', it is a full statement
                     if sql_command.endswith(';'):
@@ -167,7 +167,7 @@ def run_sql(file_path, db, first_sql):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            raise Exception("脚本执行出差" + e.get("message"))
+            raise Exception("脚本执行出错" + e.get("message"))
 
 
 def sql_concat(file_path, param):
