@@ -66,7 +66,9 @@ def init_db(db, schema, file_list, version_file_list):
     :param version_file_list: 版本文件列表
     """
     lock = Lock.get_file_lock()  # 给app注入一个外部锁
+    time.sleep(random.randint(0, 3))
     lock.acquire()
+
     try:
         first_sql = f"set search_path to {schema}; "
 
