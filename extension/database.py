@@ -159,7 +159,7 @@ def run_sql(file_path, db, first_sql):
                 # Ignore commented lines
                 if not line.lstrip().startswith('--') and line.strip('\n'):
                     # Append line to the command string
-                    sql_command += " " + line
+                    sql_command += " " + line.strip('\n')
 
                     # If the command string ends with ';', it is a full statement
                     if sql_command.endswith(';'):
