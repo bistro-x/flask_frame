@@ -135,9 +135,10 @@ def update_db(db, schema, file_list):
             current_app.logger.info("run: " + file_path + " begin")
             run_sql(file_path, db, first_sql)
             current_app.logger.info("run: " + file_path + " end")
-
-    finally:
         Lock.get_file_lock("update_db_end").acquire()
+    except Exception as e:
+        current_app.logger.error(e)
+    finally:
         lock.release()
 
 
