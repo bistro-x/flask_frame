@@ -136,7 +136,7 @@ def get_ground_avg(arr, begin, end):
     audio_avg = abs_arr.sum() / abs_arr.shape[0] / 2
 
     abs_below_avg_arr = abs_arr[abs_arr < audio_avg]
-    avg_en = abs_arr.sum()
+    avg_en = abs_below_avg_arr.sum()
 
     if abs_below_avg_arr.shape[0]:
         avg_en = avg_en / abs_below_avg_arr.shape[0]
