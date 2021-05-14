@@ -186,6 +186,7 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
 def wav_standardized(file_path, result_path, framerate=None):
     """
     根据系统要求 标准化音频
+    不做任何采样率或者声道的修改，只是为了修正某些特殊情况下 无法正常读取音频的问题
     :param file_path:
     :param result_path:
     :param framerate:
