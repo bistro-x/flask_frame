@@ -46,7 +46,7 @@ def api_init(app, table_list):
         if not PermissionScope.query.filter_by(product_key=product_key, key=parent_key).first():
             db.session.add(
                 PermissionScope(product_key=product_key, name=table.get("name"),
-                                key=parent_key, parent_key="login"))
+                                key=parent_key, parent_key=product_key))
             db.session.flush()
 
         db.session.add(PermissionScopeDetail(permission_key=parent_key, permission_scope_key=parent_key))
