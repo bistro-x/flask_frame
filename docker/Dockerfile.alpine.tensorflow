@@ -1,3 +1,0 @@
-FROM server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6
-
-RUN pip3 install https://github.com/better/alpine-tensorflow/releases/download/alpine3.7-tensorflow1.7.0/tensorflow-1.7.0-cp36-cp36m-linux_x86_64.whl
