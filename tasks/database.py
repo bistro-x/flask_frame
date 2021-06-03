@@ -84,3 +84,16 @@ def api_init(app, table_list):
                                        key=record.rule[1:].replace("/", "_") + "_" + method.lower()))
 
                     db.session.commit()
+
+    # 给超级管理员授权所有权限
+    sql_superadmin = """
+        insert into user_auth.role_permission_scope(role_id, permission_scope_key, product_key)
+        select 1 as role_id, key as permission_scope_key, product_key
+        from user_auth.permission_scope
+        where (product_key, key) not in
+              (select product_key, permission_scope_key from user_auth.role_permission_scope where role_id = 1)
+        ON CONFLICT DO NOTHING;
+        commit;
+    """
+    db.session.execute(sql_superadmin)
+

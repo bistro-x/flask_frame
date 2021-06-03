@@ -28,8 +28,8 @@ http: 网络请求相关文件
 | 权限 | FETCH_USER | 是否获取用户 |
 | 权限 | CHECK_API | API接口检查 |
 
-## 数据库
-
-
 ## 权限初始化
-invoke
+生成初始化项目信息
+invoke api-init
+
+给admin做所有功能的授权
