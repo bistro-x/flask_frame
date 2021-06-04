@@ -25,7 +25,7 @@ psutil~=5.7.0
 rsa~=4.0
 sentry-sdk[flask]==0.10
 numpy~=1.18.2
-gevent~=21.1.2
+gevent~=20.4.0
 
 flask-marshmallow~=0.13.0
 
