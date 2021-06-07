@@ -311,14 +311,18 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_si
     return items, framerate
 
 
-def get_wav_dBV(wav=None, rms=None):
+def get_wav_dBV(data=None, wav=None, rms=None):
     """
     获取 wav 音频dBV分贝数
     dBV = log(rms, 10) * 20
-    :param wav: 文件路径或AudioSegment对象
-    :param rms: 音频文件rms
+    :param data: 文件文件二进制
+    :param wav : 文件路径或AudioSegment对象
+    :param rms : 音频文件rms
     :return wav 音频的dBV分贝数
     """
+    if data:
+        if isinstance(data, bytes):
+            rms = AudioSegment(data=data).rms
     if wav:
         if not isinstance(wav, AudioSegment):
             wav = AudioSegment.from_file(wav)
