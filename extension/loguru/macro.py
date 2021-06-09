@@ -20,6 +20,3 @@ k_log_serialize = "LOG_SERIALIZE"
 
 # 保存日期
 k_log_retention = "LOG_RETENTION"
-
-# 分离文件
-k_log_rotation = "LOG_ROTATION"
