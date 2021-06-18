@@ -13,8 +13,20 @@ docker build -f ./frame/docker/Dockerfile.source  .
 docker build -f ./frame/docker/Dockerfile.encrypt  .
 ```
 
+基础镜像
+```bash
+#3.6
+docker build . --force-rm=true -f ./docker/Dockerfile.alpine.3.6 -t server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6
+
+#3.8
+docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest
+```
+
 ## 文件夹文件
 http: 网络请求相关文件
+requirements.txt 框架依赖的库
+requirements_all.txt 规定使用项目用到的所有库和版本，作为基础镜像打包
+
 
 ## 配置信息
 | 分组 | 配置项 | 说明 |
