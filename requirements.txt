@@ -13,7 +13,7 @@ Authlib~=0.14.1
 marshmallow~=3.7.0
 marshmallow-sqlalchemy>=0.23.1
 
-loguru~=0.5.3
+loguru~=0.4.1
 invoke~=1.4.1
 
 gunicorn>=19.9.0
@@ -25,7 +25,7 @@ psutil~=5.7.0
 rsa~=4.0
 sentry-sdk[flask]==0.10
 numpy~=1.18.2
-gevent~=20.4.0
+gevent~=21.1.2
 
 flask-marshmallow~=0.13.0
 
