@@ -20,3 +20,15 @@ zhon~=1.1.5
 chardet~=3.0.4
 six~=1.15.0
 websocket-client~=0.57.0
+
+
+
+# rasa
+rasa-sdk~=2.0.0
+boto3==1.17.49
+Elasticsearch~=7.12.1
+minio==7.0.3
+
+celery~=4.4.6
+redis~=3.3.8
+xlrd==1.2.0
