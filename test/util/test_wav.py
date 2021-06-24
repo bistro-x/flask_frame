@@ -13,5 +13,5 @@ def test_vad_cut():
                 os.makedirs(temp_path)
 
             sub_items, framerate = vad_cut(os.path.join(path, file_name), temp_path, audio_rate=16000,
-                                           min_audio_second=0.01)
+                                           min_audio_millisecond=10)
             print("len:" + str(len(sub_items)))
