@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import string
+import cn2an
 
 from zhon import hanzi
 import re
@@ -232,3 +233,79 @@ def text_convent(text):
     # 去掉无意义符号
     return remove_punctuation(text)
 
+
+def convert_sentence_arabic_number_to_chinese(sentence):
+    """
+    对输入的句子进行分词和中文数字替换
+    使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
+    :param sentence:  待转换的句子字符串
+    """
+    from frame.extension.participle import participle_sentence
+
+    numbers = [
+        '零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'
+    ]
+
+    words = participle_sentence(sentence)
+
+    if not words:
+        return sentence
+
+    for index, word in enumerate(words):
+        if any([(n in word) for n in numbers]):
+            words[index] = convert_chinese_number_to_arabic(word)
+
+    return ''.join(words)
+
+
+def convert_chinese_number_to_arabic(word, model='smart'):
+    """
+    中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
+    :param word:   待转换的单词字符串
+    :param model:  cn2an转换模式 strict/normal/smart
+    """
+    from frame.extension.participle import participle_app
+
+    # 包含特殊子字符串用cn2an.transform处理
+    special_word = ['百分']
+
+    try:
+        if any([(w in word) for w in special_word]):
+            word = cn2an.transform(word)
+        else:
+            word = cn2an.cn2an(word, model)
+    except Exception as e:
+        if not isinstance(e, ValueError) and hasattr(participle_app, 'logger'):
+            participle_app.logger.error(f'convert word {word} except {str(e)}')
+        return word
+    else:
+        return str(word)
+
+
+def convert_arabic_number_to_chinese(word, model='low'):
+    """
+    阿拉伯数字转中文数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
+    example: 1989年 -> 一千九百八十九年  2287 -> 二千二百八十七
+    :param word:   待转换的单词字符串
+    :param model:  cn2an转换模式 low/up/rmb/direct
+    """
+    from frame.extension.participle import participle_app
+
+    number_reg_check = '\d+\.?\d*'
+
+    numbers = re.findall(number_reg_check, word)
+    numbers.sort(key=lambda x: len(x), reverse=True)
+
+    for number in numbers:
+        chinese_number = None
+        try:
+            chinese_number = cn2an.an2cn(number, model)
+        except Exception as e:
+            if not isinstance(e, ValueError) and hasattr(participle_app, 'logger'):
+                participle_app.logger.error(f'convert number {number} except {str(e)}')
+            chinese_number = number
+        finally:
+            if chinese_number != number:
+                word = word.replace(number, chinese_number)
+
+    return str(word)

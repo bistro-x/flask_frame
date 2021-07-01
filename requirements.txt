@@ -30,3 +30,5 @@ gevent~=21.1.2
 flask-marshmallow~=0.13.0
 
 pydevd-pycharm~=202.6397.94
+
+cn2an~=0.5.11
