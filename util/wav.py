@@ -213,17 +213,21 @@ def wav_standardized(file_path, result_path, framerate=None):
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_second=0.2, min_silent_second=0.5, sound_track=1):
+def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, min_silent_millisecond=500, sound_track=1):
     """
     根据音量进行断句
     :param wave_path: 音频文件
     :param save_path: 保存路径
     :param audio_rate: 音频采样率
-    :param min_audio_second: 最小语音秒数
-    :param min_silent_second: 最小间隔长度
+    :param min_audio_millisecond: 最小语音毫秒数
+    :param min_silent_millisecond: 最小间隔长度
     :param sound_track: 声道信息 1就是单声道，2就是立体声
     :return:
     """
+
+    # 单位转换
+    min_audio_second = min_audio_millisecond / 1000
+    min_silent_second = min_silent_millisecond / 1000
 
     # 读取数据
     temp_wave_path = convert_to_wav(wave_path, save_path, audio_rate=audio_rate, sound_track=sound_track)
