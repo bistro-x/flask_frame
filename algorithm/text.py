@@ -26,5 +26,5 @@ def compute_compatibility(base_text: str, text: str) -> int:
     结算文本相似度
     """
 
-    return compute_edit_distance(base_text, text) / max(
+    return 1 - compute_edit_distance(base_text, text) / max(
         len(base_text), len(text))
