@@ -234,7 +234,7 @@ def text_convent(text):
     return remove_punctuation(text)
 
 
-def convert_sentence_arabic_number_to_chinese(sentence):
+def convert_sentence_chinese_number_to_arabic(sentence):
     """
     对输入的句子进行分词和中文数字替换
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
@@ -256,6 +256,24 @@ def convert_sentence_arabic_number_to_chinese(sentence):
             words[index] = convert_chinese_number_to_arabic(word)
 
     return ''.join(words)
+
+
+def convert_sentence_arabic_number_to_chinese(sentence):
+    """
+    对输入的句子进行分词和阿拉伯数字替换
+    使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
+    :param sentence:  待转换的句子字符串
+    """
+    from frame.extension.participle import participle_sentence
+
+    words = participle_sentence(sentence)
+
+    if not words:
+        return sentence
+
+    converted_words = [convert_arabic_number_to_chinese(word) for word in words]
+
+    return ''.join(converted_words)
 
 
 def convert_chinese_number_to_arabic(word, model='smart'):
