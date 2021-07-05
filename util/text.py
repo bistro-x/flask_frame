@@ -310,7 +310,7 @@ def convert_chinese_number_to_arabic(word):
             if all([(w in pure_digital) for w in word]):
                 converted_word = ''.join([cn2an_convert(w, 'cn2an') or w for w in word])
             else:
-                converted_word = cn2an_convert(word, 'transform') or word
+                converted_word = cn2an_convert(word, 'cn2an', 'smart') or cn2an_convert(word, 'transform') or word
         return converted_word
 
 
