@@ -243,7 +243,7 @@ def convert_sentence_chinese_number_to_arabic(sentence):
     from frame.extension.participle import participle_sentence
 
     numbers = [
-        '零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'
+        '零', '一', '二', '两', '三', '四', '五', '六', '七', '八', '九', '十'
     ]
 
     words = participle_sentence(sentence)
@@ -253,6 +253,7 @@ def convert_sentence_chinese_number_to_arabic(sentence):
 
     for index, word in enumerate(words):
         if any([(n in word) for n in numbers]):
+            word = word.replace('两', '二')
             words[index] = convert_chinese_number_to_arabic(word)
 
     return ''.join(words)
@@ -276,7 +277,7 @@ def convert_sentence_arabic_number_to_chinese(sentence):
     return ''.join(converted_words)
 
 
-def convert_chinese_number_to_arabic(word, model='smart'):
+def convert_chinese_number_to_arabic(word):
     """
     中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     :param word:   待转换的单词字符串
@@ -284,20 +285,33 @@ def convert_chinese_number_to_arabic(word, model='smart'):
     """
     from frame.extension.participle import participle_app
 
+    def cn2an_convert(target, method, method_model=None):
+        try:
+            func = getattr(cn2an, method)
+            result = func(target, method_model) if method_model else func(target)
+        except Exception as error:
+            if not isinstance(error, ValueError) and hasattr(participle_app, 'logger'):
+                participle_app.logger.error(f'convert word {word} except {str(error)}')
+            return None
+        else:
+            return str(result)
+
     # 包含特殊子字符串用cn2an.transform处理
     special_word = ['百分']
+    pure_digital = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
 
-    try:
-        if any([(w in word) for w in special_word]):
-            word = cn2an.transform(word)
-        else:
-            word = cn2an.cn2an(word, model)
-    except Exception as e:
-        if not isinstance(e, ValueError) and hasattr(participle_app, 'logger'):
-            participle_app.logger.error(f'convert word {word} except {str(e)}')
-        return word
+    # strict模式无法处理的情况下, 如果是纯数字的单词对词中每个字单独处理后拼接, 否则使用transform模式处理
+    if any([(w in word) for w in special_word]):
+        converted_word = cn2an_convert(word, 'transform')
+        return converted_word or word
     else:
-        return str(word)
+        converted_word = cn2an_convert(word, 'cn2an', 'strict')
+        if not converted_word:
+            if all([(w in pure_digital) for w in word]):
+                converted_word = ''.join([cn2an_convert(w, 'cn2an') or w for w in word])
+            else:
+                converted_word = cn2an_convert(word, 'transform') or word
+        return converted_word
 
 
 def convert_arabic_number_to_chinese(word, model='low'):
