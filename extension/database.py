@@ -156,16 +156,23 @@ def run_sql(file_path, db, first_sql):
     with open(file_path) as sql_file:
         try:
             # Iterate over all lines in the sql file
+            function_start = False  # mean read function
+            
             for line in sql_file:
+                # function start
+                if line.lstrip().contain("$$"):
+                    function_start = True
+            
                 # Ignore commented lines
-                if not line.lstrip().startswith('--') and line.strip('\n'):
+                elif not line.lstrip().startswith('--') and line.strip('\n'):
                     # Append line to the command string
                     sql_command += " " + line.strip('\n')
 
                     # If the command string ends with ';', it is a full statement
-                    if sql_command.endswith(';'):
+                    if (not function_start and sql_command.endswith(';')) or sql_command.endswith('$$;'):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
+                        function_start = False
 
             db.session.commit()
         except Exception as e:
