@@ -160,11 +160,11 @@ def run_sql(file_path, db, first_sql):
             
             for line in sql_file:
                 # function start
-                if line.lstrip().contain("$$"):
+                if "$$" in line.lstrip():
                     function_start = True
             
                 # Ignore commented lines
-                elif not line.lstrip().startswith('--') and line.strip('\n'):
+                if not line.lstrip().startswith('--') and line.strip('\n'):
                     # Append line to the command string
                     sql_command += " " + line.strip('\n')
 
@@ -177,7 +177,7 @@ def run_sql(file_path, db, first_sql):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            raise Exception("脚本执行出错" + e.get("message"))
+            raise Exception("脚本执行出错" + str(e))
 
 
 def sql_concat(file_path, param):
