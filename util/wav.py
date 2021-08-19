@@ -203,14 +203,14 @@ def wav_standardized(file_path, result_path, framerate=None):
                               ac=1)
         stream = ffmpeg.output(stream, result_path)
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
-
-    item_file_info = get_file_info(file_path)
-    if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
-        shutil.copy(file_path, result_path)
     else:
-        stream = ffmpeg.input(file_path)
-        stream = ffmpeg.output(stream, result_path)
-        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
+        item_file_info = get_file_info(file_path)
+        if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
+            shutil.copy(file_path, result_path)
+        else:
+            stream = ffmpeg.input(file_path)
+            stream = ffmpeg.output(stream, result_path)
+            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
 
 
 def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, min_silent_millisecond=500, sound_track=1):

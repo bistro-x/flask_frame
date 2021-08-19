@@ -35,6 +35,7 @@ def get_file_info(file_path):
         audio_info = get_file_info_audio(file_path)
         result = {**audio_info, **result, "type": FileType.audio}
 
-        result["framerate"] = result.get("framerate", int(media_info.get("sample_rate")))
+        result["framerate"] = result.get("framerate") or media_info.get("sample_rate") or None
+        result["framerate"] = int(result["framerate"]) if result["framerate"] else result["framerate"]
 
     return {**media_info, **result}
