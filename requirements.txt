@@ -17,14 +17,14 @@ loguru~=0.4.1
 invoke~=1.4.1
 
 gunicorn>=19.9.0
-pandas==1.0.3
+pandas~=1.2.4
 filetype~=1.0.7
 
 # todo need chech to delete
 psutil~=5.7.0
 rsa~=4.0
 sentry-sdk[flask]==0.10
-numpy~=1.18.2
+numpy~=1.21.2
 gevent~=21.1.2
 
 flask-marshmallow~=0.13.0
