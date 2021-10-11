@@ -44,17 +44,14 @@ def fetch_current_user(token_string):
                 "Authorization": "Bearer {token_string}".format(token_string=token_string),
             },
         )
-        print('Response HTTP Status Code: {status_code}'.format(
-            status_code=response.status_code))
-        print('Response HTTP Response Body: {content}'.format(
-            content=response.content))
         return response.json()
     except requests.exceptions.RequestException as e:
         app.logger.error(e)
-        print('HTTP Request failed')
 
 
 def license_check():
+    global app
+
     user_auth_url = app.config.get("USER_AUTH_URL")
     if not user_auth_url or app.config.get("LICENSE_CHECK") is False:
         return True
@@ -65,15 +62,11 @@ def license_check():
                 "product_key": app.config.get("PRODUCT_KEY")
             }
         )
-        print('Response HTTP Status Code: {status_code}'.format(
-            status_code=response.status_code))
-        print('Response HTTP Response Body: {content}'.format(
-            content=response.content))
         if not response.ok:
             abort(HTTPStatus.UNAUTHORIZED, response.json())
 
-    except requests.exceptions.RequestException:
-        print('HTTP Request failed')
+    except requests.exceptions.RequestException as e:
+        app.logger.error(e)
 
 
 def config_oauth(app):
