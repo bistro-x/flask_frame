@@ -2,6 +2,7 @@ import json
 import os
 import random
 import time
+from itertools import zip_longest
 
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
@@ -57,6 +58,20 @@ def init_app(app):
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
 
+def compare_version(version1: str, version2: str) -> int:
+    """
+    版本号管理
+    :param version1: 版本1
+    :param version2: 版本2
+    :return: 版本距离
+    """
+    for v1, v2 in zip_longest(version1.split('.'), version2.split('.'), fillvalue=0):
+        x, y = int(v1), int(v2)
+        if x != y:
+            return 1 if x > y else -1
+    return 0
+
+
 def init_db(db, schema, file_list, version_file_list):
     """
     初始化数据库到当前
@@ -105,7 +120,7 @@ def init_db(db, schema, file_list, version_file_list):
                 (current_version, extension) = os.path.splitext(temp_file_name)
 
                 # 小于当前版本 不执行
-                if float(current_version) <= float(version):
+                if compare_version(version, current_version) < 1:
                     continue
                 run_sql(version_file, db, first_sql)
     finally:
@@ -157,12 +172,12 @@ def run_sql(file_path, db, first_sql):
         try:
             # Iterate over all lines in the sql file
             function_start = False  # mean read function
-            
+
             for line in sql_file:
                 # function start
                 if "$$" in line.lstrip():
                     function_start = True
-            
+
                 # Ignore commented lines
                 if not line.lstrip().startswith('--') and line.strip('\n'):
                     # Append line to the command string
