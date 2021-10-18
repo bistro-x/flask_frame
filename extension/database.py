@@ -105,7 +105,7 @@ def init_db(db, schema, file_list, version_file_list):
                 (current_version, extension) = os.path.splitext(temp_file_name)
 
                 # 小于当前版本 不执行
-                if current_version <= version:
+                if float(current_version) <= float(version):
                     continue
                 run_sql(version_file, db, first_sql)
     finally:
