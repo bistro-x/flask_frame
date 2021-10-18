@@ -65,11 +65,18 @@ def compare_version(version1: str, version2: str) -> int:
     :param version2: 版本2
     :return: 版本距离
     """
+    version1 = version1.split("/")[-1]
+
     for v1, v2 in zip_longest(version1.split('.'), version2.split('.'), fillvalue=0):
         x, y = int(v1), int(v2)
         if x != y:
             return 1 if x > y else -1
     return 0
+
+
+def file_compare_version(file1: str, file2: str) -> int:
+    return compare_version(os.path.splitext(os.path.split(file1)[1])[0],
+                           os.path.splitext(os.path.split(file2)[1])[0])
 
 
 def init_db(db, schema, file_list, version_file_list):
@@ -115,7 +122,7 @@ def init_db(db, schema, file_list, version_file_list):
 
         elif version_file_list:
             #  根据版本运行更新脚本
-            for version_file in sorted(version_file_list, key=functools.cmp_to_key(compare_version)):
+            for version_file in sorted(version_file_list, key=functools.cmp_to_key(file_compare_version)):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
 
