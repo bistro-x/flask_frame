@@ -3,7 +3,7 @@ import os
 import random
 import time
 from itertools import zip_longest
-
+import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
@@ -60,7 +60,7 @@ def init_app(app):
 
 def compare_version(version1: str, version2: str) -> int:
     """
-    版本号管理
+    版本号管理 版本1 - 版本2
     :param version1: 版本1
     :param version2: 版本2
     :return: 版本距离
@@ -115,12 +115,12 @@ def init_db(db, schema, file_list, version_file_list):
 
         elif version_file_list:
             #  根据版本运行更新脚本
-            for version_file in sorted(version_file_list):
+            for version_file in sorted(version_file_list, key=functools.cmp_to_key(compare_version)):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
 
                 # 小于当前版本 不执行
-                if compare_version(version, current_version) < 1:
+                if compare_version(current_version, version) < 1:
                     continue
                 run_sql(version_file, db, first_sql)
     finally:
