@@ -21,7 +21,7 @@ def participle_sentence(sentence):
     global participle_app, participle_service_url
 
     if not participle_app or not participle_service_url:
-        raise ValueError("participle module not inited")
+        raise []
 
     try:
         response = requests.post(
