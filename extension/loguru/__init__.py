@@ -1,35 +1,47 @@
 # -*- coding: utf-8 -*-
-
-# sys
 import logging
 import os
 
-# 3p
 from loguru import logger
 
 
 def _set_logger(app, config):
     # project
     from .compress import zip_logs
-    from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_retention
-    from .macro import k_log_rotation, k_log_serialize
-    """ Config logru
-    """
+    from .macro import (
+        k_log_path, k_log_name, k_log_enqueue, k_log_format,
+        k_log_retention, k_log_rotation, k_log_serialize, k_log_level
+    )
+
     path = config[k_log_name]
     if config[k_log_path] is not None:
         path = os.path.join(config[k_log_path], config[k_log_name])
 
-    logger.add(path, format=config[k_log_format],
-               enqueue=config[k_log_enqueue], serialize=config[k_log_serialize],
+    app.logger.setLevel(config[k_log_level] or "ERROR")
+
+    logger.add(path,
+               format=config[k_log_format],
+               enqueue=config[k_log_enqueue],
+               serialize=config[k_log_serialize],
                rotation=config[k_log_rotation],
                retention=config[k_log_retention])
 
     class InterceptHandler(logging.Handler):
+
         def emit(self, record):
-            if hasattr(record, "levelno") and record.levelno >= 40:
-                logger.exception(record.getMessage())
-            else:
-                logger.log(record.levelname, record.getMessage())
+            # Get corresponding Loguru level if it exists
+            try:
+                level = logger.level(record.levelname).name
+            except ValueError:
+                level = record.levelno
+
+            # Find caller from where originated the logged message
+            frame, depth = logging.currentframe(), 2
+            while frame.f_code.co_filename == logging.__file__:
+                frame = frame.f_back
+                depth += 1
+
+            logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
     gunicorn_logger = logging.getLogger('gunicorn.error')
     app.logger.handlers = gunicorn_logger.handlers
@@ -43,10 +55,11 @@ def _set_logger(app, config):
 def init_app(app):
     # project
     from .compress import zip_logs
-    from .macro import k_log_path, k_log_name, k_log_enqueue, k_log_format, k_log_retention
-    from .macro import k_log_rotation, k_log_serialize
-    """This is used to initialize logger with your app object
-    """
+    from .macro import (
+        k_log_path, k_log_name, k_log_enqueue, k_log_format,
+        k_log_retention, k_log_rotation, k_log_serialize
+    )
+
     config = {
         "LOG_PATH": "./log",
         "LOG_NAME": "{time:YYYY-MM-DD}.log"
