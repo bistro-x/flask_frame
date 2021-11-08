@@ -133,7 +133,8 @@ def get_ground_avg(arr, begin, end):
     """
 
     # audio_avg 数组绝对值和的平均值 / 2
-    valid_arr = arr[arr > 0]  # 有效音频，有音量
+    no_valid_avg = arr.sum() / arr.shape[0] / 20  # 无效段落的平均
+    valid_arr = arr[arr > no_valid_avg]  # 有效音频，有音量
     valid_arr = abs(valid_arr[begin: end])
     audio_avg = valid_arr.sum() / valid_arr.shape[0] / 2  # 一半的音频大小
     abs_below_avg_arr = valid_arr[valid_arr < audio_avg]  # 小音量数据
@@ -207,7 +208,8 @@ def wav_standardized(file_path, result_path, framerate=None):
         ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
     else:
         item_file_info = get_file_info(file_path)
-        if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get("sample_rate") == str(framerate):
+        if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get(
+                "sample_rate") == str(framerate):
             shutil.copy(file_path, result_path)
         else:
             stream = ffmpeg.input(file_path)
@@ -215,7 +217,8 @@ def wav_standardized(file_path, result_path, framerate=None):
             ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, min_silent_millisecond=500, sound_track=1):
+def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, min_silent_millisecond=500,
+            sound_track=1):
     """
     根据音量进行断句
     :param wave_path: 音频文件
