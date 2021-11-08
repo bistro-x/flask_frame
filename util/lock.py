@@ -27,7 +27,7 @@ class FileLock(object):
         else:
             lock_dir = './'
 
-        self.file = '%s%s%s' % (lock_dir, os.sep, lock_file)
+        self.file = os.path.join(lock_dir, lock_file)
         self.timeout = timeout
         self._fn = None
 
