@@ -131,7 +131,7 @@ def get_ground_avg(arr, begin, end):
     :param end: 结束位置
     :return: 底噪音调
     """
-    handle_data = abs(arr[begin, end])
+    handle_data = abs(arr[begin: end])
     no_valid_avg = handle_data[begin: end].sum() / handle_data.shape[0] / 100  # 无效段落的平均
 
     valid_arr = handle_data[handle_data > no_valid_avg]  # 有效音频，有音量
