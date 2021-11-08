@@ -133,15 +133,17 @@ def get_ground_avg(arr, begin, end):
     """
 
     # audio_avg 数组绝对值和的平均值 / 2
-    abs_arr = abs(arr[begin: end])
-    audio_avg = abs_arr.sum() / abs_arr.shape[0] / 2
+    valid_arr = arr[arr > 0]  # 有效音频，有音量
+    valid_arr = abs(valid_arr[begin: end])
+    audio_avg = valid_arr.sum() / valid_arr.shape[0] / 2  # 一半的音频大小
+    abs_below_avg_arr = valid_arr[valid_arr < audio_avg]  # 小音量数据
 
-    abs_below_avg_arr = abs_arr[abs_arr < audio_avg]
-    avg_en = abs_below_avg_arr.sum()
-
+    # 取得小音量的平均值
+    avg_en = 0
     if abs_below_avg_arr.shape[0]:
-        avg_en = avg_en / abs_below_avg_arr.shape[0]
+        avg_en = abs_below_avg_arr.sum() / abs_below_avg_arr.shape[0]
 
+    # 返回
     return avg_en
 
 
