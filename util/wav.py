@@ -131,11 +131,12 @@ def get_ground_avg(arr, begin, end):
     :param end: 结束位置
     :return: 底噪音调
     """
+    handle_data = abs(arr[begin, end])
+    no_valid_avg = handle_data[begin: end].sum() / handle_data.shape[0] / 100  # 无效段落的平均
 
-    # audio_avg 数组绝对值和的平均值 / 2
-    no_valid_avg = arr.sum() / arr.shape[0] / 20  # 无效段落的平均
-    valid_arr = arr[arr > no_valid_avg]  # 有效音频，有音量
-    valid_arr = abs(valid_arr[begin: end])
+    valid_arr = handle_data[handle_data > no_valid_avg]  # 有效音频，有音量
+    valid_arr = valid_arr[begin: end]
+
     audio_avg = valid_arr.sum() / valid_arr.shape[0] / 2  # 一半的音频大小
     abs_below_avg_arr = valid_arr[valid_arr < audio_avg]  # 小音量数据
 
@@ -248,8 +249,6 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, m
     except wave.Error as e:  # parent of IOError, OSError *and* WindowsError where available
         message = "vad_cut file: " + wave_path + "  error: " + str(e)
         raise Exception(message)
-
-        return None, None
 
     # 切断
     items = []
