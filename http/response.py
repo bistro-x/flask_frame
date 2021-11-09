@@ -3,6 +3,7 @@ from datetime import date, time
 from datetime import datetime as cdatetime  # 有时候会返回datatime类型
 from http import HTTPStatus
 
+import flask
 from flask import jsonify
 from flask_sqlalchemy import Model
 from marshmallow import fields, post_dump, INCLUDE
@@ -54,6 +55,7 @@ class JsonResult:
         result = {"total": page.total, "list": items}
         return jsonify(result)
 
+
 @deprecated
 def queryToDict(models):
     if (isinstance(models, list)):
@@ -91,6 +93,7 @@ def result_to_dict(results):
         data_chg(r)
     return res
 
+
 @deprecated
 def model_to_dict(model):  # 这段来自于参考资源
     for col in model.__table__.columns:
@@ -106,6 +109,7 @@ def model_to_dict(model):  # 这段来自于参考资源
             value = getattr(model, col.name)
         yield (col.name, value)
 
+
 @deprecated
 def data_chg(value):
     for v in value:
@@ -113,6 +117,7 @@ def data_chg(value):
             value[v] = convert_datetime(value[v])  # 这里原理类似，修改的字典对象，不用返回即可修改
         elif isinstance(value[v], decimal.Decimal):
             value[v] = float(value[v])
+
 
 @deprecated
 def convert_datetime(value):
@@ -155,8 +160,9 @@ http_response_schema = HttpResponseSchema()
 class Response(object):
     """返回对应"""
 
-    def __init__(self, result=True, data=None, code=0, message="操作成功", provider_code=0, task_id=None, response_time=None,
-                 service_id=None):
+    def __init__(self, result=True, data=None, code=0, message="操作成功", provider_code=0, task_id=None,
+                 response_time=None,
+                 service_id=None, headers=None):
         """
         构造函数
         :param result:
@@ -164,6 +170,7 @@ class Response(object):
         :param code:
         :param message:
         :param service_id: 服务ID
+        :param headers: 文件报头
         :param kwargs:
         """
 
@@ -175,9 +182,28 @@ class Response(object):
         self.provider_code = provider_code
         self.message = message  # 说明信息
         self.response_time = response_time
+        self.headers = headers
 
+    @deprecated
     def get_response(self):
+        """
+        使用上会有些问题，尽量使用 create_flask_response 来替代
+        :return:
+        """
         if self.result:
             return http_response_schema.dump(self)
         else:
             return http_response_schema.dump(self), HTTPStatus.INTERNAL_SERVER_ERROR
+
+    def mark_flask_response(self) -> flask.Response:
+        """
+        创建flask相关的返回对象
+        :return:
+        """
+        response = flask.make_response(jsonify(http_response_schema.dump(self)),
+                                       HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR)
+        # 定义报头
+        response.headers = {**response.headers, **(self.headers or {})}
+
+        # 返回
+        return response
