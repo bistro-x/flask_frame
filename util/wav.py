@@ -24,7 +24,16 @@ def get_wav_info(wav_path):
     return params
 
 
-def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=None, file_save_path=None):
+def cut_wav(
+    wave_data,
+    begin,
+    end,
+    nchannels,
+    sampwidth,
+    framerate,
+    save_path=None,
+    file_save_path=None,
+):
     """
     根据音频 开始结束 进行音频切割
     :param wave_data:
@@ -37,9 +46,10 @@ def cut_wav(wave_data, begin, end, nchannels, sampwidth, framerate, save_path=No
     :return:
     """
     # print("cut_wav: %s----%s len:%s" % (begin,end,(end-begin)/16000))
-    file_name = file_save_path or os.path.join(save_path,
-                                               "%s_%s.wav" % (
-                                                   round(begin * 1000 / framerate), round(end * 1000 / framerate)))
+    file_name = file_save_path or os.path.join(
+        save_path,
+        "%s_%s.wav" % (round(begin * 1000 / framerate), round(end * 1000 / framerate)),
+    )
     temp_dataTemp = wave_data[begin:end]
     temp_dataTemp.shape = 1, -1
     temp_dataTemp = temp_dataTemp.astype(np.short)  # 打开WAV文档
@@ -95,13 +105,32 @@ def cut_wav_by_length(file, save_path, length=100):
 
         # 切割
         while end_time < len(wave_data):
-            result.append(cut_wav(wave_data, begin_time, end_time, nchannels, sampwidth, framerate, save_path))
+            result.append(
+                cut_wav(
+                    wave_data,
+                    begin_time,
+                    end_time,
+                    nchannels,
+                    sampwidth,
+                    framerate,
+                    save_path,
+                )
+            )
             begin_time = end_time + 1
             end_time = begin_time + interval
 
         # 最后一段
         result.append(
-            cut_wav(wave_data, begin_time, len(wave_data), nchannels, sampwidth, framerate, save_path))
+            cut_wav(
+                wave_data,
+                begin_time,
+                len(wave_data),
+                nchannels,
+                sampwidth,
+                framerate,
+                save_path,
+            )
+        )
 
     # 返回
     return result
@@ -131,7 +160,7 @@ def get_ground_avg(arr, begin, end):
     :param end: 结束位置
     :return: 底噪音调
     """
-    handle_data = abs(arr[begin: end])
+    handle_data = abs(arr[begin:end])
     no_valid_avg = handle_data.sum() / handle_data.shape[0] / 100  # 无效段落的平均
 
     valid_arr = handle_data[handle_data > no_valid_avg]  # 有效音频，有音量
@@ -148,7 +177,14 @@ def get_ground_avg(arr, begin, end):
     return avg_en
 
 
-def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_track=None, bits_per_raw_sample=None):
+def convert_to_wav(
+    file_path,
+    save_path,
+    file_name=None,
+    audio_rate=None,
+    sound_track=None,
+    bits_per_raw_sample=None,
+):
     """
     音频文件为 wave 文件
     :param file_path: 文件路径
@@ -166,9 +202,7 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
     # 读取数据
     temp_wave_path = os.path.join(save_path, file_name or str(time.time()) + ".wav")
     if os.path.splitext(file_path)[-1].lower() == ".pcm":
-        stream = ffmpeg.input(file_path,
-                              f="s16le",
-                              ar=audio_rate)
+        stream = ffmpeg.input(file_path, f="s16le", ar=audio_rate)
     else:
         stream = ffmpeg.input(file_path)
 
@@ -176,7 +210,7 @@ def convert_to_wav(file_path, save_path, file_name=None, audio_rate=None, sound_
     param = {
         "ar": audio_rate,
         "ac": sound_track,
-        "bits_per_raw_sample": bits_per_raw_sample
+        "bits_per_raw_sample": bits_per_raw_sample,
     }
     for key in list(param.keys()):
         if not param.get(key):
@@ -199,26 +233,41 @@ def wav_standardized(file_path, result_path, framerate=None):
     import ffmpeg
 
     if os.path.splitext(file_path)[-1].lower() == ".pcm":
-        stream = ffmpeg.input(file_path,
-                              f="s16le",
-                              ar=framerate,
-                              # todo ac 是声道数 需指定
-                              ac=1)
+        stream = ffmpeg.input(
+            file_path,
+            f="s16le",
+            ar=framerate,
+            # todo ac 是声道数 需指定
+            ac=1,
+        )
         stream = ffmpeg.output(stream, result_path)
-        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
+        ffmpeg.run(
+            stream, capture_stdout=True, capture_stderr=True, overwrite_output=True
+        )
     else:
         item_file_info = get_file_info(file_path)
-        if item_file_info and item_file_info.get("codec_name") == "pcm_s16le" and item_file_info.get(
-                "sample_rate") == str(framerate):
+        if (
+            item_file_info
+            and item_file_info.get("codec_name") == "pcm_s16le"
+            and item_file_info.get("sample_rate") == str(framerate)
+        ):
             shutil.copy(file_path, result_path)
         else:
             stream = ffmpeg.input(file_path)
             stream = ffmpeg.output(stream, result_path)
-            ffmpeg.run(stream, capture_stdout=True, capture_stderr=True, overwrite_output=True)
+            ffmpeg.run(
+                stream, capture_stdout=True, capture_stderr=True, overwrite_output=True
+            )
 
 
-def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, min_silent_millisecond=500,
-            sound_track=1):
+def vad_cut(
+    wave_path,
+    save_path,
+    audio_rate=16000,
+    min_audio_millisecond=200,
+    min_silent_millisecond=500,
+    sound_track=1,
+):
     """
     根据音量进行断句
     :param wave_path: 音频文件
@@ -235,7 +284,9 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, m
     min_silent_second = min_silent_millisecond / 1000
 
     # 读取数据
-    temp_wave_path = convert_to_wav(wave_path, save_path, audio_rate=audio_rate, sound_track=sound_track)
+    temp_wave_path = convert_to_wav(
+        wave_path, save_path, audio_rate=audio_rate, sound_track=sound_track
+    )
 
     # 切割
     try:
@@ -259,7 +310,9 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, m
 
     silent_length = 0
     while current_check + interval_step < wave_data.shape[0]:
-        interval_avg = volume_ave(wave_data, current_check, current_check + interval_step)  # 平均音量
+        interval_avg = volume_ave(
+            wave_data, current_check, current_check + interval_step
+        )  # 平均音量
 
         # 音频大于1秒，并且底噪大于音量的80%
         if ground_avg > interval_avg * 0.5 and file_obj.duration_seconds > 2:
@@ -273,10 +326,19 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, m
             silent_second = silent_length / framerate  # 静默秒数
 
             # 说话段落
-            if end and ((end - start) / framerate) >= min_audio_second and silent_second >= min_silent_second:
-                path = cut_wav(wave_data, start, end, nchannels, sampwidth, framerate, save_path)
-                item = {"begin_time": int(start * 1000 / framerate),
-                        "end_time": int(end * 1000 / framerate), "path": path}
+            if (
+                end
+                and ((end - start) / framerate) >= min_audio_second
+                and silent_second >= min_silent_second
+            ):
+                path = cut_wav(
+                    wave_data, start, end, nchannels, sampwidth, framerate, save_path
+                )
+                item = {
+                    "begin_time": int(start * 1000 / framerate),
+                    "end_time": int(end * 1000 / framerate),
+                    "path": path,
+                }
                 items.append(item)
                 start = None
                 end = None
@@ -307,12 +369,16 @@ def vad_cut(wave_path, save_path, audio_rate=16000, min_audio_millisecond=200, m
     # 结尾
     end = wave_data.shape[0]
     if start is not None and (end - start) / framerate > min_audio_second:
-        path = cut_wav(wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path)
-        item = {"begin_time": int(start * 1000 / framerate),
-                "end_time": int(
-                    end * 1000 / framerate) if end / framerate < file_obj.duration_seconds else int(
-                    file_obj.duration_seconds * 1000),
-                "path": path}
+        path = cut_wav(
+            wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path
+        )
+        item = {
+            "begin_time": int(start * 1000 / framerate),
+            "end_time": int(end * 1000 / framerate)
+            if end / framerate < file_obj.duration_seconds
+            else int(file_obj.duration_seconds * 1000),
+            "path": path,
+        }
         items.append(item)
 
     return items, framerate

@@ -1,8 +1,8 @@
 import os
 import time
 
-WINDOWS = 'windows'
-LINUX = 'linux'
+WINDOWS = "windows"
+LINUX = "linux"
 SYSTEM = None
 
 try:
@@ -15,17 +15,17 @@ except:
 
 class Lock(object):
     @staticmethod
-    def get_file_lock(lock_file='FLASK_LOCK', timeout=600):
+    def get_file_lock(lock_file="FLASK_LOCK", timeout=600):
         return FileLock(lock_file, timeout)
 
 
 class FileLock(object):
-    def __init__(self, lock_file='FLASK_LOCK', timeout=600):
+    def __init__(self, lock_file="FLASK_LOCK", timeout=600):
 
         if SYSTEM == WINDOWS:
-            lock_dir = os.environ['tmp']
+            lock_dir = os.environ["tmp"]
         else:
-            lock_dir = './'
+            lock_dir = "./"
 
         self.file = os.path.join(lock_dir, lock_file)
         self.timeout = timeout
@@ -46,12 +46,12 @@ class FileLock(object):
                 time.sleep(0.01)  # wait 10ms
                 continue
 
-            with open(self.file, 'w') as f:
-                f.write('1')
+            with open(self.file, "w") as f:
+                f.write("1")
         else:
-            self._fn = open(self.file, 'w')
+            self._fn = open(self.file, "w")
             fcntl.flock(self._fn.fileno(), fcntl.LOCK_EX)
-            self._fn.write('1')
+            self._fn.write("1")
 
     def release(self):
         """释放锁"""
