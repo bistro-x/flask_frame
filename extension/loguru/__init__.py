@@ -20,6 +20,7 @@ def _set_logger(app, config):
     app.logger.setLevel(config[k_log_level] or "ERROR")
 
     logger.add(path,
+               level=(config[k_log_level] or "ERROR"),
                format=config[k_log_format],
                enqueue=config[k_log_enqueue],
                serialize=config[k_log_serialize],
@@ -57,7 +58,7 @@ def init_app(app):
     from .compress import zip_logs
     from .macro import (
         k_log_path, k_log_name, k_log_enqueue, k_log_format,
-        k_log_retention, k_log_rotation, k_log_serialize
+        k_log_retention, k_log_rotation, k_log_serialize, k_log_level
     )
 
     config = {
@@ -65,8 +66,7 @@ def init_app(app):
         "LOG_NAME": "{time:YYYY-MM-DD}.log"
     }
 
-    config.update(app.config)
-
+    config.setdefault(k_log_level, "ERROR")
     config.setdefault(k_log_path, None)
     config.setdefault(k_log_name, "")
     config.setdefault(k_log_format, "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> "
@@ -77,5 +77,7 @@ def init_app(app):
     config.setdefault(k_log_serialize, False)
     config.setdefault(k_log_rotation, "12:00")
     config.setdefault(k_log_retention, "30 days")
+
+    config.update(app.config)
 
     _set_logger(app, config)
