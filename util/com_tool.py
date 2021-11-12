@@ -7,6 +7,7 @@ import hashlib
 import os
 import time
 import zipfile
+
 # 常用函数，时间格式，文件读写等。
 from shutil import move, rmtree
 
@@ -15,7 +16,7 @@ from shutil import move, rmtree
 
 
 def get_curr_date():
-    curr_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # 日期格式化
+    curr_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # 日期格式化
     return curr_date
 
 
@@ -53,9 +54,11 @@ def unzip_file(src_file, dest_dir, password=None):
                 file_path_final = file_path
 
                 try:
-                    file_path_final = file_path.encode('cp437').decode('utf-8', errors='strict')
+                    file_path_final = file_path.encode("cp437").decode(
+                        "utf-8", errors="strict"
+                    )
                 except:
-                    file_path_final = file_path.encode('cp437').decode('gbk', 'ignore')
+                    file_path_final = file_path.encode("cp437").decode("gbk", "ignore")
             except:
                 pass
 
@@ -87,7 +90,7 @@ def zip_dir(dirpath, outFullName):
     zip = zipfile.ZipFile(outFullName, "w", zipfile.ZIP_DEFLATED)
     for path, dirnames, filenames in os.walk(dirpath):
         # 去掉目标跟路径，只对目标文件夹下边的文件及文件夹进行压缩
-        fpath = path.replace(dirpath, '')
+        fpath = path.replace(dirpath, "")
 
         for filename in filenames:
             zip.write(os.path.join(path, filename), os.path.join(fpath, filename))
@@ -129,15 +132,14 @@ def url_join(par_url, sub_url):
 
 
 # 获取md5代码
-def get_MD5_code(str):
+def get_md5_code(str):
     hash_md5 = hashlib.md5()
     # 计算
-    str = str.encode('utf-8', errors='ignore')
-    hash_md5.update(str)
+    text = str.encode("utf-8", errors="ignore")
+    hash_md5.update(text)
     # 获取计算结果(16进制字符串，32位字符)
     md5_str = hash_md5.hexdigest()
-    # 打印结果
-    # print(md5_str)
+
     return md5_str
 
 
@@ -165,5 +167,5 @@ def if_null(arg1, arg2):
         return arg2
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(from_base64("asdfad"))
