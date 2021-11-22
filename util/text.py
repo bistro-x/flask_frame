@@ -8,28 +8,37 @@ import re
 
 def tel_convert(sentences):
     """电话转换"""
-    telRegex = re.compile(r'''(
+    telRegex = re.compile(
+        r"""(
         (\d{3}|\(\d{3}\))?              # area code
         (\s|-|\.)?                      # separator
         (\d{3})                         # first 3 digits
         (\s|-|\.)                       # separator
         (\d{4})                         # last 4 digits
         (\s*(ext|x|ext\.)\s*(\d{2,5}))? # extension
-        )''', re.VERBOSE)
+        )""",
+        re.VERBOSE,
+    )
 
-    telRegex2 = re.compile(r'''(
+    telRegex2 = re.compile(
+        r"""(
         (\d{4}|\(\d{4}\))?              # area code
         (\s|-|\.)?                      # separator
         (\d{4})                         # first 3 digits
         (\s|-|\.)                       # separator
         (\d{4})                         # last 4 digits
-        )''', re.VERBOSE)
+        )""",
+        re.VERBOSE,
+    )
 
-    telRegex3 = re.compile(r'''(
+    telRegex3 = re.compile(
+        r"""(
         (?<=\D)1
         [34789]
         (\d{9})
-    )''', re.VERBOSE)
+    )""",
+        re.VERBOSE,
+    )
 
     phone_find = telRegex3.findall(sentences)
     for groups in phone_find:
@@ -56,9 +65,28 @@ def number_convert(num):
     if not num or not isinstance(num, int):
         return digital_convert(num)
     mapping = (
-        '零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七',
-        '十八', '十九')
-    po = ('十', '百', '千', "万")
+        "零",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十",
+        "十一",
+        "十二",
+        "十三",
+        "十四",
+        "十五",
+        "十六",
+        "十七",
+        "十八",
+        "十九",
+    )
+    po = ("十", "百", "千", "万")
     tenM = 10 ** 8
     if num < 0 or num >= tenM:
         return digital_convert(str(num))
@@ -71,7 +99,7 @@ def number_convert(num):
             num = num / 10
         lst.append(num)
         c = len(lst)  # 位数
-        result = u''
+        result = ""
 
         for idx, val in enumerate(lst):
             val = int(val)
@@ -79,21 +107,27 @@ def number_convert(num):
             if val != 0:
                 result += mapping[val] if idx == 0 else po[true_idx - 1] + mapping[val]
                 if idx < c - 1 and lst[idx + 1] == 0:
-                    result += u'零'
+                    result += "零"
         return result[::-1]
 
 
 def stock_code_convert(sentences):
     """股票代码转换"""
-    stockRegex = re.compile(r'''
+    stockRegex = re.compile(
+        r"""
     [\(|（]|[代码]
     \d{6}
     [\)|）]?
-    ''', re.VERBOSE)
-    stockRegex2 = re.compile(r'''
+    """,
+        re.VERBOSE,
+    )
+    stockRegex2 = re.compile(
+        r"""
     (?<=[\D])0
     \d{5}
-    ''', re.VERBOSE)
+    """,
+        re.VERBOSE,
+    )
     stock_find = stockRegex.findall(sentences)
     for groups in stock_find:
         sentences = sentences.replace(groups, digital_convert(groups))
@@ -105,12 +139,15 @@ def stock_code_convert(sentences):
 
 def email_convert(sentences):
     """邮箱转换"""
-    emailRegex = re.compile(r'''(
+    emailRegex = re.compile(
+        r"""(
         [a-zA-Z0-9._%+-]+
         @
         [a-zA-Z0-9.-]+
         (\.[a-zA-Z]{2,4})
-    )''', re.VERBOSE)
+    )""",
+        re.VERBOSE,
+    )
 
     email_find = emailRegex.findall(sentences)
     for groups in email_find:
@@ -123,9 +160,18 @@ def email_convert(sentences):
 
 def punctuation_convert(sentences):
     """替换掉没有歧义的符号"""
-    return sentences.replace("+", "加", -1).replace("*ST", "星号ST", -1).replace("*键", "星号键", -1).replace("*", "星", -1) \
-        .replace("#键", "井号键", -1).replace("#", "井", -1).replace(".", "点", -1).replace("$", "美元", -1) \
-        .replace("¥", "人民币", -1).replace("=", "等于", -1)
+    return (
+        sentences.replace("+", "加", -1)
+        .replace("*ST", "星号ST", -1)
+        .replace("*键", "星号键", -1)
+        .replace("*", "星", -1)
+        .replace("#键", "井号键", -1)
+        .replace("#", "井", -1)
+        .replace(".", "点", -1)
+        .replace("$", "美元", -1)
+        .replace("¥", "人民币", -1)
+        .replace("=", "等于", -1)
+    )
 
 
 def remove_punctuation(sentences):
@@ -141,7 +187,8 @@ def remove_punctuation(sentences):
 
 def time_convert(sentences):
     """时间替换"""
-    timeRegex = re.compile(r'''(
+    timeRegex = re.compile(
+        r"""(
         ((?<=[\D])\d{4}|^\d{4})?
         (\s|\/|[年])?
         ((?<=\D)\d{1,2})
@@ -154,18 +201,22 @@ def time_convert(sentences):
         (\s|:|[分])?
         (\d{1,2})?
         ([秒])?
-    )''', re.VERBOSE)
+    )""",
+        re.VERBOSE,
+    )
 
     mapping = ("", "年", "月", "日", "时", "分", "秒")
 
-    result = u''
+    result = ""
     time_find = timeRegex.findall(sentences)
     for groups in time_find:
         for idx, group in enumerate(groups):
             if not group or idx == 0:
                 continue
             if idx % 2 == 1:
-                result += digital_convert(group) if idx == 1 else number_convert(int(group))
+                result += (
+                    digital_convert(group) if idx == 1 else number_convert(int(group))
+                )
             else:
                 result += mapping[int(idx / 2)]
         sentences = sentences.replace(groups[0], result, -1)
@@ -175,13 +226,16 @@ def time_convert(sentences):
 
 def percent_convent(sentences):
     """百分比替换"""
-    percentRegex = re.compile(r'''(
+    percentRegex = re.compile(
+        r"""(
         (\d+)
         (\.\d+)?
         %
-    )''', re.VERBOSE)
+    )""",
+        re.VERBOSE,
+    )
     percent_find = percentRegex.findall(sentences)
-    result = u'百分之'
+    result = "百分之"
     for groups in percent_find:
         result += number_convert(int(groups[1]))
         if groups[2]:
@@ -192,18 +246,19 @@ def percent_convent(sentences):
 
 
 def hyphen_convent(sentences):
-    hyphenRegex = re.compile(r'''(
+    hyphenRegex = re.compile(
+        r"""(
            (\d?|[年月日时分秒点])
            -
            (\d?|[一二三四五六七八九十])
-       )''', re.VERBOSE)
+       )""",
+        re.VERBOSE,
+    )
     hyphen_find = hyphenRegex.findall(sentences)
     for groups in hyphen_find:
-        sentences = sentences.replace(groups[0],
-                                      str(groups[0]).replace("-", "到"))
+        sentences = sentences.replace(groups[0], str(groups[0]).replace("-", "到"))
         if groups[2]:
-            sentences = sentences.replace(groups[2],
-                                          number_convert(int(groups[2])))
+            sentences = sentences.replace(groups[2], number_convert(int(groups[2])))
     return sentences
 
 
@@ -226,7 +281,7 @@ def text_convent(text):
     # 替换掉没有歧义的符号
     text = punctuation_convert(text)
 
-    numbers = re.compile(r'\d+').findall(text)
+    numbers = re.compile(r"\d+").findall(text)
     for number in numbers:
         text = text.replace(number, number_convert(int(number)))
 
@@ -242,9 +297,7 @@ def convert_sentence_chinese_number_to_arabic(sentence):
     """
     from frame.extension.participle import participle_sentence
 
-    numbers = [
-        '零', '一', '二', '两', '三', '四', '五', '六', '七', '八', '九', '十'
-    ]
+    numbers = ["零", "一", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
 
     words = participle_sentence(sentence)
 
@@ -253,10 +306,10 @@ def convert_sentence_chinese_number_to_arabic(sentence):
 
     for index, word in enumerate(words):
         if any([(n in word) for n in numbers]):
-            word = word.replace('两', '二')
+            word = word.replace("两", "二")
             words[index] = convert_chinese_number_to_arabic(word)
 
-    return ''.join(words)
+    return "".join(words)
 
 
 def convert_sentence_arabic_number_to_chinese(sentence):
@@ -274,7 +327,7 @@ def convert_sentence_arabic_number_to_chinese(sentence):
 
     converted_words = [convert_arabic_number_to_chinese(word) for word in words]
 
-    return ''.join(converted_words)
+    return "".join(converted_words)
 
 
 def convert_chinese_number_to_arabic(word):
@@ -290,31 +343,35 @@ def convert_chinese_number_to_arabic(word):
             func = getattr(cn2an, method)
             result = func(target, method_model) if method_model else func(target)
         except Exception as error:
-            if not isinstance(error, ValueError) and hasattr(participle_app, 'logger'):
-                participle_app.logger.error(f'convert word {word} except {str(error)}')
+            if not isinstance(error, ValueError) and hasattr(participle_app, "logger"):
+                participle_app.logger.error(f"convert word {word} except {str(error)}")
             return None
         else:
             return str(result)
 
     # 包含特殊子字符串用cn2an.transform处理
-    special_word = ['百分']
-    pure_digital = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+    special_word = ["百分"]
+    pure_digital = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
 
     # strict模式无法处理的情况下, 如果是纯数字的单词对词中每个字单独处理后拼接, 否则使用transform模式处理
     if any([(w in word) for w in special_word]):
-        converted_word = cn2an_convert(word, 'transform')
+        converted_word = cn2an_convert(word, "transform")
         return converted_word or word
     else:
-        converted_word = cn2an_convert(word, 'cn2an', 'strict')
+        converted_word = cn2an_convert(word, "cn2an", "strict")
         if not converted_word:
             if all([(w in pure_digital) for w in word]):
-                converted_word = ''.join([cn2an_convert(w, 'cn2an') or w for w in word])
+                converted_word = "".join([cn2an_convert(w, "cn2an") or w for w in word])
             else:
-                converted_word = cn2an_convert(word, 'cn2an', 'smart') or cn2an_convert(word, 'transform') or word
+                converted_word = (
+                    cn2an_convert(word, "cn2an", "smart")
+                    or cn2an_convert(word, "transform")
+                    or word
+                )
         return converted_word
 
 
-def convert_arabic_number_to_chinese(word, model='low'):
+def convert_arabic_number_to_chinese(word, model="low"):
     """
     阿拉伯数字转中文数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     example: 1989年 -> 一千九百八十九年  2287 -> 二千二百八十七
@@ -323,7 +380,7 @@ def convert_arabic_number_to_chinese(word, model='low'):
     """
     from frame.extension.participle import participle_app
 
-    number_reg_check = '\d+\.?\d*'
+    number_reg_check = "\d+\.?\d*"
 
     numbers = re.findall(number_reg_check, word)
     numbers.sort(key=lambda x: len(x), reverse=True)
@@ -333,8 +390,8 @@ def convert_arabic_number_to_chinese(word, model='low'):
         try:
             chinese_number = cn2an.an2cn(number, model)
         except Exception as e:
-            if not isinstance(e, ValueError) and hasattr(participle_app, 'logger'):
-                participle_app.logger.error(f'convert number {number} except {str(e)}')
+            if not isinstance(e, ValueError) and hasattr(participle_app, "logger"):
+                participle_app.logger.error(f"convert number {number} except {str(e)}")
             chinese_number = number
         finally:
             if chinese_number != number:
