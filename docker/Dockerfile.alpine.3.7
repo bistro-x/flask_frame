@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.10
 
 ENV PYTHONUNBUFFERED=1
 ENV API_SERVER_HOME=/opt/www
@@ -15,7 +15,7 @@ ARG INCLUDE_POSTGRESQL=false
 ARG INCLUDE_UWSGI=false
 
 
-RUN  echo 'https://mirrors.aliyun.com/alpine/v3.11/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.11/community/' >>/etc/apk/repositories
+RUN  echo 'https://mirrors.aliyun.com/alpine/v3.10/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.10/community/' >>/etc/apk/repositories
 
 RUN  echo "**** install Python ****" && \
     apk add --no-cache python3 && \

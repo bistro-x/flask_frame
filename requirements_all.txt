@@ -21,7 +21,8 @@ chardet~=3.0.4
 six~=1.15.0
 websocket-client~=0.57.0
 
-
+beautifulsoup4~=4.9.3
+pycryptodome~=3.10.1
 
 # rasa
 rasa-sdk~=2.0.0
