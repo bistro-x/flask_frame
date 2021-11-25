@@ -25,7 +25,7 @@ beautifulsoup4~=4.9.3
 pycryptodome~=3.10.1
 
 # rasa
-rasa-sdk~=2.0.0
+rasa-sdk~=2.8.1
 boto3==1.17.49
 Elasticsearch~=7.12.1
 minio==7.0.3
