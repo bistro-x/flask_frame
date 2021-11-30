@@ -1,2 +1,3 @@
 ./test/data_tmp
 nohup.out
+__pycache__
