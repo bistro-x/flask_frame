@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import sys
 
 from loguru import logger
 
@@ -24,6 +25,9 @@ def _set_logger(app, config):
         path = os.path.join(config[k_log_path], config[k_log_name])
 
     app.logger.setLevel(config[k_log_level] or "ERROR")
+
+    logger.remove()
+    logger.add(sys.stdout, format="{time:YYYY-MM-DD hh:mm:ss.SSSSSS} - {message}")
 
     logger.add(
         path,
