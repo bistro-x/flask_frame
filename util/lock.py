@@ -3,20 +3,14 @@ import time
 
 WINDOWS = "windows"
 LINUX = "linux"
-SYSTEM = None
+SYSTEM = WINDOWS
 
 try:
     import fcntl
 
     SYSTEM = LINUX
-except:
-    SYSTEM = WINDOWS
-
-
-class Lock(object):
-    @staticmethod
-    def get_file_lock(lock_file="FLASK_LOCK", timeout=600):
-        return FileLock(lock_file, timeout)
+finally:
+    ...
 
 
 class FileLock(object):
@@ -62,8 +56,8 @@ class FileLock(object):
             if self._fn:
                 try:
                     self._fn.close()
-                except:
-                    pass
+                finally:
+                    ...
 
             if os.path.exists(self.file):
                 os.remove(self.file)

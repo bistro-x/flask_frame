@@ -7,7 +7,7 @@ import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
-from frame.util.lock import Lock
+from frame.extension.lock import Lock
 
 db = None
 db_schema = "public"
