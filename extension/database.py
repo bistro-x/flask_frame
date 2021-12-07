@@ -164,11 +164,13 @@ def update_db(db, schema, file_list):
 
     # 判断服务实例本地是否有文件锁
     if Lock.get_file_lock("had-update-db", timeout=999999).locked():
+        current_app.logger.info("had update db file lock locked")
         return
 
     # 查询是否有分布式锁
     if Lock.lock_type() == "redis_lock" and get_lock("had-update-db").locked():
         # 如果有分布式进程在执行 当前进程添加文件锁
+        current_app.logger.info("had update db redis lock locked")
         Lock.get_file_lock("had-update-db", timeout=999999).acquire()
         return
 

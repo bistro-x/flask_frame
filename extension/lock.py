@@ -15,6 +15,7 @@ def init_app(app):
     if app.config.get("REDIS_URL"):
         redis_client = redis.from_url(app.config.get("REDIS_URL"))
         lock_type = "redis_lock"
+        app.logger.info("extension.lock use redis lock")
 
 
 class Lock:
