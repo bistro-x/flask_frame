@@ -7,7 +7,7 @@ import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
-from frame.extension.lock import Lock
+from .lock import get_lock, Lock
 
 db = None
 db_schema = "public"
@@ -28,9 +28,15 @@ def init_app(app):
     if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
         db = SQLAlchemy(app)
     else:
-        db = SQLAlchemy(app, engine_options={
-            "json_serializer": json_dumps, "pool_size": 20, "max_overflow": 30, "pool_pre_ping": True
-        })
+        db = SQLAlchemy(
+            app,
+            engine_options={
+                "json_serializer": json_dumps,
+                "pool_size": 20,
+                "max_overflow": 30,
+                "pool_pre_ping": True,
+            },
+        )
 
     # init_database
     auto_update = app.config.get("AUTO_UPDATE", False)
@@ -53,7 +59,8 @@ def init_app(app):
         """
         schema base model
         """
-        __table_args__ = {'extend_existing': True, 'schema': db_schema}
+
+        __table_args__ = {"extend_existing": True, "schema": db_schema}
 
     db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
@@ -67,7 +74,7 @@ def compare_version(version1: str, version2: str) -> int:
     """
     version1 = version1.split("/")[-1]
 
-    for v1, v2 in zip_longest(version1.split('.'), version2.split('.'), fillvalue=0):
+    for v1, v2 in zip_longest(version1.split("."), version2.split("."), fillvalue=0):
         x, y = int(v1), int(v2)
         if x != y:
             return 1 if x > y else -1
@@ -75,8 +82,10 @@ def compare_version(version1: str, version2: str) -> int:
 
 
 def file_compare_version(file1: str, file2: str) -> int:
-    return compare_version(os.path.splitext(os.path.split(file1)[1])[0],
-                           os.path.splitext(os.path.split(file2)[1])[0])
+    return compare_version(
+        os.path.splitext(os.path.split(file1)[1])[0],
+        os.path.splitext(os.path.split(file2)[1])[0],
+    )
 
 
 def init_db(db, schema, file_list, version_file_list):
@@ -87,7 +96,7 @@ def init_db(db, schema, file_list, version_file_list):
     :param file_list: 文件列表
     :param version_file_list: 版本文件列表
     """
-    lock = Lock.get_file_lock()  # 给app注入一个外部锁
+    lock = get_lock("init-db")  # 给app注入一个外部锁
     time.sleep(random.randint(0, 3))
     lock.acquire()
 
@@ -95,16 +104,19 @@ def init_db(db, schema, file_list, version_file_list):
         first_sql = f"set search_path to {schema}; "
 
         schema_exist = db.engine.execute(
-            f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'").fetchone()
+            f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'"
+        ).fetchone()
 
         # 获取版本
         version = None
         if schema_exist:
             table_exist = db.engine.execute(
-                f"select *  from pg_tables where tablename='param' and schemaname='{schema}'").fetchone()
+                f"select *  from pg_tables where tablename='param' and schemaname='{schema}'"
+            ).fetchone()
             if table_exist:
                 version = db.engine.execute(
-                    first_sql + "select value from param where key='version';").fetchone()
+                    first_sql + "select value from param where key='version';"
+                ).fetchone()
             if version:
                 version = version[0]
 
@@ -122,7 +134,9 @@ def init_db(db, schema, file_list, version_file_list):
 
         elif version_file_list:
             #  根据版本运行更新脚本
-            for version_file in sorted(version_file_list, key=functools.cmp_to_key(file_compare_version)):
+            for version_file in sorted(
+                version_file_list, key=functools.cmp_to_key(file_compare_version)
+            ):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
 
@@ -136,28 +150,43 @@ def init_db(db, schema, file_list, version_file_list):
 
 def update_db(db, schema, file_list):
     """
-   初始化数据库到当前
-   :param db: 数据库实例
-   :param schema: schema
-   :param file_list: 文件列表
-   """
-    lock = Lock.get_file_lock("update_db")
+    初始化数据库到当前
+    :param db: 数据库实例
+    :param schema: schema
+    :param file_list: 文件列表
+    """
+    lock = get_lock("update-db")
     time.sleep(random.randint(0, 3))
     if lock.locked():
         return
 
     lock.acquire()
-    if Lock.get_file_lock("update_db_end", timeout=999999).locked():
+
+    # 判断服务实例本地是否有文件锁
+    if Lock.get_file_lock("had-update-db", timeout=999999).locked():
+        return
+
+    # 查询是否有分布式锁
+    if Lock.lock_type() == "redis_lock" and get_lock("had-update-db").locked():
+        # 如果有分布式进程在执行 当前进程添加文件锁
+        Lock.get_file_lock("had-update-db", timeout=999999).acquire()
         return
 
     try:
         first_sql = f"set search_path to {schema}; "
 
         for file_path in file_list:
-            current_app.logger.info("run: " + file_path + " begin")
+            current_app.logger.info(f"{os.getpid()} run: " + file_path + " begin")
             run_sql(file_path, db, first_sql)
-            current_app.logger.info("run: " + file_path + " end")
-        Lock.get_file_lock("update_db_end").acquire()
+            current_app.logger.info(f"{os.getpid()} run: " + file_path + " end")
+
+        # 添加分布式锁
+        if Lock.lock_type() == "redis_lock":
+            get_lock("had-update-db", timeout=600).acquire()
+
+        # 任何锁方式都添加文件锁
+        Lock.get_file_lock("had-update-db", timeout=999999).acquire()
+
     except Exception as e:
         current_app.logger.error(e)
     finally:
@@ -174,7 +203,7 @@ def run_sql(file_path, db, first_sql):
     # Create an empty command string
     db.session.execute(first_sql)
 
-    sql_command = ''
+    sql_command = ""
     with open(file_path) as sql_file:
         try:
             # Iterate over all lines in the sql file
@@ -186,12 +215,14 @@ def run_sql(file_path, db, first_sql):
                     function_start = True
 
                 # Ignore commented lines
-                if not line.lstrip().startswith('--') and line.strip('\n'):
+                if not line.lstrip().startswith("--") and line.strip("\n"):
                     # Append line to the command string
-                    sql_command += " " + line.strip('\n')
+                    sql_command += " " + line.strip("\n")
 
                     # If the command string ends with ';', it is a full statement
-                    if (not function_start and sql_command.endswith(';')) or sql_command.endswith('$$;'):
+                    if (
+                        not function_start and sql_command.endswith(";")
+                    ) or sql_command.endswith("$$;"):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
                         function_start = False
@@ -214,9 +245,12 @@ def sql_concat(file_path, param):
     with open(file_path) as sql_file:
         for line in sql_file:
             text = line.strip()
-            if text.startswith('--{') and text.replace("--{", "").replace("}", "") in param.keys():
+            if (
+                text.startswith("--{")
+                and text.replace("--{", "").replace("}", "") in param.keys()
+            ):
                 text = line.replace("--", "").format(**param)
-            elif text.startswith('--') and text:
+            elif text.startswith("--") and text:
                 continue
 
             sql_command += " " + text
