@@ -158,6 +158,7 @@ def update_db(db, schema, file_list):
     lock = get_lock("update-db")
     time.sleep(random.randint(0, 3))
     if lock.locked():
+        current_app.logger.info(f"worker: {os.getpid()} detect update-db locked")
         return
 
     lock.acquire()
@@ -178,9 +179,9 @@ def update_db(db, schema, file_list):
         first_sql = f"set search_path to {schema}; "
 
         for file_path in file_list:
-            current_app.logger.info(f"{os.getpid()} run: " + file_path + " begin")
+            current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " begin")
             run_sql(file_path, db, first_sql)
-            current_app.logger.info(f"{os.getpid()} run: " + file_path + " end")
+            current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " end")
 
         # 添加分布式锁
         if Lock.lock_type() == "redis_lock":
@@ -188,6 +189,8 @@ def update_db(db, schema, file_list):
 
         # 任何锁方式都添加文件锁
         Lock.get_file_lock("had-update-db", timeout=999999).acquire()
+
+        current_app.logger.info(f"worker: {os.getpid()} executed update db")
 
     except Exception as e:
         current_app.logger.error(e)
