@@ -63,3 +63,7 @@ requirements.txt 框架依赖的库
 invoke api-init
 
 给 admin 做所有功能的授权
+
+
+## 使用
+请求在url参数中加入profile=true可进入调试模式。

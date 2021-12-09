@@ -19,15 +19,20 @@ def proxy_request(method="GET", url="", headers=None, **kwargs):
     send_headers = {}
     if headers:
         send_headers = {h[0]: h[1] for h in headers}
-        send_headers['Authorization'] = None
+        send_headers["Authorization"] = None
 
-    response = requests.request(method=method, url=server_url + url, headers=send_headers, **kwargs)
+    response = requests.request(
+        method=method, url=server_url + url, headers=send_headers, **kwargs
+    )
     return response
 
 
 def proxy_response(response):
-    headers = {key: response.headers.get(key) for key in response.headers if
-               key not in ['Transfer-Encoding', 'Content-Encoding', 'Content-Location']}
+    headers = {
+        key: response.headers.get(key)
+        for key in response.headers
+        if key not in ["Transfer-Encoding", "Content-Encoding", "Content-Location"]
+    }
     return response.content, response.status_code, headers
 
 
@@ -48,7 +53,9 @@ def proxy():
     if request.data:
         other_param["json"] = request.json
 
-    response = proxy_request(request.method, request.full_path, request.headers, **other_param)
+    response = proxy_request(
+        request.method, request.full_path, request.headers, **other_param
+    )
 
     return proxy_response(response)
 

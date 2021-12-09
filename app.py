@@ -2,8 +2,9 @@ import os
 from http import HTTPStatus
 
 import flask
-from flask import Flask
+from flask import Flask, g, make_response
 from flask import request
+from pyinstrument import Profiler
 
 from config import config
 from frame.http.exception import BusiError, ResourceError
@@ -20,15 +21,18 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     app = Flask(__name__, root_path=os.getcwd())
 
     # 初始化app
-    config_name = flask_config_name if flask_config_name else os.getenv('FLASK_CONFIG', "default")
+    config_name = (
+        flask_config_name if flask_config_name else os.getenv("FLASK_CONFIG", "default")
+    )
     app.config.from_object(config[config_name])
     if config_custom:
         app.config = {**app.config, **config_custom}
 
     # 加载配置文件
-    os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
+    os.environ["AUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     from . import extension
+
     extension.init_app(app)
 
     @app.errorhandler(404)
@@ -41,6 +45,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     def teardown(e):
 
         from frame.extension.database import db
+
         if db:
             db.session.commit()
             db.session.remove()
@@ -49,6 +54,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     @app.errorhandler(Exception)
     def exception_handle(error):
         from frame.extension.database import db
+
         db.session.rollback()
         app.logger.exception(error)
 
@@ -59,24 +65,44 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
         elif hasattr(error, "description") and hasattr(error, "code"):
             return flask.jsonify(error.description), error.code
         else:
-            return flask.jsonify(
-                {"message": str(error), "code": HTTPStatus.INTERNAL_SERVER_ERROR}), HTTPStatus.INTERNAL_SERVER_ERROR
+            return (
+                flask.jsonify(
+                    {"message": str(error), "code": HTTPStatus.INTERNAL_SERVER_ERROR}
+                ),
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
 
-    @app.route('/', methods=['GET'])
+    @app.route("/", methods=["GET"])
     def index():
         return "app is running"
 
-    @app.route('/debug-sentry')
+    @app.route("/debug-sentry")
     def trigger_error():
         division_by_zero = 1 / 0
+
+    @app.before_request
+    def before_request():
+        if "profile" in request.args:
+            g.profiler = Profiler()
+            g.profiler.start()
+
+    @app.after_request
+    def after_request(response):
+        if not hasattr(g, "profiler"):
+            return response
+        g.profiler.stop()
+        output_html = g.profiler.output_html()
+        return make_response(output_html)
 
     return app
 
 
 # remote debug
-pycharm_ip = os.environ.get('PYCHARM_IP')
-pycharm_port = os.environ.get('PYCHARM_PORT')
+pycharm_ip = os.environ.get("PYCHARM_IP")
+pycharm_port = os.environ.get("PYCHARM_PORT")
 if pycharm_ip:
     import pydevd_pycharm
 
-    pydevd_pycharm.settrace(pycharm_ip, port=int(pycharm_port), stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace(
+        pycharm_ip, port=int(pycharm_port), stdoutToServer=True, stderrToServer=True
+    )
