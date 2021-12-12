@@ -12,7 +12,6 @@ ffmpeg-python~=0.2.0
 natsort~=7.0.1
 
 pydub~=0.24.1
-celery~=4.4.6
 redis~=3.3.8
 aiohttp==3.6.2
 zhon~=1.1.5
@@ -30,7 +29,7 @@ boto3==1.17.49
 Elasticsearch~=7.12.1
 minio==7.0.3
 
-celery~=4.4.6
+celery~=5.2.1
 redis~=3.3.8
 xlrd==1.2.0
 
