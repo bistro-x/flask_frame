@@ -52,7 +52,9 @@ def init_app(app):
 
         # 更新开发脚本
         update_file_list = app.config.get("DB_UPDATE_FILE")
-        if update_file_list:
+        update_file_switch = app.config.get("DB_UPDATE_FILE", False)
+
+        if update_file_list and update_file_switch:
             update_db(db, db_schema, update_file_list)
 
     class BaseModel:
@@ -134,6 +136,7 @@ def init_db(db, schema, file_list, version_file_list):
 
         elif version_file_list:
             #  根据版本运行更新脚本
+            update_db_sign = False  # 数据库更新脚本执行标志
             for version_file in sorted(
                 version_file_list, key=functools.cmp_to_key(file_compare_version)
             ):
@@ -143,7 +146,17 @@ def init_db(db, schema, file_list, version_file_list):
                 # 小于当前版本 不执行
                 if compare_version(current_version, version) < 1:
                     continue
+
                 run_sql(version_file, db, first_sql)
+                update_db_sign = True
+
+            # 在版本更新的时候去更新脚本
+            if update_db_sign:
+                update_file_list = current_app.config.get("DB_UPDATE_FILE")
+                update_file_switch = current_app.config.get("DB_UPDATE_FILE", False)
+
+                if update_file_list and not update_file_switch:
+                    update_db(db, db_schema, update_file_list)
     finally:
         lock.release()
 
@@ -179,7 +192,9 @@ def update_db(db, schema, file_list):
         first_sql = f"set search_path to {schema}; "
 
         for file_path in file_list:
-            current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " begin")
+            current_app.logger.info(
+                f"worker: {os.getpid()} run: " + file_path + " begin"
+            )
             run_sql(file_path, db, first_sql)
             current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " end")
 
