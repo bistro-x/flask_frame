@@ -153,7 +153,7 @@ def init_db(db, schema, file_list, version_file_list):
             # 在版本更新的时候去更新脚本
             if update_db_sign:
                 update_file_list = current_app.config.get("DB_UPDATE_FILE")
-                update_file_switch = current_app.config.get("DB_UPDATE_FILE", False)
+                update_file_switch = current_app.config.get("DB_UPDATE_SWITCH", False)
 
                 if update_file_list and not update_file_switch:
                     update_db(db, db_schema, update_file_list)
