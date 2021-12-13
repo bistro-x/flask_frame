@@ -52,7 +52,7 @@ def init_app(app):
 
         # 更新开发脚本
         update_file_list = app.config.get("DB_UPDATE_FILE")
-        update_file_switch = app.config.get("DB_UPDATE_FILE", False)
+        update_file_switch = app.config.get("DB_UPDATE_SWITCH", False)
 
         if update_file_list and update_file_switch:
             update_db(db, db_schema, update_file_list)
