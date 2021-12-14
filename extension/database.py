@@ -32,9 +32,11 @@ def init_app(app):
             app,
             engine_options={
                 "json_serializer": json_dumps,
+                "pool_recycle": 1200,
                 "pool_size": 20,
                 "max_overflow": 30,
                 "pool_pre_ping": True,
+                "pool_use_lifo": True
             },
         )
 
@@ -138,7 +140,7 @@ def init_db(db, schema, file_list, version_file_list):
             #  根据版本运行更新脚本
             update_db_sign = False  # 数据库更新脚本执行标志
             for version_file in sorted(
-                version_file_list, key=functools.cmp_to_key(file_compare_version)
+                    version_file_list, key=functools.cmp_to_key(file_compare_version)
             ):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
@@ -241,7 +243,7 @@ def run_sql(file_path, db, first_sql):
 
                     # If the command string ends with ';', it is a full statement
                     if (
-                        not function_start and sql_command.endswith(";")
+                            not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
@@ -266,8 +268,8 @@ def sql_concat(file_path, param):
         for line in sql_file:
             text = line.strip()
             if (
-                text.startswith("--{")
-                and text.replace("--{", "").replace("}", "") in param.keys()
+                    text.startswith("--{")
+                    and text.replace("--{", "").replace("}", "") in param.keys()
             ):
                 text = line.replace("--", "").format(**param)
             elif text.startswith("--") and text:
