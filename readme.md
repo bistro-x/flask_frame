@@ -57,6 +57,7 @@ requirements.txt 框架依赖的库
 | 数据库 | DB_INIT_FILE            | 数据库初始化脚本                                                |
 | 数据库 | DB_VERSION_FILE         | 数据库迭代脚本（根据版本更新）                                  |
 | 数据库 | DB_UPDATE_FILE          | 数据库开发脚本（本次启动运行）                                  |
+| 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开则每次创建运行，关则必须有版本更新才会调用）            |
 | 权限   | FETCH_USER              | 是否获取用户                                                    |
 | 权限   | CHECK_API               | API 接口检查                                                    |
 
