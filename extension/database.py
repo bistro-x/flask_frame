@@ -28,6 +28,12 @@ def init_app(app):
     if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
         db = SQLAlchemy(app)
     else:
+        engine_options_env = {}
+        if app.config.get("DB_POOL_SIZE"):
+            engine_options_env["pool_size"] = app.config.get("DB_POOL_SIZE")
+        if app.config.get("DB_MAX_OVERFLOW"):
+            engine_options_env["max_overflow"] = app.config.get("DB_MAX_OVERFLOW")
+
         db = SQLAlchemy(
             app,
             engine_options={
@@ -36,8 +42,7 @@ def init_app(app):
                 "pool_size": 5,
                 "max_overflow": 30,
                 "pool_pre_ping": True,
-                "pool_use_lifo": True,
-                **app.config.get("DB_ENGINE_OPTIONS", {}),
+                **engine_options_env,
             },
         )
 
