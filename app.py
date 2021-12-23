@@ -2,12 +2,13 @@ import os
 from http import HTTPStatus
 
 import flask
-from flask import Flask, g, make_response
+from flask import Flask, g, make_response, send_file
 from flask import request
 from pyinstrument import Profiler
 
 from config import config
 from frame.http.exception import BusiError, ResourceError
+from frame.util.file import zip_path
 
 
 def create_app(flask_config_name=None, config_custom=None, **kwargs):
@@ -79,6 +80,29 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     @app.route("/debug-sentry")
     def trigger_error():
         division_by_zero = 1 / 0
+
+    @app.route("/flask/log")
+    def get_log_list():
+        from flask import json
+
+        def get_file(path):
+            result = []
+            for path, dir_list, file_list in os.walk("log"):
+                for file_name in file_list:
+                    result.append(os.path.join(path, file_name))
+                for dir_name in dir_list:
+                    result = result + get_file(os.path.join(path, dir_name))
+
+            return result
+
+        result = get_file("log")
+        return json.dumps(result)
+
+    @app.route("/flask/log/download", methods=["GET"])
+    def get_zip_download():
+        zip_file_path = "log.zip"
+        zip_path("log", zip_file_path)
+        return make_response(send_file(zip_file_path, as_attachment=True))
 
     @app.before_request
     def before_request():

@@ -71,3 +71,8 @@ invoke api-init
 
 ## 使用
 请求在url参数中加入profile=true可进入调试模式。
+
+### 默认接口
+get /flask/log 读取日志列表
+get /flask/log/download 下载日志列表
+get /static/log/{文件路径} 显示对应日志信息
