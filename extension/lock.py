@@ -2,6 +2,9 @@ import os
 import time
 import redis
 import platform
+from urllib.parse import urlparse
+
+from redis.sentinel import Sentinel
 
 from ..util.lock import FileLock
 
@@ -19,6 +22,8 @@ def init_app(app):
 
     if app.config.get("REDIS_URL"):
 
+        redis_url = app.config.get("REDIS_URL")
+
         if platform.system() == "Linux":
             socket_keepalive_options = {
                 socket.TCP_KEEPIDLE: 60,
@@ -28,12 +33,29 @@ def init_app(app):
         else:
             socket_keepalive_options = None
 
-        redis_client = redis.from_url(
-            app.config.get("REDIS_URL"),
-            decode_responses=True,
-            socket_keepalive=True,
-            socket_keepalive_options=socket_keepalive_options,
-        )
+        # redis 主从集群 master name
+        redis_master_name = app.config.get("REDIS_MASTER_NAME", None)
+
+        if redis_url.startswith("sentinel"):
+            sentinels = []
+            urls = redis_url.split(";")
+            for url in urls:
+                url = urlparse(url)
+                sentinels.append((url.hostname, url.port))
+            redis_client = Sentinel(
+                sentinels,
+                decode_responses=True,
+                socket_keepalive=True,
+                socket_keepalive_options=socket_keepalive_options,
+            ).master_for(redis_master_name)
+            app.logger.info("using sentinel")
+        else:
+            redis_client = redis.from_url(
+                redis_url,
+                decode_responses=True,
+                socket_keepalive=True,
+                socket_keepalive_options=socket_keepalive_options,
+            )
 
         lock_type = "redis_lock"
         app.logger.info(f"process {os.getpid()} extension.lock use redis lock")
