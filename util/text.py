@@ -289,25 +289,54 @@ def text_convent(text):
     return remove_punctuation(text)
 
 
-def convert_sentence_chinese_number_to_arabic(sentence):
+def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
     """
     对输入的句子进行分词和中文数字替换
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
     :param sentence:  待转换的句子字符串
+    :param no_convert_words:  不处理的字符串
     """
     from frame.extension.participle import participle_sentence
 
     numbers = ["零", "一", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
 
-    words = participle_sentence(sentence)
+    def convert_word_list(word_list: list):
+        for index, w in enumerate(word_list):
+            if any([(n in w) for n in numbers]):
+                w = w.replace("两", "二")
+                word_list[index] = convert_chinese_number_to_arabic(w)
 
-    if not words:
-        return sentence
+    # 对指定字符组合不做处理
+    if no_convert_words:
+        words_span = []  # 句子字符串中指定字符组合外的子字符串索引
+        sub_sentences = []  # 句子字符串中指定字符组合外的子字符串
 
-    for index, word in enumerate(words):
-        if any([(n in word) for n in numbers]):
-            word = word.replace("两", "二")
-            words[index] = convert_chinese_number_to_arabic(word)
+        for word in re.finditer("|".join(no_convert_words), sentence):
+            words_span.extend(list(word.span()))
+
+        words_span.insert(0, None)
+        words_span.append(None)
+
+        for i in range(0, len(words_span), 2):
+            sub_sentences.append(sentence[words_span[i]: words_span[i + 1]])
+
+        participle_sub_sentences = participle_sentence(sub_sentences)
+        for sub_sentence in participle_sub_sentences:
+            convert_word_list(sub_sentence)
+
+        words = []
+        for i, sub_sentence in enumerate(participle_sub_sentences):
+            words.append("".join(sub_sentence))
+            if i + 1 < len(participle_sub_sentences):
+                words.append(sentence[words_span[i * 2 + 1]: words_span[i * 2 + 2]])
+
+    else:
+        words = participle_sentence(sentence)
+
+        if not words:
+            return sentence
+
+        convert_word_list(words)
 
     return "".join(words)
 
