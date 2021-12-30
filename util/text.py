@@ -298,12 +298,12 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
     """
     from frame.extension.participle import participle_sentence
 
-    numbers = ["零", "一", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
+    numbers = ["零", "一", "幺", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
 
     def convert_word_list(word_list: list):
         for index, w in enumerate(word_list):
             if any([(n in w) for n in numbers]):
-                w = w.replace("两", "二")
+                w = w.replace("两", "二").replace("幺", "一")
                 word_list[index] = convert_chinese_number_to_arabic(w)
 
     # 对指定字符组合不做处理
