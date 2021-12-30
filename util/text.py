@@ -363,7 +363,6 @@ def convert_chinese_number_to_arabic(word):
     """
     中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     :param word:   待转换的单词字符串
-    :param model:  cn2an转换模式 strict/normal/smart
     """
     from frame.extension.participle import participle_app
 
@@ -392,7 +391,13 @@ def convert_chinese_number_to_arabic(word):
             if all([(w in pure_digital) for w in word]):
                 converted_word = "".join([cn2an_convert(w, "cn2an") or w for w in word])
             else:
-                converted_word = (
+                start_with_zero = re.match("^零+", word)
+                if not start_with_zero:
+                    zero_prefix = ""
+                else:
+                    zero_prefix = "0" * start_with_zero.span()[-1]
+                    word = word[start_with_zero.span()[-1]:]
+                converted_word = zero_prefix + (
                     cn2an_convert(word, "cn2an", "smart")
                     or cn2an_convert(word, "transform")
                     or word
