@@ -31,7 +31,7 @@ def _set_logger(app, config):
 
     logger.add(
         path,
-        level=(config[k_log_level] or "ERROR"),
+        level=(config[k_log_level] or "WARNING"),
         format=config[k_log_format],
         enqueue=config[k_log_enqueue],
         serialize=config[k_log_serialize],
