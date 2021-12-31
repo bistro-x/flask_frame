@@ -57,7 +57,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
         from frame.extension.database import db
 
         db.session.rollback()
-        app.logger.exception(error)
+        app.logger.error(error)
 
         if isinstance(error, BusiError):
             return error
