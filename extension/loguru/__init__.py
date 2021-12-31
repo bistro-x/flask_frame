@@ -27,11 +27,11 @@ def _set_logger(app, config):
     app.logger.setLevel(config[k_log_level] or "ERROR")
 
     logger.remove()
-    logger.add(sys.stdout, format="{time:YYYY-MM-DD hh:mm:ss.SSSSSS} - {message}")
+    logger.add(sys.stdout, format=config[k_log_format])
 
     logger.add(
         path,
-        level=(config[k_log_level] or "WARNING"),
+        level=(config[k_log_level] or "ERROR"),
         format=config[k_log_format],
         enqueue=config[k_log_enqueue],
         serialize=config[k_log_serialize],
