@@ -9,7 +9,7 @@ try:
     import fcntl
 
     SYSTEM = LINUX
-finally:
+except ModuleNotFoundError:
     ...
 
 
@@ -56,7 +56,7 @@ class FileLock(object):
             if self._fn:
                 try:
                     self._fn.close()
-                finally:
+                except:
                     ...
 
             if os.path.exists(self.file):
