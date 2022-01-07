@@ -22,23 +22,42 @@ def deprecated(func):
     return new_func
 
 
-def profile(func):
+def profile(timeout=1000):
     """
     生成方法的调用性能报告
     路径在 log下 prifle_方法名_时间搓
     """
 
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        import time
+    def decorate(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            import time
+            from flask import has_request_context, g, current_app, request
 
-        profiler = Profiler()
-        profiler.start()
+            if (
+                not has_request_context()
+                or "profile" in request.args
+                or not current_app.config.get("profile")
+                or current_app.config.get("profile") == "False"
+            ):
+                return func(*args, **kwargs)
 
-        result = None
-        with profiler:
-            result = func(*args, **kwargs)
-        profiler.output_text(f"./log/prfile_{func.__name__}_{str(time.time())}.txt")
-        return result
+            g.profiler = Profiler() if "profiler" not in g else g.profiler
+            result = None
+            with g.profiler:
+                result = func(*args, **kwargs)
 
-    return new_func
+            # 写入文件
+            if g.profiler._last_session.duration * 1000 > timeout:
+                time_format = time.strftime("%Y%m%d_%H:%M:%S", time.localtime())
+                file_path = f"./log/prfile_{func.__name__}_{time_format}.txt"
+                profile_file = open(file_path, "w")
+                with profile_file:
+                    profile_file.write(g.profiler.output_text())
+
+            # 返回
+            return result
+
+        return new_func
+
+    return decorate

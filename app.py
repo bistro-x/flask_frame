@@ -57,7 +57,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
         from frame.extension.database import db
 
         db.session.rollback()
-        app.logger.error(error)
+        app.logger.exception(error)
 
         if isinstance(error, BusiError):
             return error
@@ -112,7 +112,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
 
     @app.after_request
     def after_request(response):
-        if not hasattr(g, "profiler"):
+        if "profile" not in request.args:
             return response
         g.profiler.stop()
         output_html = g.profiler.output_html()

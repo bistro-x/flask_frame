@@ -216,7 +216,7 @@ def update_db(db, schema, file_list):
         current_app.logger.info(f"worker: {os.getpid()} executed update db")
 
     except Exception as e:
-        current_app.logger.error(e)
+        current_app.logger.exception(e)
     finally:
         lock.release()
 

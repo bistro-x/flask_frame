@@ -46,7 +46,7 @@ def fetch_current_user(token_string):
         )
         return response.json()
     except requests.exceptions.RequestException as e:
-        app.logger.error(e)
+        app.logger.exception(e)
 
 
 def license_check():
@@ -66,7 +66,7 @@ def license_check():
             abort(HTTPStatus.UNAUTHORIZED, response.json())
 
     except requests.exceptions.RequestException as e:
-        app.logger.error(e)
+        app.logger.exception(e)
 
 
 def config_oauth(app):
