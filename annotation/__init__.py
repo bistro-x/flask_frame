@@ -50,7 +50,7 @@ def profile(timeout=1000):
             # 写入文件
             if g.profiler._last_session.duration * 1000 > timeout:
                 time_format = time.strftime("%Y%m%d_%H:%M:%S", time.localtime())
-                file_path = f"./log/prfile_{func.__name__}_{time_format}.txt"
+                file_path = f"./log/profile_{func.__name__}_{time_format}.txt"
                 profile_file = open(file_path, "w")
                 with profile_file:
                     profile_file.write(g.profiler.output_text())
