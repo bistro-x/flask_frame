@@ -37,8 +37,8 @@ def profile(timeout=1000):
             if (
                 not has_request_context()
                 or "profile" in request.args
-                or not current_app.config.get("profile")
-                or current_app.config.get("profile") == "False"
+                or not current_app.config.get("PROFILE")
+                or current_app.config.get("PROFILE") == "False"
             ):
                 return func(*args, **kwargs)
 
