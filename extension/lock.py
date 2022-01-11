@@ -35,6 +35,12 @@ def init_app(app):
 
         # redis 主从集群 master name
         redis_master_name = app.config.get("REDIS_MASTER_NAME", None)
+        redis_password = app.config.get("REDIS_PASSWORD", None)
+        sentinel_options = {}
+        if redis_master_name:
+            sentinel_options.update(service_name=redis_master_name)
+        if redis_password:
+            sentinel_options.update(password=redis_password)
 
         if redis_url.startswith("sentinel"):
             sentinels = []
@@ -47,7 +53,7 @@ def init_app(app):
                 decode_responses=True,
                 socket_keepalive=True,
                 socket_keepalive_options=socket_keepalive_options,
-            ).master_for(redis_master_name)
+            ).master_for(**sentinel_options)
             app.logger.info("using sentinel")
         else:
             redis_client = redis.from_url(
