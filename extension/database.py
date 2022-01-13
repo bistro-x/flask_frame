@@ -53,7 +53,11 @@ def init_app(app):
         init_file_list = app.config.get("DB_INIT_FILE")
 
         #  开发版本更新
+        import os
         version_file_list = app.config.get("DB_VERSION_FILE")
+        if not version_file_list:
+            sql_path = "sql/migrate"
+            version_file_list = [os.path.join(sql_path, item) for item in os.listdir(sql_path)]
 
         if init_file_list:
             init_db(db, db_schema, init_file_list, version_file_list)
@@ -146,7 +150,7 @@ def init_db(db, schema, file_list, version_file_list):
             #  根据版本运行更新脚本
             update_db_sign = False  # 数据库更新脚本执行标志
             for version_file in sorted(
-                version_file_list, key=functools.cmp_to_key(file_compare_version)
+                    version_file_list, key=functools.cmp_to_key(file_compare_version)
             ):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
@@ -249,7 +253,7 @@ def run_sql(file_path, db, first_sql):
 
                     # If the command string ends with ';', it is a full statement
                     if (
-                        not function_start and sql_command.endswith(";")
+                            not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
@@ -274,8 +278,8 @@ def sql_concat(file_path, param):
         for line in sql_file:
             text = line.strip()
             if (
-                text.startswith("--{")
-                and text.replace("--{", "").replace("}", "") in param.keys()
+                    text.startswith("--{")
+                    and text.replace("--{", "").replace("}", "") in param.keys()
             ):
                 text = line.replace("--", "").format(**param)
             elif text.startswith("--") and text:
