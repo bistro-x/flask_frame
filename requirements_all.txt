@@ -13,7 +13,7 @@ natsort~=7.0.1
 
 pydub~=0.24.1
 redis~=3.3.8
-aiohttp==3.6.2
+aiohttp==3.7.4
 zhon~=1.1.5
 
 chardet~=3.0.4
