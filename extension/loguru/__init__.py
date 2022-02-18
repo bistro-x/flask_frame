@@ -92,8 +92,8 @@ def init_app(app):
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> -"
         " <level>{message}</level>",
     )
-    config.setdefault(k_log_enqueue, True)
-    config.setdefault(k_log_serialize, False)
+    config.setdefault(k_log_enqueue, False)
+    config.setdefault(k_log_serialize, True)
     config.setdefault(k_log_rotation, "12:00")
     config.setdefault(k_log_retention, "30 days")
 
