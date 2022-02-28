@@ -26,6 +26,9 @@ docker build . --force-rm=true -f ./docker/Dockerfile.alpine.3.6 -t server.aikno
 #3.8
 nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
 
+# image first build
+nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &s
+
 # image update
 nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine_continue -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
 ```

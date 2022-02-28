@@ -14,11 +14,10 @@ EXPOSE 5000
 ARG INCLUDE_POSTGRESQL=false
 ARG INCLUDE_UWSGI=false
 
-
-RUN  echo 'https://mirrors.aliyun.com/alpine/v3.11/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.11/community/' >>/etc/apk/repositories
+RUN  echo 'https://mirrors.aliyun.com/alpine/v3.11/main/' >/etc/apk/repositories && echo 'https://mirrors.aliyun.com/alpine/v3.11/community/' >>/etc/apk/repositories 
 
 RUN  echo "**** install Python ****" && \
-    apk add --no-cache python3 && \
+    apk add --no-cache python3 --allow-untrusted --repository=https://mirrors.aliyun.com/alpine/v3.11/community/ && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
     echo "**** install pip ****" && \
     python3 -m ensurepip && \
@@ -26,13 +25,19 @@ RUN  echo "**** install Python ****" && \
     pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --no-cache pip --upgrade setuptools wheel && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
+
 RUN apk add --no-cache --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ libressl-dev && \
-    apk add --no-cache  tzdata postgresql-dev gcc libffi-dev zeromq-dev yasm ffmpeg make wget && \
+    apk add --no-cache  tzdata postgresql-dev gcc libffi-dev zeromq-dev yasm make wget git && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone
+
+RUN git clone https://git.ffmpeg.org/ffmpeg.git && cd ffmpeg && git checkout  tags/n4.4.1 && ./configure && make && make install && cd .. && rm -rf ffmpeg
+
 
 RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
 
 
 # minio命令
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc && chmod +x ./mc && mv ./mc /usr/local/bin
+
+RUN apk del .build_dependencies
