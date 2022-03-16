@@ -8,9 +8,19 @@ def get_request_param():
     Returns:
         json: 请求传入的所有参数
     """
-    return {
-        **(request.args or {}),
-        **(request.form or {}),
-        **(request.json or {}),
-        **request.files,
-    }
+
+    json_data = request.get_json(silent=True)
+
+    if isinstance(json_data, list):
+        return {
+            **(request.form or {}),
+            **request.files,
+            **(request.args or {}),
+        }, json_data
+    else:
+        return {
+            **(json_data or {}),
+            **(request.form or {}),
+            **request.files,
+            **(request.args or {}),
+        }, None
