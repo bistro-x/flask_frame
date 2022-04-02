@@ -50,7 +50,11 @@ requirements.txt 框架依赖的库
     |-- requirements.txt                      # 框架依赖的库
     |-- requirements_all.txt                  # 规定使用项目用到的所有库和版本，作为基础镜像打包
 
-## 配置信息
+## 插件支持
+- api_log: 记录API请求到数据库中进行保留
+    - api_log_clean: celery 支持的自动日志清理函数，需要在config 配置对应任务启用。
+    
+## 环境配置
 
 | 分组   | 配置项                  | 说明                                                            |
 | ------ | ----------------------- | --------------------------------------------------------------- |
@@ -63,6 +67,7 @@ requirements.txt 框架依赖的库
 | 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开则每次创建运行，关则必须有版本更新才会调用）            |
 | 权限   | FETCH_USER              | 是否获取用户                                                    |
 | 权限   | CHECK_API               | API 接口检查                                                    |
+| 插件   | API_LOG_RETENTION_DAYS  | API日志保留天数,默认30天     |
 
 ## 权限初始化
 
