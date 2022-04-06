@@ -20,6 +20,11 @@ def init_app(app):
     @app.after_request
     def after_request(response):
         from flask import request
+
+        # 查询方法不记录
+        if request.method == "GET":
+            return response
+
         from frame.extension.permission import get_current_user
         from sqlalchemy.sql import null
 
