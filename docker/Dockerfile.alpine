@@ -39,5 +39,3 @@ RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_
 
 # minio命令
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc && chmod +x ./mc && mv ./mc /usr/local/bin
-
-RUN apk del .build_dependencies
