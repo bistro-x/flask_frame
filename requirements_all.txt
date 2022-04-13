@@ -34,4 +34,4 @@ redis~=3.3.8
 xlrd==1.2.0
 
 # pymilvus
-pymilvus~=0.3.0
+pymilvus~=2.0.0
