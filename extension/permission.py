@@ -123,6 +123,8 @@ def check_user_permission(token_string=None):
                 "method") == method for permission in
             user.get("permissions")):
         return user
+    elif check_path and check_path.startswith("/static/"):
+        return True
 
     return user
 
