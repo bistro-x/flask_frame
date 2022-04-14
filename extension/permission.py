@@ -50,6 +50,8 @@ def fetch_current_user(token_string):
 
 
 def license_check():
+    """证书检测
+    """
     global app
 
     user_auth_url = app.config.get("USER_AUTH_URL")
@@ -180,4 +182,4 @@ def init_app(flask_app):
         token_string = token_string.split(" ")[1] if token_string else None
         if fetch_user and not check_user_permission(token_string):
             if check_api:
-                abort(HTTPStatus.METHOD_NOT_ALLOWED, {"message": "API未授权"})
+                abort(HTTPStatus.UNAUTHORIZED, {"message": "API未授权"})
