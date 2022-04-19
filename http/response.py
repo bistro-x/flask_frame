@@ -142,14 +142,23 @@ class HttpResponseSchema(BaseSchema):
     provider_code = fields.Str()
     service_id = fields.Integer()
     message = fields.Str(default="操作成功")  # 说明信息
+    create_time = fields.DateTime(default=cdatetime.now())
 
     class Meta:
         unknown = INCLUDE
 
-    def load_by_key(self, code=0, data=None, message=None, provider_code=None):
+    def load_by_key(
+        self, code=0, data=None, message=None, provider_code=None, create_time=None
+    ):
         """构造函数"""
         return self.load(
-            {code: code, data: data, message: message, provider_code: provider_code}
+            {
+                code: code,
+                data: data,
+                message: message,
+                provider_code: provider_code,
+                create_time: create_time,
+            }
         )
 
     @post_dump
@@ -174,6 +183,7 @@ class Response(object):
         response_time=None,
         service_id=None,
         headers=None,
+        create_time=None,
     ):
         """
         构造函数
@@ -195,6 +205,8 @@ class Response(object):
         self.message = message  # 说明信息
         self.response_time = response_time
         self.headers = headers
+        if create_time:
+            self.create_time = create_time
 
     @deprecated
     def get_response(self):
