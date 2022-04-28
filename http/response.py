@@ -178,12 +178,13 @@ class Response(object):
         data=None,
         code=0,
         message="操作成功",
-        provider_code=0,
+        provider_code=None,
         task_id=None,
         response_time=None,
         service_id=None,
         headers=None,
         create_time=None,
+        http_status=None
     ):
         """
         构造函数
@@ -193,6 +194,7 @@ class Response(object):
         :param message:
         :param service_id: 服务ID
         :param headers: 文件报头
+        :param http_status: 指定返回http代码
         :param kwargs:
         """
 
@@ -205,6 +207,8 @@ class Response(object):
         self.message = message  # 说明信息
         self.response_time = response_time
         self.headers = headers
+        self.http_status = http_status
+        
         if create_time:
             self.create_time = create_time
 
@@ -217,7 +221,7 @@ class Response(object):
         if self.result:
             return http_response_schema.dump(self)
         else:
-            return http_response_schema.dump(self), HTTPStatus.INTERNAL_SERVER_ERROR
+            return http_response_schema.dump(self), (self.http_status or HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def mark_flask_response(self) -> flask.Response:
         """
@@ -226,10 +230,17 @@ class Response(object):
         """
         response = flask.make_response(
             jsonify(http_response_schema.dump(self)),
-            HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR,
+            self.http_status or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
         )
+
         # 定义报头
         response.headers = {**response.headers, **(self.headers or {})}
 
         # 返回
         return response
+
+    @classmethod
+    def force_type(self, rv, environ=None):
+        if isinstance(rv, dict):
+            rv = jsonify(rv)
+        return self.mark_flask_response()
