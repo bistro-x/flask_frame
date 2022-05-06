@@ -23,7 +23,7 @@ def generate_sql(
 
     sql = ""  # 返回条件
     count_sql = None
-    
+
     table_name = path.replace("/", "")  # 表名
     if args:
         select_sql, where_sql, order_sql, limit_sql, join_table = condition_bulid(
@@ -49,7 +49,7 @@ def generate_sql(
         # todo throw error
         print("error")
 
-    return sql,count_sql
+    return sql, count_sql
 
 
 def condition_bulid(table_name: str, args: dict):
@@ -59,34 +59,6 @@ def condition_bulid(table_name: str, args: dict):
         table_name (str): 表名
         args (dict): 传入参数
     """
-    parse_map = {
-        "not.eq": "is not",
-        "eq": "=",
-        "ne": ">",
-        "gte": ">=",
-        "lt": "<",
-        "lte": "<=",
-        "neq": "!=",
-        "like": "like",
-        "ilike": "ilike",
-        "in": "in",
-        "is": "is",
-        "fts": "@@",
-        "plfts": "@@",
-        "phfts": "@@",
-        "wfts": "@@",
-        "cs": "@>",
-        "cd": "<@",
-        "ov": "&&",
-        "sl": "<<",
-        "sr": ">>",
-        "nxr": "&<",
-        "nxl": "&>",
-        "adj": "-|-",
-        "not": "not",
-        "or": "or",
-        "and": "and",
-    }
 
     where_sql = " 1 = 1 "  # 条件sql
     select_sql = "*"  # 查询字段 sql
@@ -128,9 +100,13 @@ def condition_bulid(table_name: str, args: dict):
                             # 增加扩展表
                             join_table.append(join_table_name)
                         elif "->>" in item:
-                            select_value_array.append(f"{table_name}.{item.split('->>')[0]}->>'{item.split('->>')[1]}' as \"{item.split('->>')[1]}\"")
+                            select_value_array.append(
+                                f"{table_name}.{item.split('->>')[0]}->>'{item.split('->>')[1]}' as \"{item.split('->>')[1]}\""
+                            )
                         elif "->" in item:
-                            select_value_array.append(f"{table_name}.{item.split('->')[0]}->'{item.split('->>')[1]}' as \"{item.split('->')[1]}\"")
+                            select_value_array.append(
+                                f"{table_name}.{item.split('->')[0]}->'{item.split('->>')[1]}' as \"{item.split('->')[1]}\""
+                            )
                         else:
                             select_value_array.append(f"{table_name}.{item}")
 
@@ -145,40 +121,136 @@ def condition_bulid(table_name: str, args: dict):
         elif key.casefold() == "order":
             order_sql += f" order by {value.replace('.',' ').replace('nullslast','nulls last').replace('nullsfirst','nulls first')}"
             continue
-        elif key.startswith("not."):
-            where_sql += f"and not {table_name}.{key}"
-            value = value.replace("not.", "")
-        elif key.casefold() == "or":
-            continue
-        elif key.casefold() == "and":
-            continue
         else:
-            where_sql += f"and {table_name}.{key}"
-
-        # 拆分表达式和数值
-        split_index = 0
-        for map_key, map_value in parse_map.items():
-            current_index = value.rfind(map_key + ".")
-            if current_index < 0:
-                continue
-
-            current_index += +len(map_key + ".")
-            if current_index > split_index:
-                split_index = current_index
-
-        search_reg, search_value = value[:split_index], value[split_index:]
-
-        # 转换表达式
-        for map_key, map_value in parse_map.items():
-            search_reg = search_reg.replace(map_key + ".", " " + map_value + " ")
-            if "." not in search_reg:
-                break
-
-        # 拼接
-        where_sql += f"{search_reg} {replace_value(search_value)} "
+            where_sql += " and " + where_sql_build(table_name, value, key)
 
     # 返回查询语句
     return select_sql, where_sql, order_sql, limit_sql, join_table
+
+
+def where_sql_build(table_name: str, value: str, key: str = None):
+    """构建where语句
+
+    Args:
+        table_name (str): 表名
+        value (str): 数值
+        key (str, optional): 参数名. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    parse_map = {
+        "not.is":"is not",
+        "not.eq":"!=",
+        "eq": "=",
+        "ne": ">",
+        "gte": ">=",
+        "lt": "<",
+        "lte": "<=",
+        "neq": "!=",
+        "like": "like",
+        "ilike": "ilike",
+        "in": "in",
+        "is": "is",
+        "fts": "@@",
+        "plfts": "@@",
+        "phfts": "@@",
+        "wfts": "@@",
+        "cs": "@>",
+        "cd": "<@",
+        "ov": "&&",
+        "sl": "<<",
+        "sr": ">>",
+        "nxr": "&<",
+        "nxl": "&>",
+        "adj": "-|-",
+        "not": "not",
+        "or": "or",
+        "and": "and",
+    }
+
+    where_sql = ""
+
+    while True:
+        if not key:
+            # 下一个字符是(
+            if value.find("(") > 0 and (
+                value.find("(") < value.find(".") or value.find(".") < -1
+            ):
+                key = value.split("(", 1)[0]
+                value = "(" + value.split("(", 1)[1]
+            # 下一个字符)
+            else:
+                key = value.split(".", 1)[0]
+                value = value.split(".", 1)[1]
+
+        if key in ["not"]:
+            where_sql += " not "
+            key = None
+        elif key.startswith("not."):
+            where_sql += " not "
+            key = key.replace("not.","")
+            continue
+        elif key in ["or", "and"]:
+            union_sign = key
+
+            # 拼装子条件
+            value_available = value[1:][:-1]
+            value_list = []
+            scope = False
+            begin_index = 0
+            for index, item in enumerate(value_available):
+                if index == len(value_available) - 1:
+                    value_list.append(value_available[begin_index:index+1])
+                elif item == "," and not scope:
+                    value_list.append(value_available[begin_index:index])
+                    begin_index = index + 1
+                elif item == "(":
+                    scope = True
+                elif item == ")":
+                    scope == False
+
+            where_sql += " ("
+            for index, item in enumerate(value_list):
+                where_sql += where_sql_build(table_name, item) + (
+                    " " + union_sign + " " if index < len(value_list) - 1 else ""
+                )
+            where_sql += ")"
+            return where_sql
+        else:
+            break
+
+    # 子条件
+    where_sql += f" {table_name}.{replace_key(key)}  "
+
+    # 拆分表达式和数值
+    split_index = 0
+    for map_key, map_value in parse_map.items():
+        current_index = value.rfind(map_key + ".")
+        if current_index < 0:
+            continue
+
+        current_index += +len(map_key + ".")
+        if current_index > split_index:
+            split_index = current_index
+
+    search_reg, search_value = value[:split_index], value[split_index:]
+
+    # 转换表达式
+    not_sql = ""
+    if search_reg.startswith("not.") and not search_reg.startswith("not.is") and  not search_reg.startswith("not.eq"):
+        not_sql = "not "
+        search_reg = search_reg.replace("not.","")
+
+    for map_key, map_value in parse_map.items():
+        search_reg = search_reg.replace(map_key + ".", " " + map_value + " ")
+        if "." not in search_reg:
+            break
+
+    # 拼接
+    where_sql += f"{not_sql} {search_reg} {replace_value(search_value)} "
+
+    return where_sql
 
 
 def data_build(table_name, data, merge=False):
@@ -210,10 +282,7 @@ def update_sql(table_name, data, key_field="id", where_sql=None):
         where_sql = f" {replace_key(key_field)}={replace_value(key_value)}"
 
     filed_update_sql = ",".join(
-        [
-            f"{replace_key(key)}={replace_value(value)}"
-            for key, value in data.items()
-        ]
+        [f"{replace_key(key)}={replace_value(value)}" for key, value in data.items()]
     )
     sql = f'update "{table_name}" set  {filed_update_sql} where {where_sql};'
     return sql
@@ -231,15 +300,11 @@ def insert_sql(table_name, data):
     """
 
     key_sql = ",".join([f"{replace_key(key)}" for key in data.keys()])
-    value_sql = ",".join(
-        [
-            (f"{replace_value(value)}")
-            for value in data.values()
-        ]
-    )
+    value_sql = ",".join([(f"{replace_value(value)}") for value in data.values()])
 
     sql = f'insert into "{table_name}" ({key_sql}) values ({value_sql});'
     return sql
+
 
 def replace_key(value: str):
     """切换数据值为数据库的字段表示
@@ -252,6 +317,7 @@ def replace_key(value: str):
     """
     return f'"{value}"'
 
+
 def replace_value(value: str):
     """切换数据值为数据库的数值表示
 
@@ -261,27 +327,35 @@ def replace_value(value: str):
     Returns:
         str: 数据库数值
     """
-    
-
     if value is None:
         return "null"
-    if isinstance(value,list):
+    if isinstance(value, list):
         return "'{" + ",".join([f"{replace_value(item)}" for item in value]) + "}'"
-    if value in ("null"):
+    if str(value) in ("null"):
         return value
-
-    if value.startswith("("):
+    if str(value).startswith("("):
         result = value.replace("(", "").replace(")", "").split(",")
-        result = (
-            "(" + ",".join([f"{replace_value(item)}" for item in result]) + ")"
-        )
+        result = "(" + ",".join([f"{replace_value(item)}" for item in result]) + ")"
         return result
     else:
         return f"'{value}'"
 
 
 if __name__ == "__main__":
-    print(generate_sql("GET", "/user", {"id": "eq.1", "limit": 3, "offset": 5}))
+    # print(generate_sql("GET", "/user", {"id": "eq.1","id2": "eq.1","id3": "eq.1", "limit": 3, "offset": 5}))
+    print(
+        generate_sql(
+            "GET",
+            "/user",
+            {
+                "id": "eq.1",
+                "limit": 3,
+                "or": "(age.eq.14,not.and(age.gte.11,age.lte.17))",
+                "not.and":"(a.gte.0,a.lte.100)"
+            },
+        )
+    )
+
     print(generate_sql("DELETE", "/user", {"id": "eq.1"}))
     print(generate_sql("PATCH", "/user", {"id": "eq.1"}, {"category": "child"}))
     print(
