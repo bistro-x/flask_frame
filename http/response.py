@@ -139,7 +139,7 @@ class HttpResponseSchema(BaseSchema):
 
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str(default="0")  # 统一编码 来自数据库 dict
-    provider_code = fields.Str(default="0")
+    provider_code = fields.Str()
     service_id = fields.Integer()
     message = fields.Str(default="操作成功")  # 说明信息
     create_time = fields.DateTime(default=cdatetime.now())
@@ -178,7 +178,7 @@ class Response(object):
         data=None,
         code=0,
         message="操作成功",
-        provider_code=None,
+        provider_code=0,
         task_id=None,
         response_time=None,
         service_id=None,
