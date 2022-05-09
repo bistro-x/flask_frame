@@ -8,7 +8,7 @@ server_url = None
 proxy_local = None
 
 
-def proxy_request(method="GET", url="", headers=None, **kwargs):
+def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
     """
     创建代理请求
     :param method:
@@ -21,7 +21,7 @@ def proxy_request(method="GET", url="", headers=None, **kwargs):
 
     # 本地代理
     if proxy_local:
-        data, headers = local_run()
+        data, headers = local_run(method=method, url=url, args=params, headers=None, **kwargs)
         return Response(data=data, headers=headers)
 
     send_headers = {}
@@ -78,12 +78,14 @@ def proxy():
         other_param["json"] = request.json
 
     response = proxy_request(
-        request.method, request.full_path, request.headers, **other_param
+        request.method, request.path, request.headers,request.params, **other_param
     )
     return response.mark_flask_response()
 
 
-def local_run(schema=None):
+def local_run(
+    schema=None, method="GET", url="", headers=None, params=None, data=[], **kwargs
+):
     """本地运行数据库操作
 
     Returns:
@@ -96,11 +98,11 @@ def local_run(schema=None):
 
     # 调用本地转换
     exec_sql, count_sql = generate_sql(
-        request.method,
-        request.path,
-        request.args,
-        request.get_json(silent=True),
-        request.headers,
+        method or request.method,
+        url or request.path,
+        params or request.args,
+        data or request.get_json(silent=True),
+        headers or request.headers,
     )
 
     schema = schema or flask_app.config.get("PRODUCT_KEY")
@@ -120,6 +122,9 @@ def local_run(schema=None):
 
             if query_result is not None:
                 data = [dict(row) for row in query_result]
+            else:
+                data = []
+
             if count_result is not None:
                 count_result = count_result[0]
                 index_begin = int(request.args.get("offset", "0"))
