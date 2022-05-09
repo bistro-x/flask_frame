@@ -10,7 +10,6 @@ def init_app(app):
     flask_app = app
 
     # 初始化模型
-    from extension.cache.cache import register_cache
     from frame.extension.database import db, BaseModel, db_schema
 
     class ApiLog(db.Model, BaseModel):
