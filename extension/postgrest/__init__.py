@@ -152,7 +152,7 @@ def init_app(app):
     proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 本地代理
 
     # get proxy config
-    if not server_url or not proxy_custom:
+    if proxy_custom:
         return
 
     @app.before_request
