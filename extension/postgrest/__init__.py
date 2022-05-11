@@ -30,7 +30,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         send_headers["Authorization"] = None
 
     response = requests.request(
-        method=method, url=server_url + url, headers=send_headers, **kwargs
+        method=method, url=server_url + url, params=params, headers=send_headers, **kwargs
     )
 
     return Response(
