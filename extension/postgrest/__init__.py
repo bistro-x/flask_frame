@@ -36,7 +36,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         method=method, url=server_url + url, params=params, headers=send_headers, **kwargs
     )
 
-    if "content-type" in response.headers and "application/json" in response.headers["content-type"]:
+    if "content-type" in response.headers and "json" in response.headers["content-type"]:
         response_json = response.json()
     else:
         response_json = {}
