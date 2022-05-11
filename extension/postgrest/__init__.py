@@ -1,3 +1,4 @@
+import json
 from operator import index
 import requests
 from flask import request
@@ -26,16 +27,23 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
 
     send_headers = {}
     if headers:
-        send_headers = {h[0]: h[1] for h in headers}
+        send_headers = (
+            {h[0]: h[1] for h in headers} if not isinstance(headers, dict) else headers
+        )
         send_headers["Authorization"] = None
 
     response = requests.request(
         method=method, url=server_url + url, params=params, headers=send_headers, **kwargs
     )
 
+    if "content-type" in response.headers and "application/json" in response.headers["content-type"]:
+        response_json = response.json()
+    else:
+        response_json = {}
+
     return Response(
         result=response.ok,
-        data=response.json(),
+        data=response_json,
         http_status=response.status_code,
         headers=headers,
     )
