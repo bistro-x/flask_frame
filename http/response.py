@@ -228,10 +228,13 @@ class Response(object):
         创建flask相关的返回对象
         :return:
         """
-        response = flask.make_response(
-            jsonify(http_response_schema.dump(self)),
-            self.http_status or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
-        )
+        if self.http_status == 204:
+            response = flask.make_response('', 204) 
+        else:
+            response = flask.make_response(
+                jsonify(http_response_schema.dump(self)),
+                self.http_status or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
+            )
 
         # 定义报头
         response.headers = {**response.headers, **(self.headers or {})}

@@ -45,7 +45,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         result=response.ok,
         data=response_json,
         http_status=response.status_code,
-        headers=headers,
+        headers=response.headers,
     )
 
 
