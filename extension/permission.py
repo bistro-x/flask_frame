@@ -16,6 +16,7 @@ fetch_user = True  # 是否获取用户
 
 def fetch_current_user(token_string):
     """
+    todo 使用缓存
     获取当前用户
     :param token_string:
     :return:
