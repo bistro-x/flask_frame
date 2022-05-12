@@ -156,7 +156,7 @@ def init_app(app):
     global flask_app, server_url, proxy_local
     flask_app = app
     server_url = flask_app.config.get("PROXY_SERVER_URL")
-    proxy_local = flask_app.config.get("RPOXY_LOCAL", False)  # 本地代理
+    proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
     proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 本地代理
 
     # get proxy config
