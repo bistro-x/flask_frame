@@ -142,7 +142,9 @@ def init_db(db, schema, file_list, version_file_list):
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
 
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
-
+            db.engine.execute(
+                f"GRANT ALL ON SCHEMA {db_schema} TO current_user;"
+            )
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
 
