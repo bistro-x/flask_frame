@@ -16,7 +16,7 @@ print(install_requires)
 
 setup(
     name='flask_rest_frame',
-    version='1.0',
+    version='0.1.1',
     author='wuhanchu',
     author_email='whcwuhanchu@gmail.com',
     description=u'基于FLASK快速开发REST接口框架',
