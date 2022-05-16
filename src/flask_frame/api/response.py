@@ -10,8 +10,8 @@ from marshmallow import fields, post_dump, INCLUDE
 from sqlalchemy import DateTime, Numeric, Date, Time  # 有时又是DateTime
 
 # 返回结果： 成功code=100； 失败：code=-1
-from frame.annotation import deprecated
-from frame.schema import BaseSchema
+from ..annotation import deprecated
+from ..schema import BaseSchema
 
 SUCCESS_CODE = 100
 ERROR_CODE = -1

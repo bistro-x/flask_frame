@@ -1,5 +1,5 @@
-from frame.annotation import deprecated
-from frame.util import txt_compare
+from ..annotation import deprecated
+from ..util import txt_compare
 
 
 def get_asr_report(base_record, check_record, clauses_tolerance=50):

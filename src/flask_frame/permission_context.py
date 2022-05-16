@@ -1,5 +1,5 @@
-from frame.extension.database import db, db_schema
-from frame.http.response import queryToDict
+from .extension.database import db, db_schema
+from .api.response import queryToDict
 
 permission_map = None
 

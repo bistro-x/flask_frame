@@ -8,8 +8,8 @@ with pathlib.Path("requirements.txt").open() as requirements_txt:
     ]
 
 setup(
-    name="flask_rest_frame",
-    version="0.1.2",
+    name="flask_frame",
+    version="0.1.6",
     author="wuhanchu",
     author_email="whcwuhanchu@gmail.com",
     description=u"基于FLASK快速开发REST接口框架",

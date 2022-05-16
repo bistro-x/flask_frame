@@ -2,7 +2,7 @@
 # flask api 的日志记录模块
 
 flask_app = None
-from extension.celery import celery
+from flask_frame.extension.celery import celery
 
 
 def init_app(app):
@@ -10,7 +10,7 @@ def init_app(app):
     flask_app = app
 
     # 初始化模型
-    from frame.extension.database import db, BaseModel, db_schema
+    from flask_frame.extension.database import db, BaseModel, db_schema
 
     class ApiLog(db.Model, BaseModel):
         __tablename__ = "api_log"
@@ -24,7 +24,7 @@ def init_app(app):
         if request.method == "GET":
             return response
 
-        from frame.extension.permission import get_current_user
+        from flask_frame.extension.permission import get_current_user
         from sqlalchemy.sql import null
 
         # 创建
@@ -52,7 +52,7 @@ if celery:
     @celery.task(base=BaseTask, name="api_log_clean")
     def api_log_clean():
         """API日志清理"""
-        from frame.extension.database import db
+        from flask_frame.extension.database import db
 
         api_log_retention_days = flask_app.config.get(
             "API_LOG_RETENTION_DAYS", 30

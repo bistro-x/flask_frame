@@ -4,7 +4,7 @@ import os
 import filetype
 from pydub.utils import mediainfo
 
-from frame.file.audio import get_file_info_audio, is_audio
+from .file.audio import get_file_info_audio, is_audio
 
 
 class FileType:
