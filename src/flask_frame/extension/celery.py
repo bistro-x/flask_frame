@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 
 from celery import Celery, Task
+from celery.signals import task_prerun, worker_init
 from celery.utils.log import get_task_logger
 
 logger = get_task_logger("celery_info")
@@ -99,3 +100,30 @@ class BaseTask(Task):
             db.session.remove()
 
         return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
+
+
+@worker_init.connect
+def before_worker_init(**kwargs):
+    from .database import db
+    from .database.model import Param
+
+    with flask_app.app_context():
+        db.engine.dispose()
+        Param.query.session.close()
+
+
+@task_prerun.connect
+def before_task_start(**kwargs):
+    from .database import db
+    from .database.model import Param
+
+    try:
+        Param.query.session.execute("SELECT 1")
+    except Exception as e:
+        if isinstance(e, OperationalError) or isinstance(e, InvalidRequestError):
+            logger.info("before task ping error")
+            Param.query.session.close()
+            db.session.remove()
+            db.engine.dispose()
+        else:
+            logger.error(f"execute ping catch {str(e)}")
