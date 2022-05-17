@@ -22,7 +22,9 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
 
     # 本地代理
     if proxy_local:
-        data, headers = local_run(method=method, url=url, args=params, headers=None, **kwargs)
+        data, headers = local_run(
+            method=method, url=url, args=params, headers=None, **kwargs
+        )
         return Response(data=data, headers=headers)
 
     send_headers = {}
@@ -33,10 +35,17 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         send_headers["Authorization"] = None
 
     response = requests.request(
-        method=method, url=server_url + url, params=params, headers=send_headers, **kwargs
+        method=method,
+        url=server_url + url,
+        params=params,
+        headers=send_headers,
+        **kwargs,
     )
 
-    if "content-type" in response.headers and "json" in response.headers["content-type"]:
+    if (
+        "content-type" in response.headers
+        and "json" in response.headers["content-type"]
+    ):
         response_json = response.json()
     else:
         response_json = {}
@@ -86,7 +95,7 @@ def proxy():
         other_param["json"] = request.json
 
     response = proxy_request(
-        request.method, request.path, request.headers,request.params, **other_param
+        request.method, request.path, request.headers, request.args, **other_param
     )
     return response.mark_flask_response()
 
