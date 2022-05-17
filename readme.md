@@ -90,6 +90,7 @@ get /static/log/{文件路径} 显示对应日志信息
 ## 发布
 
 ```shell
+rm -rf dist
 python3 setup.py sdist bdist_wheel
 twine upload dist/*
 ```

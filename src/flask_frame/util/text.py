@@ -174,31 +174,31 @@ def punctuation_convert(sentences):
     )
 
 
-def remove_punctuation(sentences, includ_variable=True):
-    """ 去除标点符号
+def remove_punctuation(sentences, includ_variable=True, replace_text=""):
+    """去除标点符号
 
 
     Args:
         sentences (str): 处理文本
         includ_variable (bool, optional): 是否去除变量符号. Defaults to True.
+        replace_text (str): 去除后替换的文本. Defaults to "".
 
     Returns:
         _type_: 返回文本
     """
-    
+
     if not sentences:
         return sentences
 
     result = sentences.strip()
-    result = re.sub(f"[{hanzi.punctuation}]", "", result)
+    result = re.sub(f"[{hanzi.punctuation}]", replace_text, result)
     eng_punctuation = [*string.punctuation]
     if not includ_variable:
         eng_punctuation.remove("{")
         eng_punctuation.remove("}")
-        
-    result = re.sub(f"[{eng_punctuation}]", "", result)
-    return result
 
+    result = re.sub(f"[{eng_punctuation}]", replace_text, result)
+    return result
 
 
 def time_convert(sentences):

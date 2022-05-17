@@ -7,7 +7,7 @@ import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
-from .lock import get_lock, Lock
+from ..lock import get_lock, Lock
 
 db = None
 db_schema = "public"
@@ -24,6 +24,12 @@ def init_app(app):
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
+
+    # 兼容高斯
+    if "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
+        from sqlalchemy.dialects.postgresql.base import PGDialect
+
+        PGDialect._get_server_version_info = lambda *args: (9, 2)
 
     if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
         db = SQLAlchemy(app)
@@ -54,10 +60,13 @@ def init_app(app):
 
         #  开发版本更新
         import os
+
         version_file_list = app.config.get("DB_VERSION_FILE")
         if not version_file_list:
             sql_path = "sql/migrate"
-            version_file_list = [os.path.join(sql_path, item) for item in os.listdir(sql_path)]
+            version_file_list = [
+                os.path.join(sql_path, item) for item in os.listdir(sql_path)
+            ]
 
         if init_file_list:
             init_db(db, db_schema, init_file_list, version_file_list)
@@ -142,9 +151,7 @@ def init_db(db, schema, file_list, version_file_list):
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
 
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
-            db.engine.execute(
-                f"GRANT ALL ON SCHEMA {db_schema} TO current_user;"
-            )
+            db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
 
@@ -152,7 +159,7 @@ def init_db(db, schema, file_list, version_file_list):
             #  根据版本运行更新脚本
             update_db_sign = False  # 数据库更新脚本执行标志
             for version_file in sorted(
-                    version_file_list, key=functools.cmp_to_key(file_compare_version)
+                version_file_list, key=functools.cmp_to_key(file_compare_version)
             ):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
@@ -255,7 +262,7 @@ def run_sql(file_path, db, first_sql):
 
                     # If the command string ends with ';', it is a full statement
                     if (
-                            not function_start and sql_command.endswith(";")
+                        not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
                         db.session.execute(sqlalchemy.text(sql_command))
                         sql_command = ""
@@ -280,8 +287,8 @@ def sql_concat(file_path, param):
         for line in sql_file:
             text = line.strip()
             if (
-                    text.startswith("--{")
-                    and text.replace("--{", "").replace("}", "") in param.keys()
+                text.startswith("--{")
+                and text.replace("--{", "").replace("}", "") in param.keys()
             ):
                 text = line.replace("--", "").format(**param)
             elif text.startswith("--") and text:

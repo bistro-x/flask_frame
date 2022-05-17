@@ -1,15 +1,24 @@
-import os
 from urllib.parse import urlparse
 
-from celery import Celery
+from sqlalchemy.exc import InvalidRequestError, OperationalError
+
+from celery import Celery, Task
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger("celery_info")
 
 celery = None
 flask_app = None
 
 
 def init_app(app):
-    global celery
-    global flask_app
+    """初始化模块
+
+    Args:
+        app (_type_): _description_
+    """
+    global celery, flask_app
+
     flask_app = app
 
     # redis 主从集群 master name
@@ -54,3 +63,39 @@ def init_app(app):
 
     celery.conf.broker_transport_options.update(master_name=redis_master_name)
     celery.conf.result_backend_transport_options = celery.conf.broker_transport_options
+
+
+class BaseTask(Task):
+    """基础任务
+
+    Args:
+        Task (_type_): _description_
+    """
+
+    def run(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def on_success(self, retval, task_id, args, kwargs):
+        from .database import db
+        from .database.model import Param
+
+        Param.query.session.commit()
+        if db:
+            db.session.commit()
+            db.session.remove()
+
+        return super(BaseTask, self).on_success(retval, task_id, args, kwargs)
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        from .database import db
+        from .database.model import Param
+
+        if isinstance(exc, OperationalError) or isinstance(exc, InvalidRequestError):
+            db.session.remove()
+            db.engine.dispose()
+            Param.query.session.close()
+        else:
+            db.session.rollback()
+            db.session.remove()
+
+        return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)

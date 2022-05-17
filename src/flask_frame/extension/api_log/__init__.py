@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 # flask api 的日志记录模块
+from ..celery import celery
 
 flask_app = None
-from flask_frame.extension.celery import celery
 
 
 def init_app(app):
@@ -10,21 +10,18 @@ def init_app(app):
     flask_app = app
 
     # 初始化模型
-    from flask_frame.extension.database import db, BaseModel, db_schema
-
-    class ApiLog(db.Model, BaseModel):
-        __tablename__ = "api_log"
-        __table_args__ = {"extend_existing": True, "schema": db_schema}
+    from ..database import db, BaseModel, db_schema
 
     @app.after_request
     def after_request(response):
         from flask import request
+        from .model import ApiLog
 
         # 查询方法不记录
         if request.method == "GET":
             return response
 
-        from flask_frame.extension.permission import get_current_user
+        from ..permission import get_current_user
         from sqlalchemy.sql import null
 
         # 创建
@@ -47,16 +44,16 @@ def init_app(app):
 
 
 if celery:
-    from extension.celery import BaseTask
 
-    @celery.task(base=BaseTask, name="api_log_clean")
+    @celery.task(name="api_log_clean")
     def api_log_clean():
         """API日志清理"""
-        from flask_frame.extension.database import db
+        from ..database import db
 
-        api_log_retention_days = flask_app.config.get(
-            "API_LOG_RETENTION_DAYS", 30
-        )  # 日志保留时间
+        api_log_retention_days = flask_app.config.get("API_LOG_RETENTION_DAYS", 30)
+
+        # 日志保留时间
+        schema = flask_app.config.get("DB_SCHEMA")
         db.session.execute(
-            f"delete from z_know_info.api_log where create_time < (now() - interval '{api_log_retention_days} day');"
+            f"delete from {schema}.api_log where create_time < (now() - interval '{api_log_retention_days} day');"
         )
