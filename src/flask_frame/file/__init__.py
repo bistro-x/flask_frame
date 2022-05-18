@@ -4,7 +4,7 @@ import os
 import filetype
 from pydub.utils import mediainfo
 
-from .file.audio import get_file_info_audio, is_audio
+from .audio import get_file_info_audio, is_audio
 
 
 class FileType:
@@ -20,14 +20,9 @@ def get_file_info(file_path):
     kind = filetype.guess(file_path)
 
     if kind is None:
-        result = {
-            "ext": os.path.splitext(file_path)[-1].replace(".", "")
-        }
+        result = {"ext": os.path.splitext(file_path)[-1].replace(".", "")}
     else:
-        result = {
-            "mimetype": kind.mime,
-            "ext": kind.extension
-        }
+        result = {"mimetype": kind.mime, "ext": kind.extension}
 
     media_info = mediainfo(file_path)
 
@@ -35,7 +30,11 @@ def get_file_info(file_path):
         audio_info = get_file_info_audio(file_path)
         result = {**audio_info, **result, "type": FileType.audio}
 
-        result["framerate"] = result.get("framerate") or media_info.get("sample_rate") or None
-        result["framerate"] = int(result["framerate"]) if result["framerate"] else result["framerate"]
+        result["framerate"] = (
+            result.get("framerate") or media_info.get("sample_rate") or None
+        )
+        result["framerate"] = (
+            int(result["framerate"]) if result["framerate"] else result["framerate"]
+        )
 
     return {**media_info, **result}

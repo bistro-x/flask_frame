@@ -312,7 +312,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
     :param sentence:  待转换的句子字符串
     :param no_convert_words:  不处理的字符串
     """
-    from .extension.participle import participle_sentence
+    from ..extension.participle import participle_sentence
 
     numbers = ["零", "一", "幺", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
 
@@ -363,7 +363,7 @@ def convert_sentence_arabic_number_to_chinese(sentence):
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
     :param sentence:  待转换的句子字符串
     """
-    from .extension.participle import participle_sentence
+    from ..extension.participle import participle_sentence
 
     words = participle_sentence(sentence)
 
@@ -380,7 +380,7 @@ def convert_chinese_number_to_arabic(word):
     中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     :param word:   待转换的单词字符串
     """
-    from .extension.participle import participle_app
+    from ..extension.participle import participle_app
 
     def cn2an_convert(target, method, method_model=None):
         try:
@@ -428,7 +428,7 @@ def convert_arabic_number_to_chinese(word, model="low"):
     :param word:   待转换的单词字符串
     :param model:  cn2an转换模式 low/up/rmb/direct
     """
-    from .extension.participle import participle_app
+    from ..extension.participle import participle_app
 
     number_reg_check = "\d+\.?\d*"
 

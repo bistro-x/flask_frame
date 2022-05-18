@@ -12,6 +12,7 @@ app = None
 # 配置参数
 check_api = True  # 检查API权限
 fetch_user = True  # 是否获取用户
+get_user_extend_info = None  # 获取用户权限信息
 
 
 def fetch_current_user(token_string):
@@ -24,10 +25,12 @@ def fetch_current_user(token_string):
     global app
 
     from authlib.integrations.flask_oauth2 import current_token
+
     user_auth_local = app.config.get("USER_AUTH_LOCAL")
 
     if current_token and current_token.user and user_auth_local:
         from module.user.service import get_user_extend_info
+
         return get_user_extend_info(current_token.user)
 
     # get users
@@ -42,7 +45,9 @@ def fetch_current_user(token_string):
         response = requests.get(
             url=user_auth_url + "/user/current",
             headers={
-                "Authorization": "Bearer {token_string}".format(token_string=token_string),
+                "Authorization": "Bearer {token_string}".format(
+                    token_string=token_string
+                ),
             },
         )
         return response.json()
@@ -51,8 +56,7 @@ def fetch_current_user(token_string):
 
 
 def license_check():
-    """证书检测
-    """
+    """证书检测"""
     global app
 
     user_auth_url = app.config.get("USER_AUTH_URL")
@@ -61,9 +65,7 @@ def license_check():
     try:
         response = requests.get(
             url=user_auth_url + "/license/check",
-            params={
-                "product_key": app.config.get("PRODUCT_KEY")
-            }
+            params={"product_key": app.config.get("PRODUCT_KEY")},
         )
         if not response.ok:
             abort(HTTPStatus.UNAUTHORIZED, response.json())
@@ -120,11 +122,15 @@ def check_user_permission(token_string=None):
         return user
 
     check_path = request.url_rule.rule if request.url_rule else request.path
-    if user and check_api and user.get("permissions") and any(
-            permission.get(
-                "url") == check_path and permission.get(
-                "method") == method for permission in
-            user.get("permissions")):
+    if (
+        user
+        and check_api
+        and user.get("permissions")
+        and any(
+            permission.get("url") == check_path and permission.get("method") == method
+            for permission in user.get("permissions")
+        )
+    ):
         return user
     elif check_path and check_path.startswith("/static/"):
         return True
@@ -142,7 +148,7 @@ def get_current_user():
     if not flask.has_request_context():
         return None
 
-    if hasattr(g, 'current_user'):
+    if hasattr(g, "current_user"):
         return g.current_user
 
     return None
@@ -157,8 +163,8 @@ def param_add_department_filter(params={}):
     user = g.current_user
 
     depart_list = []
-    for item in user.get('department_key') or []:
-        depart_list.append(f'department_key.like.{item}*')
+    for item in user.get("department_key") or []:
+        depart_list.append(f"department_key.like.{item}*")
 
     if len(depart_list) > 0:
         depart_str = ",".join(depart_list)
@@ -170,16 +176,17 @@ def param_add_department_filter(params={}):
 
 
 def init_app(flask_app):
-    global app, check_api, fetch_user
+    global app, check_api, fetch_user, get_user_extend_info
 
     app = flask_app
     check_api = app.config.get("CHECK_API", True)
     fetch_user = app.config.get("FETCH_USER", True)
+    get_user_extend_info =
 
     @app.before_request
     def app_proxy():
         # check permission
-        token_string = request.headers.environ.get('HTTP_AUTHORIZATION')
+        token_string = request.headers.environ.get("HTTP_AUTHORIZATION")
         token_string = token_string.split(" ")[1] if token_string else None
         if fetch_user and not check_user_permission(token_string):
             if check_api:

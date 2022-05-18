@@ -26,11 +26,11 @@ def check_permission(uri, method, usr_roles):
 
 # 加载角色权限
 def load_permission():
-    from run import app
+    from flask import current_app
 
     global permission_map
     permission_map = {}
-    with app.app_context():
+    with current_app.app_context():
         sql = f"""
             SET search_path to {db_schema};
             select * from permission_role
