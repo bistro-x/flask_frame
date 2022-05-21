@@ -104,24 +104,26 @@ def check_url_permission(user):
 
     # 超级用户不需要检测权限
     if user and user.get("name") == "admin":
-        return user
+        return True
 
     check_path = request.url_rule.rule if request.url_rule else request.path
     method = request.method
 
-    if (
-        user
-        and user.get("permissions")
-        and any(
-            permission.get("url") == check_path and permission.get("method") == method
-            for permission in user.get("permissions")
-        )
-    ):
-        return True
-    elif check_path and check_path.startswith("/static/"):
+    # todo 权限库没有定义的接口，就不进行限制。
+    if check_path and check_path.startswith("/static/"):
         return True
 
-    return False
+    if (
+        user
+        and user.get("no_permissions")
+        and any(
+            permission.get("url") == check_path and permission.get("method") == method
+            for permission in user.get("no_permissions")
+        )
+    ):
+        return False
+
+    return True
 
 
 def param_add_department_filter(params={}):
