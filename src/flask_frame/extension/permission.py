@@ -106,13 +106,18 @@ def check_url_permission(user):
     if user and user.get("name") == "admin":
         return True
 
+    # 客户端校验
+    if user and user.get("client_id") and not user.get("id"):
+        return True
+
     check_path = request.url_rule.rule if request.url_rule else request.path
     method = request.method
 
-    # todo 权限库没有定义的接口，就不进行限制。
+    # 静态文件不进行限制
     if check_path and check_path.startswith("/static/"):
         return True
-
+    
+    # 权限库没有定义的接口，就不进行限制。
     if (
         user
         and user.get("no_permissions")
@@ -123,6 +128,7 @@ def check_url_permission(user):
     ):
         return False
 
+    # 默认true
     return True
 
 
