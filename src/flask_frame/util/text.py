@@ -197,7 +197,7 @@ def remove_punctuation(sentences, includ_variable=True, replace_text=""):
         eng_punctuation.remove("{")
         eng_punctuation.remove("}")
 
-    result = re.sub(f"[{eng_punctuation}]", replace_text, result)
+    result = re.sub(f"{eng_punctuation}", replace_text, result)
     return result
 
 
@@ -334,7 +334,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
         words_span.append(None)
 
         for i in range(0, len(words_span), 2):
-            sub_sentences.append(sentence[words_span[i]: words_span[i + 1]])
+            sub_sentences.append(sentence[words_span[i] : words_span[i + 1]])
 
         participle_sub_sentences = participle_sentence(sub_sentences)
         for sub_sentence in participle_sub_sentences:
@@ -344,7 +344,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
         for i, sub_sentence in enumerate(participle_sub_sentences):
             words.append("".join(sub_sentence))
             if i + 1 < len(participle_sub_sentences):
-                words.append(sentence[words_span[i * 2 + 1]: words_span[i * 2 + 2]])
+                words.append(sentence[words_span[i * 2 + 1] : words_span[i * 2 + 2]])
 
     else:
         words = participle_sentence(sentence)
@@ -412,7 +412,7 @@ def convert_chinese_number_to_arabic(word):
                     zero_prefix = ""
                 else:
                     zero_prefix = "0" * start_with_zero.span()[-1]
-                    word = word[start_with_zero.span()[-1]:]
+                    word = word[start_with_zero.span()[-1] :]
                 converted_word = zero_prefix + (
                     cn2an_convert(word, "cn2an", "smart")
                     or cn2an_convert(word, "transform")
