@@ -1,7 +1,4 @@
 # url 转 sql 生成器，postgrest 格式
-import string
-from turtle import st
-from typing import List
 
 
 def generate_sql(
@@ -48,8 +45,8 @@ def generate_sql(
     else:
         # todo throw error
         print("error")
-    print("sql:"+sql)
-    print("count_sql:"+(count_sql or ""))
+    print("sql:" + sql)
+    print("count_sql:" + (count_sql or ""))
 
     return sql, count_sql
 
@@ -82,38 +79,40 @@ def condition_bulid(table_name: str, args: dict):
                     + ")"
                 )
             elif "(" in select_value:
-                    select_value_array = []
-                    select_value = select_value.split(",")
-                    for item in select_value:
-                        # 普通字段
-                        if "(" in item:
-                            # 扩展字段
-                            join_table_name = item.split("(")[0]
-                            field_name = item.split("(")[1].replace(")", "").split(",")
-                            field_name_str = ",".join(
-                                [f"{join_table_name}.{item}" for item in field_name]
-                            )
-                            select_value_array.append(
-                                f' (select row_to_json(_) from (select {field_name_str} ) as _) as "{join_table_name}"'
-                            )
+                select_value_array = []
+                select_value = select_value.split(",")
+                for item in select_value:
+                    # 普通字段
+                    if "(" in item:
+                        # 扩展字段
+                        join_table_name = item.split("(")[0]
+                        field_name = item.split("(")[1].replace(")", "").split(",")
+                        field_name_str = ",".join(
+                            [f"{join_table_name}.{item}" for item in field_name]
+                        )
+                        select_value_array.append(
+                            f' (select row_to_json(_) from (select {field_name_str} ) as _) as "{join_table_name}"'
+                        )
 
-                            # 增加扩展表
-                            join_table.append(join_table_name)
-                        elif "->>" in item:
-                            select_value_array.append(
-                                f"{table_name}.{item.split('->>')[0]}->>'{item.split('->>')[1]}' as \"{item.split('->>')[1]}\""
-                            )
-                        elif "->" in item:
-                            select_value_array.append(
-                                f"{table_name}.{item.split('->')[0]}->'{item.split('->>')[1]}' as \"{item.split('->')[1]}\""
-                            )
-                        else:
-                            select_value_array.append(f"{table_name}.{item}")
+                        # 增加扩展表
+                        join_table.append(join_table_name)
+                    elif "->>" in item:
+                        select_value_array.append(
+                            f"{table_name}.{item.split('->>')[0]}->>'{item.split('->>')[1]}' as \"{item.split('->>')[1]}\""
+                        )
+                    elif "->" in item:
+                        select_value_array.append(
+                            f"{table_name}.{item.split('->')[0]}->'{item.split('->>')[1]}' as \"{item.split('->')[1]}\""
+                        )
+                    else:
+                        select_value_array.append(f"{table_name}.{item}")
 
-                    select_sql = ",".join(select_value_array)
+                select_sql = ",".join(select_value_array)
             else:
-                select_sql = ",".join([f"{table_name}.{item}" for item in select_value.split(",")])
-                    
+                select_sql = ",".join(
+                    [f"{table_name}.{item}" for item in select_value.split(",")]
+                )
+
             continue
         elif key.casefold() == "limit":
             limit_sql += f" limit {value}"
@@ -143,8 +142,8 @@ def where_sql_build(table_name: str, value: str, key: str = None):
         _type_: _description_
     """
     parse_map = {
-        "not.is":"is not",
-        "not.eq":"!=",
+        "not.is": "is not",
+        "not.eq": "!=",
         "eq": "=",
         "ne": ">",
         "gte": ">=",
@@ -192,7 +191,7 @@ def where_sql_build(table_name: str, value: str, key: str = None):
             key = None
         elif key.startswith("not."):
             where_sql += " not "
-            key = key.replace("not.","")
+            key = key.replace("not.", "")
             continue
         elif key in ["or", "and"]:
             union_sign = key
@@ -203,15 +202,16 @@ def where_sql_build(table_name: str, value: str, key: str = None):
             scope = False
             begin_index = 0
             for index, item in enumerate(value_available):
-                if index == len(value_available) - 1:
-                    value_list.append(value_available[begin_index:index+1])
+                if index == (len(value_available) - 1):
+                    index_end = index + 1
+                    value_list.append(value_available[begin_index:index_end])
                 elif item == "," and not scope:
                     value_list.append(value_available[begin_index:index])
                     begin_index = index + 1
                 elif item == "(":
                     scope = True
                 elif item == ")":
-                    scope == False
+                    scope = False
 
             where_sql += " ("
             for index, item in enumerate(value_list):
@@ -241,13 +241,17 @@ def where_sql_build(table_name: str, value: str, key: str = None):
 
     # 转换表达式
     not_sql = ""
-    if search_reg.startswith("not.") and not search_reg.startswith("not.is") and not search_reg.startswith("not.eq"):
+    if (
+        search_reg.startswith("not.")
+        and not search_reg.startswith("not.is")
+        and not search_reg.startswith("not.eq")
+    ):
         not_sql = "not "
-        search_reg = search_reg.replace("not.","")
+        search_reg = search_reg.replace("not.", "")
 
     for map_key, map_value in parse_map.items():
         if map_key in ["like"]:
-            search_value=search_value.replace("*","%")
+            search_value = search_value.replace("*", "%")
         search_reg = search_reg.replace(map_key + ".", " " + map_value + " ")
         if "." not in search_reg:
             break
@@ -333,9 +337,10 @@ def replace_value(value: str):
         str: 数据库数值
     """
     import json
+
     if value is None:
         return "null"
-    
+
     if isinstance(value, list):
         if len(value) == 0:
             type_name = "text"
@@ -345,17 +350,23 @@ def replace_value(value: str):
             type_name = "integer"
         else:
             type_name = "text"
-            
-        return f"array[" + ",".join([f"{replace_value(item)}" for item in value]) + f"]" if len(value) > 0 else f"array[]::{type_name}[]"
-    if isinstance(value,dict):
-        result = json.dumps(value,ensure_ascii=False)
-        return "'"+result+"'"
+
+        return (
+            "array["
+            + ",".join([f"{replace_value(item)}" for item in value])
+            + f"]::{type_name}[]"
+            if len(value) > 0
+            else f"array[]::{type_name}[]"
+        )
+    if isinstance(value, dict):
+        result = json.dumps(value, ensure_ascii=False)
+        return "'" + result + "'"
     if str(value) == "null":
         return value
     if str(value).startswith("("):
         result = value.replace("(", "").replace(")", "").split(",")
         result = "(" + ",".join([f"{replace_value(item)}" for item in result]) + ")"
-        return result   
+        return result
     else:
         return f"'{value}'"
 
@@ -369,9 +380,9 @@ if __name__ == "__main__":
             {
                 "id": "eq.1",
                 "limit": 3,
-                "select":"id",
+                "select": "id",
                 "or": "(age.eq.14,not.and(age.gte.11,age.lte.17))",
-                "not.and":"(a.gte.0,a.lte.100)"
+                "not.and": "(a.gte.0,a.lte.100)",
             },
         )
     )
