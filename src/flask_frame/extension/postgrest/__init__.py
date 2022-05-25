@@ -49,7 +49,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         response_json = response.json()
     else:
         response_json = {}
-
+    response.headers.delete("Transfer-Encoding")
     return Response(
         result=response.ok,
         data=response_json,
