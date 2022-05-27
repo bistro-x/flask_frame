@@ -91,13 +91,11 @@ class BaseTask(Task):
         from .database import db
         from .database.model import Param
 
-        if isinstance(exc, OperationalError) or isinstance(exc, InvalidRequestError):
-            db.session.remove()
-            db.engine.dispose()
-            Param.query.session.close()
-        else:
+        Param.query.session.rollback()
+        Param.query.session.close()
+        if db:
             db.session.rollback()
-            db.session.remove()
+            db.session.close()
 
         return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
