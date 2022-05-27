@@ -1,5 +1,3 @@
-import json
-from operator import index
 import requests
 from flask import request
 from ...api.response import Response
@@ -54,7 +52,10 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         response.headers.pop("Transfer-Encoding")
     return Response(
         result=response.ok,
-        data=response_json,
+        code = response_json.get("code") if not response.ok else 0,
+        message= response_json.get("message") if not response.ok else None,
+        detail= response_json.get("details") if not response.ok else None,
+        data=response_json if response.ok else None,
         http_status=response.status_code,
         headers=response.headers,
     )

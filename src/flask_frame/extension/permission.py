@@ -122,6 +122,7 @@ def check_url_permission(user):
         user
         and user.get("no_permissions")
         and any(
+            app.config.get("PRODUCT_KEY") == permission.get("product_key") and 
             permission.get("url") == check_path and permission.get("method") == method
             for permission in user.get("no_permissions")
         )

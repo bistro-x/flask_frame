@@ -142,13 +142,14 @@ class HttpResponseSchema(BaseSchema):
     provider_code = fields.Str()
     service_id = fields.Integer()
     message = fields.Str(default="操作成功")  # 说明信息
+    detail = fields.Str()  # 说明信息
     create_time = fields.DateTime(default=cdatetime.now())
 
     class Meta:
         unknown = INCLUDE
 
     def load_by_key(
-        self, code=0, data=None, message=None, provider_code=None, create_time=None
+        self, code=0, data=None, message=None, provider_code=None, create_time=None, **kwargs
     ):
         """构造函数"""
         return self.load(
@@ -158,6 +159,7 @@ class HttpResponseSchema(BaseSchema):
                 message: message,
                 provider_code: provider_code,
                 create_time: create_time,
+                **kwargs
             }
         )
 
@@ -177,14 +179,15 @@ class Response(object):
         result=True,
         data=None,
         code=0,
-        message="操作成功",
+        message=None,
         provider_code=0,
         task_id=None,
         response_time=None,
         service_id=None,
         headers=None,
         create_time=None,
-        http_status=None
+        http_status=None,
+        detail = None,
     ):
         """
         构造函数
@@ -204,11 +207,12 @@ class Response(object):
         self.code = code or "0"  # 统一编码 来自数据库 dict
         self.service = service_id
         self.provider_code = provider_code
-        self.message = message  # 说明信息
+        self.message = message or "操作成功" # 说明信息
         self.response_time = response_time
         self.headers = headers
         self.http_status = http_status
-        
+        self.detail = detail
+
         if create_time:
             self.create_time = create_time
 
