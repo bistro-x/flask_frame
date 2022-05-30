@@ -8,6 +8,7 @@ from pyinstrument import Profiler
 
 from .api.exception import BusiError, ResourceError
 from .util.file import zip_path
+from .util.text import AppEncoder
 
 
 def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
@@ -19,6 +20,7 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     :return:
     """
     app = Flask(__name__, root_path=os.getcwd())
+    app.json_encoder = AppEncoder
 
     # 初始化app
     config_name = (

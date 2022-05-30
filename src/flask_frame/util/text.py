@@ -1,9 +1,19 @@
 # -*- coding: UTF-8 -*-
+import json
+from datetime import datetime
 import string
 import cn2an
 
 from zhon import hanzi
 import re
+
+
+class AppEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        return json.JSONEncoder.default(self, obj)
 
 
 def tel_convert(sentences):
