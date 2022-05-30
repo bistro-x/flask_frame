@@ -47,14 +47,14 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         response_json = response.json()
     else:
         response_json = {}
-    
+
     if response.headers.get("Transfer-Encoding"):
         response.headers.pop("Transfer-Encoding")
     return Response(
         result=response.ok,
-        code = response_json.get("code") if not response.ok else 0,
-        message= response_json.get("message") if not response.ok else None,
-        detail= response_json.get("details") if not response.ok else None,
+        code=response_json.get("code") if not response.ok else 0,
+        message=response_json.get("message") if not response.ok else None,
+        detail=response_json.get("details") if not response.ok else None,
         data=response_json if response.ok else None,
         http_status=response.status_code,
         headers=response.headers,
@@ -131,8 +131,15 @@ def local_run(
     # 执行语句
     data = None
     headers = {}
-
-    if "select" in exec_sql:
+    if isinstance(exec_sql, list):
+        for item_sql in exec_sql:
+            if "returning" in item_sql:
+                item = db.session.execute(first_sql + item_sql).fetchone()
+                data = data or []
+                item and data.append(dict(item))
+            else:
+                db.session.execute(first_sql + item_sql)
+    elif "select" in exec_sql:
         if "application/vnd.pgrst.object+json" in request.headers.get("Accept"):
             query_result = db.session.execute(first_sql + exec_sql).fetchone()
             data = dict(query_result)
@@ -159,7 +166,11 @@ def local_run(
                     "Content-Range"
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
-        db.session.execute(first_sql + exec_sql)
+        if "returning" in exec_sql:
+            item = db.session.execute(first_sql + item_sql).fetchall()
+            data.append(item)
+        else:
+            db.session.execute(first_sql + item_sql)
 
     return data, headers
 

@@ -27,25 +27,30 @@ def generate_sql(
             table_name, args
         )  # 搜索条件
 
+    return_data = "return=representation" in headers.get("Prefer", "")  # 是否返回修改数据
+    return_sql = " returning * " if return_data else ""  # 数据返回语句
+
     if method.casefold() == "get":
         # 数据查询
         sql = f'select {select_sql} from { ",".join(join_table + [table_name])} where {where_sql} {order_sql} {limit_sql};'
         count_sql = f'select count(*) from { ",".join(join_table + [table_name])} where {where_sql} ;'
     elif method.casefold() == "delete":
         # 数据修改
-        sql = f'delete from "{table_name}"  where {where_sql};'
+        sql = f'delete from "{table_name}"  where {where_sql}  {return_sql};'
     elif method.casefold() == "post":
         # 数据新增
         merge = "merge-duplicates" in headers.get("Prefer", "")
-        sql = data_build(table_name, data, merge)
+        sql = data_build(
+            table_name, data, merge, args.get("on_conflict", "").split(","), return_sql
+        )
     elif method.casefold() == "patch":
         # 数据修改
-        sql = update_sql(table_name, data, None, where_sql)
+        sql = update_sql(table_name, data, None, where_sql, return_sql)
 
     else:
         # todo throw error
         print("error")
-    print("sql:" + sql)
+    print("sql:" + str(sql))
     print("count_sql:" + (count_sql or ""))
 
     return sql, count_sql
@@ -262,43 +267,52 @@ def where_sql_build(table_name: str, value: str, key: str = None):
     return where_sql
 
 
-def data_build(table_name, data, merge=False):
+def data_build(table_name, data, merge=False, key_field_list=None, return_sql=""):
     """数据转换
     Args:
        data (List[dict]): 传入参数
     """
-    key_field = "id"
-    # todo 使用 on_conflict
+    if not key_field_list:
+        key_field_list = ["id"]
 
     handle_data = data if isinstance(data, list) else [data]
 
-    sql = ""
+    sql = []
     for item in handle_data:
-        if merge and item.get(key_field):
-            sql += update_sql(table_name, item, key_field)
+        if merge and all(
+            [item.get(key_field, None) is not None for key_field in key_field_list]
+        ):
+            sql.append(
+                update_sql(table_name, item, key_field_list, return_sql=return_sql)
+            )
         else:
-            sql += insert_sql(table_name, item)
+            sql.append(insert_sql(table_name, item, return_sql=return_sql))
 
     return sql
 
 
-def update_sql(table_name, data, key_field="id", where_sql=None):
+def update_sql(table_name, data, key_field_list=["id"], where_sql=None, return_sql=""):
     """构建修改数据
     Args:
         data (_type_): _description_
     """
     if not where_sql:
-        key_value = data.pop(key_field, None)
-        where_sql = f" {replace_key(key_field)}={replace_value(key_value)}"
+        where_sql = []
+        for key_field in key_field_list:
+            key_value = data.pop(key_field, None)
+            where_sql.append(f"{replace_key(key_field)}={replace_value(key_value)}")
+        where_sql = " and ".join(where_sql)
 
     filed_update_sql = ",".join(
         [f"{replace_key(key)}={replace_value(value)}" for key, value in data.items()]
     )
-    sql = f'update "{table_name}" set  {filed_update_sql} where {where_sql};'
+    sql = (
+        f'update "{table_name}" set  {filed_update_sql} where {where_sql} {return_sql};'
+    )
     return sql
 
 
-def insert_sql(table_name, data):
+def insert_sql(table_name, data, return_sql=""):
     """生成插入数据
 
     Args:
@@ -312,7 +326,7 @@ def insert_sql(table_name, data):
     key_sql = ",".join([f"{replace_key(key)}" for key in data.keys()])
     value_sql = ",".join([(f"{replace_value(value)}") for value in data.values()])
 
-    sql = f'insert into "{table_name}" ({key_sql}) values ({value_sql});'
+    sql = f'insert into "{table_name}" ({key_sql}) values ({value_sql}) {return_sql};'
     return sql
 
 
@@ -344,7 +358,7 @@ def replace_value(value: str):
 
     if isinstance(value, list):
         if len(value) == 0:
-            type_name = "text"
+            return "null"
         elif isinstance(value[0], dict):
             type_name = "json"
         elif isinstance(value[0], int):
@@ -394,12 +408,12 @@ if __name__ == "__main__":
         generate_sql(
             "POST",
             "/user",
-            None,
+            {"on_conflict": "name,salary"},
             [
                 {"id": 1, "name": "Old employee 1", "salary": 30000},
                 {"id": 2, "name": "Old employee 2", "salary": 42000},
-                {"name": "New employee 3", "salary": 50000},
+                {"name": "New employee 3"},
             ],
-            {"Prefer": "merge-duplicates"},
+            {"Prefer": "merge-duplicates,return=representation"},
         )
     )
