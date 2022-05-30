@@ -126,7 +126,13 @@ def condition_bulid(table_name: str, args: dict):
             limit_sql += f" offset {value}"
             continue
         elif key.casefold() == "order":
-            order_sql += f" order by {value.replace('.',' ').replace('nullslast','nulls last').replace('nullsfirst','nulls first')}"
+            values = value.replace('nullslast','nulls last').replace('nullsfirst','nulls first').split(".")
+            if "->>" in values[0]:
+                keys = values[0].split("->>")
+                for i in range(1, len(keys)):
+                    keys[i] = f"'{keys[i]}'"
+                values[0] = "->>".join(keys)
+            order_sql += f" order by {' '.join(values)}"
             continue
         else:
             where_sql += " and " + where_sql_build(table_name, value, key)
