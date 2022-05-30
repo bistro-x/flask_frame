@@ -268,6 +268,8 @@ def data_build(table_name, data, merge=False):
        data (List[dict]): 传入参数
     """
     key_field = "id"
+    # todo 使用 on_conflict
+
     handle_data = data if isinstance(data, list) else [data]
 
     sql = ""
@@ -282,7 +284,6 @@ def data_build(table_name, data, merge=False):
 
 def update_sql(table_name, data, key_field="id", where_sql=None):
     """构建修改数据
-
     Args:
         data (_type_): _description_
     """

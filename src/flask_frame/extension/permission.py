@@ -89,7 +89,7 @@ def check_user_permission(token_string=None):
     return check_url_permission(user)
 
 
-def check_url_permission(user):
+def check_url_permission(user, product_key=None):
     """检测是否有相关接口权限
 
 
@@ -116,14 +116,16 @@ def check_url_permission(user):
     # 静态文件不进行限制
     if check_path and check_path.startswith("/static/"):
         return True
-    
+
     # 权限库没有定义的接口，就不进行限制。
+    product_key = product_key or app.config.get("PRODUCT_KEY")
     if (
         user
         and user.get("no_permissions")
         and any(
-            app.config.get("PRODUCT_KEY") == permission.get("product_key") and 
-            permission.get("url") == check_path and permission.get("method") == method
+            product_key == permission.get("product_key")
+            and permission.get("url") == check_path
+            and permission.get("method") == method
             for permission in user.get("no_permissions")
         )
     ):
