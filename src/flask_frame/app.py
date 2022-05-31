@@ -49,15 +49,13 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
         from .extension.database import db
 
         if db:
-            db.session.commit()
+            if not e:
+                db.session.commit()
             db.session.remove()
 
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
-        from .extension.database import db
-
-        db.session.rollback()
         app.logger.exception(error)
 
         if isinstance(error, BusiError):

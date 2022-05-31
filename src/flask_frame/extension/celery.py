@@ -91,11 +91,9 @@ class BaseTask(Task):
         from .database import db
         from .database.model import Param
 
-        Param.query.session.rollback()
-        Param.query.session.close()
+        Param.query.session.remove()
         if db:
-            db.session.rollback()
-            db.session.close()
+            db.session.remove()
 
         return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
