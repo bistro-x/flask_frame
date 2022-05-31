@@ -167,10 +167,10 @@ def local_run(
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
         if "returning" in exec_sql:
-            item = db.session.execute(first_sql + item_sql).fetchall()
+            item = db.session.execute(first_sql + exec_sql).fetchall()
             data.append(item)
         else:
-            db.session.execute(first_sql + item_sql)
+            db.session.execute(first_sql + exec_sql)
 
     return data, headers
 
