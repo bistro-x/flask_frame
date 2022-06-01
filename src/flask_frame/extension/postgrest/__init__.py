@@ -21,7 +21,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
     # 本地代理
     if proxy_local:
         data, headers = local_run(
-            method=method, url=url, args=params, headers=None, **kwargs
+            method=method, url=url, args=params, headers=headers, **kwargs
         )
         return Response(data=data, headers=headers)
 
@@ -167,8 +167,8 @@ def local_run(
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
         if "returning" in exec_sql:
-            item = db.session.execute(first_sql + exec_sql).fetchall()
-            data.append(item)
+            query_result = db.session.execute(first_sql + exec_sql).fetchall()
+            data = [dict(row) for row in query_result]
         else:
             db.session.execute(first_sql + exec_sql)
 
