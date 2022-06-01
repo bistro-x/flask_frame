@@ -206,11 +206,14 @@ def remove_punctuation(sentences, includ_variable=True, replace_text=""):
     result = sentences.strip()
     result = re.sub(f"[{hanzi.punctuation}]", replace_text, result)
     eng_punctuation = [*string.punctuation]
+
     if not includ_variable:
         eng_punctuation.remove("{")
         eng_punctuation.remove("}")
+        
+    for item in eng_punctuation:
+        result = result.replace(item, replace_text)
 
-    result = re.sub(f"{eng_punctuation}", replace_text, result)
     return result
 
 
