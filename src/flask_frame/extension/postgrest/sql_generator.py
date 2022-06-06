@@ -26,6 +26,8 @@ def generate_sql(
         select_sql, where_sql, order_sql, limit_sql, join_table = condition_bulid(
             table_name, args
         )  # 搜索条件
+    else:
+        select_sql = *
 
     return_data = "return=representation" in headers.get("Prefer", "")  # 是否返回修改数据
     return_sql = " returning * " if return_data else ""  # 数据返回语句
