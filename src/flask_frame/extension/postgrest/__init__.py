@@ -21,7 +21,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
     # 本地代理
     if proxy_local:
         data, headers = local_run(
-            method=method, url=url, args=params, headers=headers, **kwargs
+            method=method, url=url, params=params, headers=headers, **kwargs
         )
         return Response(data=data, headers=headers)
 

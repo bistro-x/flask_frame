@@ -27,15 +27,16 @@ def generate_sql(
             table_name, args
         )  # 搜索条件
     else:
-        select_sql = *
+        select_sql = "*"
 
     return_data = "return=representation" in headers.get("Prefer", "")  # 是否返回修改数据
     return_sql = " returning * " if return_data else ""  # 数据返回语句
 
     if method.casefold() == "get":
+        table_name_str = '"' + '","'.join(join_table + [table_name]) + '"'
         # 数据查询
-        sql = f'select {select_sql} from { ",".join(join_table + [table_name])} where {where_sql} {order_sql} {limit_sql};'
-        count_sql = f'select count(*) from { ",".join(join_table + [table_name])} where {where_sql} ;'
+        sql = f"select {select_sql} from {table_name_str } where {where_sql} {order_sql} {limit_sql};"
+        count_sql = f'select count(*) from { table_name_str} where {where_sql} ;'
     elif method.casefold() == "delete":
         # 数据修改
         sql = f'delete from "{table_name}"  where {where_sql}  {return_sql};'
@@ -128,7 +129,11 @@ def condition_bulid(table_name: str, args: dict):
             limit_sql += f" offset {value}"
             continue
         elif key.casefold() == "order":
-            values = value.replace('nullslast','nulls last').replace('nullsfirst','nulls first').split(".")
+            values = (
+                value.replace("nullslast", "nulls last")
+                .replace("nullsfirst", "nulls first")
+                .split(".")
+            )
             if "->>" in values[0]:
                 keys = values[0].split("->>")
                 for i in range(1, len(keys)):
