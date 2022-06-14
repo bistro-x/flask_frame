@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import json
-from datetime import datetime
+from datetime import datetime, date
 import string
 import cn2an
 import uuid
@@ -14,6 +14,8 @@ class AppEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if isinstance(obj, date):
+            return obj.strftime("%Y-%m-%d")
         if isinstance(obj, uuid.UUID):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
