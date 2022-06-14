@@ -10,7 +10,7 @@ with pathlib.Path("requirements.txt").open() as requirements_txt:
 
 setup(
     name="flask_frame",
-    version="0.2.24",
+    version="0.2.25",
     author="wuhanchu",
     author_email="whcwuhanchu@gmail.com",
     description=u"基于FLASK快速开发REST接口框架",
