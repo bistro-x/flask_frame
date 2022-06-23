@@ -369,12 +369,11 @@ def replace_value(value: str):
     if value is None:
         return "null"
 
-    if isinstance(value, list):
-        if len(value) == 0:
-            return "null"
-        elif isinstance(value[0], dict):
-            type_name = "json"
-        elif isinstance(value[0], int):
+    if isinstance(value, list) and len(value) == 0:
+        return "null"
+
+    if isinstance(value, list) and not isinstance(value[0], dict):
+        if isinstance(value[0], int):
             type_name = "integer"
         else:
             type_name = "text"
@@ -386,11 +385,14 @@ def replace_value(value: str):
             if len(value) > 0
             else f"array[]::{type_name}[]"
         )
-    if isinstance(value, dict):
+
+    if isinstance(value, dict) or (isinstance(value, list) and isinstance(value[0], dict)):
         result = json.dumps(value, ensure_ascii=False)
         return "'" + result + "'"
+
     if str(value) == "null":
         return value
+
     if str(value).startswith("("):
         result = value.replace("(", "").replace(")", "").split(",")
         result = "(" + ",".join([f"{replace_value(item)}" for item in result]) + ")"
