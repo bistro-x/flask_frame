@@ -242,7 +242,7 @@ def where_sql_build(table_name: str, value: str, key: str = None):
             break
 
     # 子条件
-    where_sql += f" {table_name}.{replace_key(key)}  "
+    where_sql += f' "{table_name}".{replace_key(key)}  '
 
     # 拆分表达式和数值
     split_index = 0
