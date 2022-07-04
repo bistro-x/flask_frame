@@ -4,6 +4,7 @@ from datetime import datetime, date
 import string
 import cn2an
 import uuid
+from decimal import Decimal
 
 from zhon import hanzi
 import re
@@ -17,6 +18,8 @@ class AppEncoder(json.JSONEncoder):
         if isinstance(obj, date):
             return obj.strftime("%Y-%m-%d")
         if isinstance(obj, uuid.UUID):
+            return str(obj)
+        if isinstance(obj, Decimal):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
