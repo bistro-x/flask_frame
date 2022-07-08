@@ -21,6 +21,12 @@ def json_dumps(*data, **kwargs):
 
 
 def init_app(app):
+    """初始化数据库
+
+    Args:
+        app (flask app): _description_
+    """
+
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
@@ -28,18 +34,27 @@ def init_app(app):
     # 兼容高斯
     if "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
         from sqlalchemy.dialects.postgresql.base import PGDialect
-
         PGDialect._get_server_version_info = lambda *args: (9, 2)
 
+    # 其余参数
+    params = {}
+    if app.config.get("session_options"):
+        params["session_options"] = app.config.get("session_options")
+
+    # 从环境变量获取参数
     if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
-        db = SQLAlchemy(app)
+        db = SQLAlchemy(app, **params)
+
+    # 自定义参数初始化
     else:
+        # 自定义变量
         engine_options_env = {}
         if app.config.get("DB_POOL_SIZE"):
             engine_options_env["pool_size"] = app.config.get("DB_POOL_SIZE")
         if app.config.get("DB_MAX_OVERFLOW"):
             engine_options_env["max_overflow"] = app.config.get("DB_MAX_OVERFLOW")
 
+        # 初始化
         db = SQLAlchemy(
             app,
             engine_options={
@@ -50,6 +65,7 @@ def init_app(app):
                 "pool_pre_ping": True,
                 **engine_options_env,
             },
+            **params,
         )
 
     # init_database
