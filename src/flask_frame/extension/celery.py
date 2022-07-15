@@ -78,9 +78,7 @@ class BaseTask(Task):
 
     def on_success(self, retval, task_id, args, kwargs):
         from .database import db
-        from .database.model import Param
 
-        Param.query.session.commit()
         if db:
             db.session.commit()
             db.session.remove()
@@ -89,41 +87,11 @@ class BaseTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from .database import db
-        from .database.model import Param
 
         if isinstance(exc, OperationalError) or isinstance(exc, InvalidRequestError):
             db.session.remove()
             db.engine.dispose()
-            Param.query.session.close()
         else:
             db.session.rollback()
-            Param.query.session.rollback()
-            
+
         return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
-
-
-@worker_init.connect
-def before_worker_init(**kwargs):
-    from .database import db
-    from .database.model import Param
-
-    with flask_app.app_context():
-        db.engine.dispose()
-        Param.query.session.close()
-
-
-@task_prerun.connect
-def before_task_start(**kwargs):
-    from .database import db
-    from .database.model import Param
-
-    try:
-        Param.query.session.execute("SELECT 1")
-    except Exception as e:
-        if isinstance(e, OperationalError) or isinstance(e, InvalidRequestError):
-            logger.info("before task ping error")
-            Param.query.session.close()
-            db.session.remove()
-            db.engine.dispose()
-        else:
-            logger.error(f"execute ping catch {str(e)}")
