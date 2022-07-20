@@ -94,3 +94,9 @@ rm -rf dist
 python3 setup.py sdist bdist_wheel
 twine upload dist/*
 ```
+
+## todo
+
+### gevent 和 loguru 冲突
+
+issue: <https://github.com/Delgan/loguru/issues/258>
