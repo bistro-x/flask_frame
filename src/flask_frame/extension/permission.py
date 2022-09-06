@@ -99,6 +99,13 @@ def check_url_permission(user, product_key=None):
         _type_: 是否通过
     """
     # 没有用户信息直接返回
+    check_path = request.url_rule.rule if request.url_rule else request.path
+    method = request.method
+
+    # 静态文件不进行限制
+    if check_path and check_path.startswith("/static/"):
+        return True
+    
     if not user:
         return False
 
@@ -109,14 +116,7 @@ def check_url_permission(user, product_key=None):
     # 客户端校验
     if user and user.get("client_id") and not user.get("id"):
         return True
-
-    check_path = request.url_rule.rule if request.url_rule else request.path
-    method = request.method
-
-    # 静态文件不进行限制
-    if check_path and check_path.startswith("/static/"):
-        return True
-
+    
     # 权限库没有定义的接口，就不进行限制。
     product_key = product_key or app.config.get("PRODUCT_KEY")
     if (
