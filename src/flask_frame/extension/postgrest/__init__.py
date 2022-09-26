@@ -88,7 +88,7 @@ def proxy():
     global flask_app, server_url
 
     # request.url_rule
-    if not flask_app or request.url_rule:
+    if not flask_app or (request.url_rule and not request.headers.get("proxy")):
         return
 
     # proxy
@@ -100,6 +100,7 @@ def proxy():
     response = proxy_request(
         request.method, request.path, request.headers, request.args, **other_param
     )
+    
     return response.mark_flask_response()
 
 
@@ -180,7 +181,7 @@ def init_app(app):
     flask_app = app
     server_url = flask_app.config.get("PROXY_SERVER_URL")
     proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
-    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 本地代理
+    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
 
     # get proxy config
     if proxy_custom:
