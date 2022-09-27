@@ -79,6 +79,20 @@ def proxy_response(response):
 
     return response.content, response.status_code, headers
 
+def is_send_proxy():
+    """是否发送请求到代理服务
+
+    Returns:
+        boolean: 判断结果 
+    """
+    global flask_app, server_url
+    
+    # request.url_rule
+    if not flask_app or (request.url_rule and not request.headers.get("proxy")):
+        return False
+    
+    return True
+
 
 def proxy():
     """
@@ -88,10 +102,9 @@ def proxy():
     global flask_app, server_url
 
     # request.url_rule
-    if not flask_app or (request.url_rule and not request.headers.get("proxy")):
+    if not is_send_proxy():
         return
 
-    # proxy
     # 调用远程服务
     other_param = {}
     if request.data:

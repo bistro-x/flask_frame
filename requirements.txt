@@ -5,7 +5,8 @@ psycopg2~=2.9.3
 PyMySQL==0.9.3
 requests~=2.27.1
 flask-restplus~=0.13.0
-Werkzeugapispec>=0.20.0,<0.39
+Werkzeug>=0.16.0
+apispec>=0.20.0,<0.39
 
 marshmallow~=3.7.0
 marshmallow-sqlalchemy>=0.23.1
