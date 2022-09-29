@@ -32,9 +32,13 @@ def init_app(app):
     db_schema = app.config.get("DB_SCHEMA")
 
     # 兼容高斯
-    if "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
+    version = app.config.get("DB_VERSION")
+    if version or "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
+        version_list = [int(item) for item in (version or "9.2").split(".")]
+
         from sqlalchemy.dialects.postgresql.base import PGDialect
-        PGDialect._get_server_version_info = lambda *args: (9, 2)
+
+        PGDialect._get_server_version_info = lambda *args: tuple(version_list)
 
     # 其余参数
     params = {}
