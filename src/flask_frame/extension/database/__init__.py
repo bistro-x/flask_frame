@@ -63,7 +63,8 @@ def init_app(app):
             app,
             engine_options={
                 "json_serializer": json_dumps,
-                "pool_recycle": 1200,
+                # 配置成1200 会导致对接 高斯 断开报错
+                "pool_recycle": 600,
                 "pool_size": 5,
                 "max_overflow": 30,
                 "pool_pre_ping": True,
