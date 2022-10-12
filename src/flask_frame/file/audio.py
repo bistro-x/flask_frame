@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-from tkinter import E
 import wave
 import sndhdr
 
