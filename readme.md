@@ -3,6 +3,23 @@
 建议使用 flask_rest_frame 被作为子模块引入到当前项目的 frame 文件夹下
 下方的说明都是以 frame 文件夹的基础
 
+## 基础镜像
+
+### python
+
+基础镜像
+
+```bash
+#3.6
+docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/python:3.6_alpie && docker push wuhanchu/alpine-python3:3.6
+
+# image first build
+nohup docker build . --force-rm=true -f docker/Dockerfile.alpine -t wuhanchu/python:3_alpine && docker push wuhanchu/alpine-python3:latest &
+
+# image update
+nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpnie && docker push wuhanchu/alpine-python3:latest &
+```
+
 ## 编译
 
 普通编译
@@ -15,22 +32,6 @@ docker build -f ./frame/docker/Dockerfile.source  .
 
 ```bash
 docker build -f ./frame/docker/Dockerfile.encrypt  .
-```
-
-基础镜像
-
-```bash
-#3.6
-docker build . --force-rm=true -f ./docker/Dockerfile.alpine.3.6 -t server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6
-
-#3.8
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
-
-# image first build
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &s
-
-# image update
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine_continue -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
 ```
 
 ## 文件夹文件

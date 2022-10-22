@@ -1,0 +1,23 @@
+FROM server.aiknown.cn:31003/z_ai_frame/alpine-python3
+USER root
+
+
+RUN wget http://download.videolan.org/pub/videolan/x264/snapshots/x264-snapshot-20191217-2245-stable.tar.bz2 --no-check-certificate \
+    && tar -xf x264-snapshot-20191217-2245-stable.tar.bz2 \
+    && cd x264-snapshot-20191217-2245-stable \
+    && ./configure --prefix=/usr/local/x264 --includedir=/usr/local/include --libdir=/usr/local/lib --enable-shared --enable-static --disable-asm && make \
+    && make install \
+    && cd .. \
+    && rm -rf x264-snapshot-20191217-2245-stable
+
+RUN wget http://ffmpeg.org/releases/ffmpeg-4.4.1.tar.bz2 --no-check-certificate \
+    && tar -xf ffmpeg-4.4.1.tar.bz2 \
+    && cd  ffmpeg-4.4.1 \
+    && ./configure --enable-shared --enable-x86asm --enable-libx264 --enable-gpl --enable-pthreads  \
+    && make \
+    && make install
+
+COPY "./requirements.txt" "./requirements.txt"
+COPY "./requirements_all.txt" "./requirements_all.txt"
+
+RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
