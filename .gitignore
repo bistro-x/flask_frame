@@ -1,3 +1,10 @@
 ./test/data_tmp
 nohup.out
 __pycache__
+
+dist
+*.egg-info
+.pytest_cache
+build
+.pytest_cache
+.vscode
