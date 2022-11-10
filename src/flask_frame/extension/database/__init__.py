@@ -285,7 +285,7 @@ def run_sql(file_path, db, first_sql):
                     if (
                         not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
-                        db.session.execute(sql_command)
+                        db.session.connection().execution_options(no_parameters=True).execute(sql_command)
                         sql_command = ""
                         function_start = False
 
