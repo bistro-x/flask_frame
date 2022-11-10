@@ -1,4 +1,6 @@
 FROM server.aiknown.cn:31003/z_ai_frame/alpine-python3
+USER root
+
 
 COPY "./requirements.txt" "./requirements.txt"
 COPY "./requirements_all.txt" "./requirements_all.txt"

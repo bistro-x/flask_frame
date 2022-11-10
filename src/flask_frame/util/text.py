@@ -1,9 +1,27 @@
 # -*- coding: UTF-8 -*-
+import json
+from datetime import datetime, date
 import string
 import cn2an
+import uuid
+from decimal import Decimal
 
 from zhon import hanzi
 import re
+
+
+class AppEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if isinstance(obj, date):
+            return obj.strftime("%Y-%m-%d")
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def tel_convert(sentences):
@@ -174,31 +192,34 @@ def punctuation_convert(sentences):
     )
 
 
-def remove_punctuation(sentences, includ_variable=True):
-    """ 去除标点符号
+def remove_punctuation(sentences, includ_variable=True, replace_text=""):
+    """去除标点符号
 
 
     Args:
         sentences (str): 处理文本
         includ_variable (bool, optional): 是否去除变量符号. Defaults to True.
+        replace_text (str): 去除后替换的文本. Defaults to "".
 
     Returns:
         _type_: 返回文本
     """
-    
+
     if not sentences:
         return sentences
 
     result = sentences.strip()
-    result = re.sub(f"[{hanzi.punctuation}]", "", result)
+    result = re.sub(f"[{hanzi.punctuation}]", replace_text, result)
     eng_punctuation = [*string.punctuation]
+
     if not includ_variable:
         eng_punctuation.remove("{")
         eng_punctuation.remove("}")
         
-    result = re.sub(f"[{eng_punctuation}]", "", result)
-    return result
+    for item in eng_punctuation:
+        result = result.replace(item, replace_text)
 
+    return result
 
 
 def time_convert(sentences):
@@ -312,7 +333,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
     :param sentence:  待转换的句子字符串
     :param no_convert_words:  不处理的字符串
     """
-    from frame.extension.participle import participle_sentence
+    from ..extension.participle import participle_sentence
 
     numbers = ["零", "一", "幺", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
 
@@ -334,7 +355,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
         words_span.append(None)
 
         for i in range(0, len(words_span), 2):
-            sub_sentences.append(sentence[words_span[i]: words_span[i + 1]])
+            sub_sentences.append(sentence[words_span[i] : words_span[i + 1]])
 
         participle_sub_sentences = participle_sentence(sub_sentences)
         for sub_sentence in participle_sub_sentences:
@@ -344,7 +365,7 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
         for i, sub_sentence in enumerate(participle_sub_sentences):
             words.append("".join(sub_sentence))
             if i + 1 < len(participle_sub_sentences):
-                words.append(sentence[words_span[i * 2 + 1]: words_span[i * 2 + 2]])
+                words.append(sentence[words_span[i * 2 + 1] : words_span[i * 2 + 2]])
 
     else:
         words = participle_sentence(sentence)
@@ -363,7 +384,7 @@ def convert_sentence_arabic_number_to_chinese(sentence):
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
     :param sentence:  待转换的句子字符串
     """
-    from frame.extension.participle import participle_sentence
+    from ..extension.participle import participle_sentence
 
     words = participle_sentence(sentence)
 
@@ -380,7 +401,7 @@ def convert_chinese_number_to_arabic(word):
     中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     :param word:   待转换的单词字符串
     """
-    from frame.extension.participle import participle_app
+    from ..extension.participle import participle_app
 
     def cn2an_convert(target, method, method_model=None):
         try:
@@ -412,7 +433,7 @@ def convert_chinese_number_to_arabic(word):
                     zero_prefix = ""
                 else:
                     zero_prefix = "0" * start_with_zero.span()[-1]
-                    word = word[start_with_zero.span()[-1]:]
+                    word = word[start_with_zero.span()[-1] :]
                 converted_word = zero_prefix + (
                     cn2an_convert(word, "cn2an", "smart")
                     or cn2an_convert(word, "transform")
@@ -428,7 +449,7 @@ def convert_arabic_number_to_chinese(word, model="low"):
     :param word:   待转换的单词字符串
     :param model:  cn2an转换模式 low/up/rmb/direct
     """
-    from frame.extension.participle import participle_app
+    from ..extension.participle import participle_app
 
     number_reg_check = "\d+\.?\d*"
 

@@ -9,8 +9,8 @@ import ffmpeg
 import numpy as np
 from pydub import AudioSegment
 
-from frame.file import get_file_info
-from frame.http.exception import ResourceError
+from ..file import get_file_info
+from ..api.exception import ResourceError
 
 
 def get_wav_info(wav_path):

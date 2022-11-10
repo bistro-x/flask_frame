@@ -1,8 +1,6 @@
-import json
-from operator import index
 import requests
 from flask import request
-from ...http.response import Response
+from ...api.response import Response
 
 flask_app = None
 server_url = None
@@ -22,7 +20,9 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
 
     # 本地代理
     if proxy_local:
-        data, headers = local_run(method=method, url=url, args=params, headers=None, **kwargs)
+        data, headers = local_run(
+            method=method, url=url, params=params, headers=headers, **kwargs
+        )
         return Response(data=data, headers=headers)
 
     send_headers = {}
@@ -33,17 +33,29 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         send_headers["Authorization"] = None
 
     response = requests.request(
-        method=method, url=server_url + url, params=params, headers=send_headers, **kwargs
+        method=method,
+        url=server_url + url,
+        params=params,
+        headers=send_headers,
+        **kwargs,
     )
 
-    if "content-type" in response.headers and "json" in response.headers["content-type"]:
+    if (
+        "content-type" in response.headers
+        and "json" in response.headers["content-type"]
+    ):
         response_json = response.json()
     else:
         response_json = {}
 
+    if response.headers.get("Transfer-Encoding"):
+        response.headers.pop("Transfer-Encoding")
     return Response(
         result=response.ok,
-        data=response_json,
+        code=response_json.get("code") if not response.ok else 0,
+        message=response_json.get("message") if not response.ok else None,
+        detail=response_json.get("details") if not response.ok else None,
+        data=response_json if response.ok else None,
         http_status=response.status_code,
         headers=response.headers,
     )
@@ -67,6 +79,20 @@ def proxy_response(response):
 
     return response.content, response.status_code, headers
 
+def is_send_proxy():
+    """是否发送请求到代理服务
+
+    Returns:
+        boolean: 判断结果 
+    """
+    global flask_app, server_url
+    
+    # request.url_rule
+    if not flask_app or (request.url_rule and not request.headers.get("proxy")):
+        return False
+    
+    return True
+
 
 def proxy():
     """
@@ -76,18 +102,18 @@ def proxy():
     global flask_app, server_url
 
     # request.url_rule
-    if not flask_app or request.url_rule:
+    if not is_send_proxy():
         return
 
-    # proxy
     # 调用远程服务
     other_param = {}
     if request.data:
         other_param["json"] = request.json
 
     response = proxy_request(
-        request.method, request.path, request.headers,request.params, **other_param
+        request.method, request.path, request.headers, request.args, **other_param
     )
+    
     return response.mark_flask_response()
 
 
@@ -119,8 +145,15 @@ def local_run(
     # 执行语句
     data = None
     headers = {}
-
-    if "select" in exec_sql:
+    if isinstance(exec_sql, list):
+        for item_sql in exec_sql:
+            if "returning" in item_sql:
+                item = db.session.execute(first_sql + item_sql).fetchone()
+                data = data or []
+                item and data.append(dict(item))
+            else:
+                db.session.execute(first_sql + item_sql)
+    elif "select" in exec_sql:
         if "application/vnd.pgrst.object+json" in request.headers.get("Accept"):
             query_result = db.session.execute(first_sql + exec_sql).fetchone()
             data = dict(query_result)
@@ -147,7 +180,11 @@ def local_run(
                     "Content-Range"
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
-        db.session.execute(first_sql + exec_sql)
+        if "returning" in exec_sql:
+            query_result = db.session.execute(first_sql + exec_sql).fetchall()
+            data = [dict(row) for row in query_result]
+        else:
+            db.session.execute(first_sql + exec_sql)
 
     return data, headers
 
@@ -157,7 +194,7 @@ def init_app(app):
     flask_app = app
     server_url = flask_app.config.get("PROXY_SERVER_URL")
     proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
-    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 本地代理
+    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
 
     # get proxy config
     if proxy_custom:

@@ -7,7 +7,7 @@ import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 
-from .lock import get_lock, Lock
+from ..lock import get_lock, Lock
 
 db = None
 db_schema = "public"
@@ -21,29 +21,56 @@ def json_dumps(*data, **kwargs):
 
 
 def init_app(app):
+    """初始化数据库
+
+    Args:
+        app (flask app): _description_
+    """
+
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
 
+    # 兼容高斯
+    version = app.config.get("DB_VERSION")
+    if version or "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
+        version_list = [int(item) for item in (version or "9.2").split(".")]
+
+        from sqlalchemy.dialects.postgresql.base import PGDialect
+
+        PGDialect._get_server_version_info = lambda *args: tuple(version_list)
+
+    # 其余参数
+    params = {}
+    if app.config.get("session_options"):
+        params["session_options"] = app.config.get("session_options")
+
+    # 从环境变量获取参数
     if app.config.get("SQLALCHEMY_ENGINE_OPTIONS"):
-        db = SQLAlchemy(app)
+        db = SQLAlchemy(app, **params)
+
+    # 自定义参数初始化
     else:
+        # 自定义变量
         engine_options_env = {}
         if app.config.get("DB_POOL_SIZE"):
             engine_options_env["pool_size"] = app.config.get("DB_POOL_SIZE")
         if app.config.get("DB_MAX_OVERFLOW"):
             engine_options_env["max_overflow"] = app.config.get("DB_MAX_OVERFLOW")
 
+        # 初始化
         db = SQLAlchemy(
             app,
             engine_options={
                 "json_serializer": json_dumps,
-                "pool_recycle": 1200,
+                # 配置成1200 会导致对接 高斯 断开报错
+                "pool_recycle": 600,
                 "pool_size": 5,
                 "max_overflow": 30,
                 "pool_pre_ping": True,
                 **engine_options_env,
             },
+            **params,
         )
 
     # init_database
@@ -54,10 +81,13 @@ def init_app(app):
 
         #  开发版本更新
         import os
+
         version_file_list = app.config.get("DB_VERSION_FILE")
         if not version_file_list:
             sql_path = "sql/migrate"
-            version_file_list = [os.path.join(sql_path, item) for item in os.listdir(sql_path)]
+            version_file_list = [
+                os.path.join(sql_path, item) for item in os.listdir(sql_path)
+            ]
 
         if init_file_list:
             init_db(db, db_schema, init_file_list, version_file_list)
@@ -142,9 +172,7 @@ def init_db(db, schema, file_list, version_file_list):
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
 
             db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
-            db.engine.execute(
-                f"GRANT ALL ON SCHEMA {db_schema} TO current_user;"
-            )
+            db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
 
@@ -152,7 +180,7 @@ def init_db(db, schema, file_list, version_file_list):
             #  根据版本运行更新脚本
             update_db_sign = False  # 数据库更新脚本执行标志
             for version_file in sorted(
-                    version_file_list, key=functools.cmp_to_key(file_compare_version)
+                version_file_list, key=functools.cmp_to_key(file_compare_version)
             ):
                 (file_path, temp_file_name) = os.path.split(version_file)
                 (current_version, extension) = os.path.splitext(temp_file_name)
@@ -251,13 +279,13 @@ def run_sql(file_path, db, first_sql):
                 # Ignore commented lines
                 if not line.lstrip().startswith("--") and line.strip("\n"):
                     # Append line to the command string
-                    sql_command += " " + line.strip("\n")
+                    sql_command += " " + line.strip("\n").strip()
 
                     # If the command string ends with ';', it is a full statement
                     if (
-                            not function_start and sql_command.endswith(";")
+                        not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
-                        db.session.execute(sqlalchemy.text(sql_command))
+                        db.session.connection().execution_options(no_parameters=True).execute(sql_command)
                         sql_command = ""
                         function_start = False
 
@@ -280,8 +308,8 @@ def sql_concat(file_path, param):
         for line in sql_file:
             text = line.strip()
             if (
-                    text.startswith("--{")
-                    and text.replace("--{", "").replace("}", "") in param.keys()
+                text.startswith("--{")
+                and text.replace("--{", "").replace("}", "") in param.keys()
             ):
                 text = line.replace("--", "").format(**param)
             elif text.startswith("--") and text:

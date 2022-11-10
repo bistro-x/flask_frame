@@ -3,6 +3,23 @@
 建议使用 flask_rest_frame 被作为子模块引入到当前项目的 frame 文件夹下
 下方的说明都是以 frame 文件夹的基础
 
+## 基础镜像
+
+### python
+
+基础镜像
+
+```bash
+#3.6
+docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/python:3.6_alpie && docker push wuhanchu/python:3.6_alpie
+
+# image first build
+nohup docker build . --force-rm=true -f docker/Dockerfile.alpine -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine &
+
+# image update
+nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpnie && docker push wuhanchu/python:3_alpnie:latest &
+```
+
 ## 编译
 
 普通编译
@@ -15,22 +32,6 @@ docker build -f ./frame/docker/Dockerfile.source  .
 
 ```bash
 docker build -f ./frame/docker/Dockerfile.encrypt  .
-```
-
-基础镜像
-
-```bash
-#3.6
-docker build . --force-rm=true -f ./docker/Dockerfile.alpine.3.6 -t server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:3.6
-
-#3.8
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
-
-# image first build
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &s
-
-# image update
-nohup docker build . --force-rm=true -f ./docker/Dockerfile.alpine_continue -t server.aiknown.cn:31003/z_ai_frame/alpine-python3 && docker push server.aiknown.cn:31003/z_ai_frame/alpine-python3:latest &
 ```
 
 ## 文件夹文件
@@ -51,9 +52,19 @@ requirements.txt 框架依赖的库
     |-- requirements_all.txt                  # 规定使用项目用到的所有库和版本，作为基础镜像打包
 
 ## 插件支持
-- api_log: 记录API请求到数据库中进行保留
-    - api_log_clean: celery 支持的自动日志清理函数，需要在config 配置对应任务启用。
-    
+
+- api_log: 记录 API 请求到数据库中进行保留
+  - api_log_clean: celery 支持的自动日志清理函数，需要在 config 配置对应任务启用。
+
+### sentry
+
+支持配置sentry插件和对应的初始化参数。
+初始化参数会从app.config 取前缀未sentry的配置值。如果你想修改sentry的初始化参数，可以使用下面的对应逻辑。
+
+environment -> SENTRY_ENVIRONMENT
+
+只要 app.config 包含 SENTRY_ENVIRONMENT 的数据就可以在sentry_sdk.init 传入  environment 参数。
+
 ## 环境配置
 
 | 分组   | 配置项                  | 说明                                                            |
@@ -64,10 +75,10 @@ requirements.txt 框架依赖的库
 | 数据库 | DB_INIT_FILE            | 数据库初始化脚本                                                |
 | 数据库 | DB_VERSION_FILE         | 数据库迭代脚本（根据版本更新）                                  |
 | 数据库 | DB_UPDATE_FILE          | 数据库开发脚本（本次启动运行）                                  |
-| 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开则每次创建运行，关则必须有版本更新才会调用）            |
+| 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开则每次创建运行，关则必须有版本更新才会调用）    |
 | 权限   | FETCH_USER              | 是否获取用户                                                    |
 | 权限   | CHECK_API               | API 接口检查                                                    |
-| 插件   | API_LOG_RETENTION_DAYS  | API日志保留天数,默认30天     |
+| 插件   | API_LOG_RETENTION_DAYS  | API 日志保留天数,默认 30 天                                     |
 
 ## 权限初始化
 
@@ -76,11 +87,26 @@ invoke api-init
 
 给 admin 做所有功能的授权
 
-
 ## 使用
-请求在url参数中加入profile=true可进入调试模式。
+
+请求在 url 参数中加入 profile=true 可进入调试模式。
 
 ### 默认接口
+
 get /flask/log 读取日志列表
 get /flask/log/download 下载日志列表
 get /static/log/{文件路径} 显示对应日志信息
+
+## 发布
+
+```shell
+rm -rf dist
+python3 setup.py sdist bdist_wheel
+twine upload dist/*
+```
+
+## todo
+
+### gevent 和 loguru 冲突
+
+issue: <https://github.com/Delgan/loguru/issues/258>

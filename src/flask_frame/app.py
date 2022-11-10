@@ -6,12 +6,12 @@ from flask import Flask, g, make_response, send_file
 from flask import request
 from pyinstrument import Profiler
 
-from config import config
-from frame.http.exception import BusiError, ResourceError
-from frame.util.file import zip_path
+from .api.exception import BusiError, ResourceError
+from .util.file import zip_path
+from .util.text import AppEncoder
 
 
-def create_app(flask_config_name=None, config_custom=None, **kwargs):
+def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     """
     create the app
     :param flask_config_name:
@@ -20,6 +20,7 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     :return:
     """
     app = Flask(__name__, root_path=os.getcwd())
+    app.json_encoder = AppEncoder
 
     # 初始化app
     config_name = (
@@ -45,18 +46,20 @@ def create_app(flask_config_name=None, config_custom=None, **kwargs):
     @app.teardown_request
     def teardown(e):
 
-        from frame.extension.database import db
+        from .extension.database import db
 
         if db:
-            db.session.commit()
+            if not e:
+                db.session.commit()
             db.session.remove()
 
     # 全局异常处理
     @app.errorhandler(Exception)
     def exception_handle(error):
-        from frame.extension.database import db
+        from .extension.database import db
 
         db.session.rollback()
+
         app.logger.exception(error)
 
         if isinstance(error, BusiError):

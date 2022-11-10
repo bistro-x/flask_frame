@@ -3,10 +3,22 @@ import wave
 import sndhdr
 
 
-def is_audio(ext):
-    """判断是否是音频"""
-    if ext in ["midi", "mp3", 'm4a', 'ogg', 'flac', 'wav', 'amr', 'pcm']:
+def is_audio(info) -> bool:
+    """判断是否是音频
+    Args:
+        info (_type_): 扩展名或者文件信息
+
+    Returns:
+        bool: 判断结果
+    """
+    ext_list = ["midi", "mp3", "m4a", "ogg", "flac", "wav", "amr", "pcm"]
+
+    if info in ext_list:
         return True
+    # todo 根据其他方式检测
+    elif isinstance(info, dict):
+        if info.get("ext") in ext_list:
+            return True
 
     return False
 
@@ -29,7 +41,7 @@ def get_file_info_audio(file_path):
         "nframes": header.nframes,  # 总帧数
         "sampwidth": header.sampwidth,  # 带宽
         "rate": rate,  # 比特率
-        "length": header.nframes / header.framerate * 1000
+        "length": header.nframes / header.framerate * 1000,
     }
 
 
@@ -48,6 +60,12 @@ def get_file_info_wave(file_path):
         frames = f.getnframes()  #
         original_length = frames / float(rate) * 1000  # 音频长度 毫秒
 
-    return {"original_length": original_length,
-            "nchannels": nchannels, "sampwidth": sampwidth, "framerate": framerate,
-            "nframes": nframes, "comptype": comptype, "compname": compname}
+    return {
+        "original_length": original_length,
+        "nchannels": nchannels,
+        "sampwidth": sampwidth,
+        "framerate": framerate,
+        "nframes": nframes,
+        "comptype": comptype,
+        "compname": compname,
+    }

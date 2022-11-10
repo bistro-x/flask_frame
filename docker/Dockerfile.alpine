@@ -27,12 +27,16 @@ RUN  echo "**** install Python ****" && \
 
 
 RUN apk add --no-cache --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ libressl-dev && \
-    apk add --no-cache  tzdata postgresql-dev gcc libffi-dev zeromq-dev yasm make wget git && \
+    apk add --no-cache tzdata postgresql-dev gcc libffi-dev zeromq-dev yasm make wget git x264 x264-dev && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone
 
-RUN git clone https://git.ffmpeg.org/ffmpeg.git && cd ffmpeg && git checkout  tags/n4.4.1 && ./configure && make && make install && cd .. && rm -rf ffmpeg
-
+RUN wget http://ffmpeg.org/releases/ffmpeg-4.4.1.tar.bz2 --no-check-certificate \
+    && tar -xf ffmpeg-4.4.1.tar.bz2 \
+    && cd  ffmpeg-4.4.1 \
+    && ./configure --enable-shared --enable-x86asm --enable-libx264 --enable-gpl --enable-pthreads  \
+    && make \
+    && make install
 
 RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
 
