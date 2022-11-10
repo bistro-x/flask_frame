@@ -56,6 +56,15 @@ requirements.txt 框架依赖的库
 - api_log: 记录 API 请求到数据库中进行保留
   - api_log_clean: celery 支持的自动日志清理函数，需要在 config 配置对应任务启用。
 
+### sentry
+
+支持配置sentry插件和对应的初始化参数。
+初始化参数会从app.config 取前缀未sentry的配置值。如果你想修改sentry的初始化参数，可以使用下面的对应逻辑。
+
+environment -> SENTRY_ENVIRONMENT
+
+只要 app.config 包含 SENTRY_ENVIRONMENT 的数据就可以在sentry_sdk.init 传入  environment 参数。
+
 ## 环境配置
 
 | 分组   | 配置项                  | 说明                                                            |

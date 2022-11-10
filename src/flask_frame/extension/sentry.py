@@ -8,6 +8,12 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 def init_app(flask_app):
     if flask_app.config.get("SENTRY_DS"):
 
+        # get all environment variables
+        other_param = {}
+        for key, value in flask_app.config.items():
+            if key.startswith("SENTRY_"):
+                other_param[key.replace("SENTRY_","").lower()] = value
+        
         # All of this is already happening by default!
         sentry_logging = LoggingIntegration(
             level=flask_app.config.get("LOG_LEVEL")
@@ -15,7 +21,9 @@ def init_app(flask_app):
             event_level=logging.ERROR,  # Send errors as events
         )
 
+        # init sentry
         sentry_sdk.init(
             dsn=flask_app.config.get("SENTRY_DS", ""),
             integrations=[sentry_logging, FlaskIntegration()],
+            **other_param
         )
