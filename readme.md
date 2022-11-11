@@ -17,7 +17,7 @@ docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/pytho
 nohup docker build . --force-rm=true -f docker/Dockerfile.alpine -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine &
 
 # image update
-nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpnie && docker push wuhanchu/python:3_alpnie:latest &
+nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine &
 ```
 
 ## 编译

@@ -1,4 +1,4 @@
-FROM wuhanchu/alpine-python3
+FROM wuhanchu/python:3_alpine
 USER root
 
 
