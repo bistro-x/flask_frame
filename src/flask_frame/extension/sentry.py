@@ -11,9 +11,9 @@ def init_app(flask_app):
         # get all environment variables
         other_param = {}
         for key, value in flask_app.config.items():
-            if key.startswith("SENTRY_"):
-                other_param[key.replace("SENTRY_","").lower()] = value
-        
+            if key.startswith("SENTRY_") and key not in ("SENTRY_DS"):
+                other_param[key.replace("SENTRY_", "").lower()] = value
+
         # All of this is already happening by default!
         sentry_logging = LoggingIntegration(
             level=flask_app.config.get("LOG_LEVEL")
