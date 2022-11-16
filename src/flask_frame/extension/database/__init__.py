@@ -6,6 +6,7 @@ from itertools import zip_longest
 import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
+from tenacity import retry, stop_after_attempt
 
 from ..lock import get_lock, Lock
 
@@ -255,6 +256,7 @@ def update_db(db, schema, file_list):
         lock.release()
 
 
+@retry(reraise=True, stop=stop_after_attempt(2))
 def run_sql(file_path, db, first_sql):
     """
     对数据库云信脚本文件
