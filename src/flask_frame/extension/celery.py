@@ -54,7 +54,8 @@ def init_app(app):
         {
             "CELERY_TIMEZONE": "Asia/Shanghai",
             "ENABLE_UTC": True,
-            "redbeat_key_prefix": app.config.get("PRODUCT_KEY"),
+            "redbeat_key_prefix": app.config.get("CELERY_DEFAULT_QUEUE")
+            or app.config.get("PRODUCT_KEY"),
             "redbeat_lock_timeout": app.config.get("REDBEAT_LOCK_TIMEOUT", 360),
             "redbeat_redis_url": redbeat_redis_url,
             "redbeat_redis_options": redbeat_redis_options,
