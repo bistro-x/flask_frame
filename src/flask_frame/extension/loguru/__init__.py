@@ -41,21 +41,33 @@ def _set_logger(app, config):
 
     class InterceptHandler(logging.Handler):
         def emit(self, record):
-            # Get corresponding Loguru level if it exists
+            from ..lock import Lock
+
+            # 获得锁
+            lock = Lock.get_file_lock("log_lock")
+            
             try:
-                level = logger.level(record.levelname).name
-            except ValueError:
-                level = record.levelno
+                # 锁住请求
+                lock.acquire()
+                
+                # Get corresponding Loguru level if it exists
+                try:
+                    level = logger.level(record.levelname).name
+                except ValueError:
+                    level = record.levelno
 
-            # Find caller from where originated the logged message
-            frame, depth = logging.currentframe(), 2
-            while frame.f_code.co_filename == logging.__file__:
-                frame = frame.f_back
-                depth += 1
+                # Find caller from where originated the logged message
+                frame, depth = logging.currentframe(), 2
+                while frame.f_code.co_filename == logging.__file__:
+                    frame = frame.f_back
+                    depth += 1
 
-            logger.opt(depth=depth, exception=record.exc_info).log(
-                level, record.getMessage()
-            )
+                logger.opt(depth=depth, exception=record.exc_info).log(
+                    level, record.getMessage()
+                )
+            finally:
+                # 释放
+                lock.release()
 
     gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
@@ -92,7 +104,7 @@ def init_app(app):
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> -"
         " <level>{message}</level>",
     )
-    config.setdefault(k_log_enqueue, True)
+    config.setdefault(k_log_enqueue, False)
     config.setdefault(k_log_serialize, False)
     config.setdefault(k_log_rotation, "12:00")
     config.setdefault(k_log_retention, "30 days")
