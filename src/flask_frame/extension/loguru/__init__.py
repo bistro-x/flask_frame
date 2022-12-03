@@ -44,12 +44,12 @@ def _set_logger(app, config):
             from ..lock import Lock
 
             # 获得锁
-            lock = Lock.get_file_lock("log_lock")
-            
+            lock = Lock.get_file_lock("log_lock", timeout=10)
+
             try:
                 # 锁住请求
                 lock.acquire()
-                
+
                 # Get corresponding Loguru level if it exists
                 try:
                     level = logger.level(record.levelname).name
@@ -106,7 +106,7 @@ def init_app(app):
     )
     config.setdefault(k_log_enqueue, False)
     config.setdefault(k_log_serialize, False)
-    config.setdefault(k_log_rotation, "12:00")
+    config.setdefault(k_log_rotation, "00:00")
     config.setdefault(k_log_retention, "30 days")
 
     config.update(app.config)
