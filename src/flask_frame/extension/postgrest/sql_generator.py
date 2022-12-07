@@ -36,7 +36,7 @@ def generate_sql(
         table_name_str = '"' + '","'.join(join_table + [table_name]) + '"'
         # 数据查询
         sql = f"select {select_sql} from {table_name_str } where {where_sql} {order_sql} {limit_sql};"
-        count_sql = f'select count(*) from { table_name_str} where {where_sql} ;'
+        count_sql = f"select count(*) from { table_name_str} where {where_sql} ;"
     elif method.casefold() == "delete":
         # 数据修改
         sql = f'delete from "{table_name}"  where {where_sql}  {return_sql};'
@@ -386,9 +386,11 @@ def replace_value(value: str):
             else f"array[]::{type_name}[]"
         )
 
-    if isinstance(value, dict) or (isinstance(value, list) and isinstance(value[0], dict)):
+    if isinstance(value, dict) or (
+        isinstance(value, list) and isinstance(value[0], dict)
+    ):
         result = json.dumps(value, ensure_ascii=False)
-        return "'" + result + "'"
+        return "'" + result.replace("'", "''") + "'"
 
     if str(value) == "null":
         return value
