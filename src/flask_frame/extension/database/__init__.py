@@ -32,6 +32,22 @@ def init_app(app):
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
 
+    # 编码密码，防止特殊字符
+    password = (
+        app.config.get("SQLALCHEMY_DATABASE_URI")
+        .split("://", 1)[1]
+        .split(":", 1)[1]
+        .rsplit("@", 1)[0]
+    )
+    if not password.isalpha():  # 如果密码不是纯字母
+        import urllib.parse
+
+        app.config["SQLALCHEMY_DATABASE_URI"] = app.config.get(
+            "SQLALCHEMY_DATABASE_URI"
+        )[::-1].replace(password[::-1], urllib.parse.quote_plus(password)[::-1], 1)[
+            ::-1
+        ]
+
     # 兼容高斯
     version = app.config.get("DB_VERSION")
     if version or "gaussdb" in app.config.get("SQLALCHEMY_DATABASE_URI", ""):
@@ -169,11 +185,12 @@ def init_db(db, schema, file_list, version_file_list):
         if not version:
             current_app.logger.info("初始化数据库")
 
-            if schema_exist:
+            # 重新构建schema
+            if schema_exist and current_app.config.get("CREATE_SCHEMA", True):
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+                db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
+                db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
 
-            db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
-            db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO {db.engine.url.username};")
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
 
@@ -287,7 +304,9 @@ def run_sql(file_path, db, first_sql):
                     if (
                         not function_start and sql_command.endswith(";")
                     ) or sql_command.endswith("$$;"):
-                        db.session.connection().execution_options(no_parameters=True).execute(sql_command)
+                        db.session.connection().execution_options(
+                            no_parameters=True
+                        ).execute(sql_command)
                         sql_command = ""
                         function_start = False
 
