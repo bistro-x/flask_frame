@@ -186,8 +186,9 @@ def init_db(db, schema, file_list, version_file_list):
             current_app.logger.info("初始化数据库")
 
             # 重新构建schema
-            if schema_exist and current_app.config.get("CREATE_SCHEMA", True):
+            if current_app.config.get("RECREATE_SCHEMA", False) and schema_exist:
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+            elif not schema_exist:
                 db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
                 db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
 

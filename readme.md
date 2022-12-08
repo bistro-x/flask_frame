@@ -72,7 +72,7 @@ environment -> SENTRY_ENVIRONMENT
 | 数据库 | SQLALCHEMY_DATABASE_URI | 数据库链接地址                                                  |
 | 数据库 | DB_SCHEMA               | 对接的数据库 schema                                             |
 | 数据库 | AUTO_UPDATE             | 是否自动更新数据库(DB_INIT_FILE,DB_VERSION_FILE,DB_UPDATE_FILE) |
-| 数据库 | CREATE_SCHEMA           | 是否自行构建schame，默认True                                    |
+| 数据库 | RECREATE_SCHEMA         | 如果schema已经存在强制重新创建schema，默认False                 |
 | 数据库 | DB_INIT_FILE            | 数据库初始化脚本                                                |
 | 数据库 | DB_VERSION_FILE         | 数据库迭代脚本（根据版本更新）                                  |
 | 数据库 | DB_UPDATE_FILE          | 数据库开发脚本（本次启动运行）                                  |
