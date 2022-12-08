@@ -186,12 +186,24 @@ def init_db(db, schema, file_list, version_file_list):
             current_app.logger.info("初始化数据库")
 
             # 重新构建schema
-            if current_app.config.get("RECREATE_SCHEMA", False) and schema_exist:
+            from distutils.util import strtobool
+
+            # 获取配置数据
+            recreate_schema = False
+            recreate_schema_key = "RECREATE_SCHEMA"
+            if current_app.config.get(recreate_schema_key):
+                recreate_schema = current_app.config.get(recreate_schema_key)
+            elif os.environ.get(recreate_schema_key):
+                recreate_schema = bool(strtobool(os.environ.get(recreate_schema_key)))
+
+            # 判断是否创建
+            if schema_exist and recreate_schema:
                 db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
             elif not schema_exist:
                 db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
                 db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
 
+            # 运行初始化脚本
             for file_path in file_list:
                 run_sql(file_path, db, first_sql)
 
