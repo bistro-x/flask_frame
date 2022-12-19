@@ -49,18 +49,18 @@ class FileLock(object):
 
     def release(self):
         """释放锁"""
-        if SYSTEM == WINDOWS:
-            if os.path.exists(self.file):
-                os.remove(self.file)
-        else:
-            if self._fn:
-                try:
+        try:
+            if SYSTEM == WINDOWS:
+                if os.path.exists(self.file):
+                    os.remove(self.file)
+            else:
+                if self._fn:
                     self._fn.close()
-                except:
-                    ...
 
-            if os.path.exists(self.file):
-                os.remove(self.file)
+                if os.path.exists(self.file):
+                    os.remove(self.file)
+        except:
+            ...
 
 
 def check_file(file_path):

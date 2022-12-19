@@ -352,7 +352,12 @@ def replace_key(value: str):
     Returns:
         str: 数据库数值
     """
-    return f'"{value}"'
+    if "->>" in value:
+        return f"\"{value.split('->>')[0]}\"->>'{value.split('->>')[1]}'"
+    elif "->" in value:
+        return f"\"{value.split('->')[0]}\"->>'{value.split('->>')[1]}'"
+    else:
+        return f'"{value}"'
 
 
 def replace_value(value: str):
@@ -404,7 +409,19 @@ def replace_value(value: str):
 
 
 if __name__ == "__main__":
-    # print(generate_sql("GET", "/user", {"id": "eq.1","id2": "eq.1","id3": "eq.1", "limit": 3, "offset": 5}))
+    print(
+        generate_sql(
+            "GET",
+            "/user",
+            {
+                "id->>ABD": "like.1",
+                "id2": "eq.1",
+                "id3": "eq.1",
+                "limit": 3,
+                "offset": 5,
+            },
+        )
+    )
     print(
         generate_sql(
             "GET",
