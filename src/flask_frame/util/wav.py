@@ -293,7 +293,7 @@ def vad_cut(
         file_obj = AudioSegment.from_file(temp_wave_path)
         with wave.open(temp_wave_path) as file:
             nchannels, sampwidth, framerate, nframes = file.getparams()[:4]
-            interval_step = int(framerate / 50)  # 检测间隔
+            interval_step = int(framerate / 100)  # 检测间隔
             str_data = file.readframes(nframes)
             wave_data = np.fromstring(str_data, dtype=np.int16)
     except wave.Error as e:  # parent of IOError, OSError *and* WindowsError where available
