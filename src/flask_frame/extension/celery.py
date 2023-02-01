@@ -96,3 +96,14 @@ class BaseTask(Task):
             db.session.rollback()
 
         return super(BaseTask, self).on_failure(exc, task_id, args, kwargs, einfo)
+    
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        from .database import db
+
+        if isinstance(exc, OperationalError) or isinstance(exc, InvalidRequestError):
+            db.session.remove()
+            db.engine.dispose()
+        else:
+            db.session.rollback()
+
+        return super(BaseTask, self).on_retry(exc, task_id, args, kwargs, einfo)
