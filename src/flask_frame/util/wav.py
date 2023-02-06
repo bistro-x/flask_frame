@@ -54,7 +54,8 @@ def cut_wav(
     )
     # 目标音频长度短于引擎识别最小音频长度前后补充空音
     if min_audio_length and (end - begin) < min_audio_length * framerate / 1000:
-        temp_dataTemp = np.zeros(min_audio_length * framerate)
+        min_audio_length /= 1000
+        temp_dataTemp = np.zeros(int(min_audio_length * framerate))
         middle_begin = int((min_audio_length * framerate + begin - end) / 2)
         temp_dataTemp[middle_begin : middle_begin + end - begin] = wave_data[begin:end]
     else:
