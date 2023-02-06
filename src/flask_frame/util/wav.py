@@ -33,6 +33,7 @@ def cut_wav(
     framerate,
     save_path=None,
     file_save_path=None,
+    min_audio_length=None,
 ):
     """
     根据音频 开始结束 进行音频切割
@@ -43,6 +44,7 @@ def cut_wav(
     :param sampwidth:
     :param framerate:
     :param save_path:
+    :param min_audio_length: 引擎识别最小音频长度
     :return:
     """
     # print("cut_wav: %s----%s len:%s" % (begin,end,(end-begin)/16000))
@@ -50,7 +52,13 @@ def cut_wav(
         save_path,
         "%s_%s.wav" % (round(begin * 1000 / framerate), round(end * 1000 / framerate)),
     )
-    temp_dataTemp = wave_data[begin:end]
+    # 目标音频长度短于引擎识别最小音频长度前后补充空音
+    if min_audio_length and (end - begin) < min_audio_length * framerate / 1000:
+        temp_dataTemp = np.zeros(min_audio_length * framerate)
+        middle_begin = int((min_audio_length * framerate + begin - end) / 2)
+        temp_dataTemp[middle_begin : middle_begin + end - begin] = wave_data[begin:end]
+    else:
+        temp_dataTemp = wave_data[begin:end]
     temp_dataTemp.shape = 1, -1
     temp_dataTemp = temp_dataTemp.astype(np.short)  # 打开WAV文档
     with wave.open(r"" + file_name, "wb") as f:
@@ -267,6 +275,7 @@ def vad_cut(
     min_audio_millisecond=200,
     min_silent_millisecond=500,
     sound_track=1,
+    min_audio_length=None,
 ):
     """
     根据音量进行断句
@@ -276,6 +285,7 @@ def vad_cut(
     :param min_audio_millisecond: 最小语音毫秒数
     :param min_silent_millisecond: 最小间隔长度
     :param sound_track: 声道信息 1就是单声道，2就是立体声
+    :param min_audio_length: 引擎识别最小音频长度
     :return:
     """
 
@@ -332,7 +342,15 @@ def vad_cut(
                 and silent_second >= min_silent_second
             ):
                 path = cut_wav(
-                    wave_data, start, end, nchannels, sampwidth, framerate, save_path
+                    wave_data,
+                    start,
+                    end,
+                    nchannels,
+                    sampwidth,
+                    framerate,
+                    save_path,
+                    None,
+                    min_audio_length,
                 )
                 item = {
                     "begin_time": int(start * 1000 / framerate),
@@ -370,7 +388,7 @@ def vad_cut(
     end = wave_data.shape[0]
     if start is not None and (end - start) / framerate > min_audio_second:
         path = cut_wav(
-            wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path
+            wave_data, start, end - 1, nchannels, sampwidth, framerate, save_path, None, min_audio_length
         )
         item = {
             "begin_time": int(start * 1000 / framerate),
