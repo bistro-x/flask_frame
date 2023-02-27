@@ -1,7 +1,9 @@
+# -*- coding:utf-8 -*-
+
 import os
 import time
 
-from ...util.wav import vad_cut
+from src.flask_frame.util.wav import vad_cut
 
 
 def test_vad_cut():
@@ -12,6 +14,10 @@ def test_vad_cut():
             if not os.path.exists(temp_path):
                 os.makedirs(temp_path)
 
-            sub_items, framerate = vad_cut(os.path.join(path, file_name), temp_path, audio_rate=16000,
-                                           min_audio_millisecond=10)
+            sub_items, framerate = vad_cut(
+                os.path.join(path, file_name),
+                temp_path,
+                audio_rate=16000,
+                min_audio_millisecond=10,
+            )
             print("len:" + str(len(sub_items)))
