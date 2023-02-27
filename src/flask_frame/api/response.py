@@ -143,7 +143,7 @@ class HttpResponseSchema(BaseSchema):
     service_id = fields.Integer()
     message = fields.Str(default="操作成功")  # 说明信息
     detail = fields.Str()  # 说明信息
-    create_time = fields.DateTime(default=cdatetime.now())
+    create_time = fields.DateTime()
 
     class Meta:
         unknown = INCLUDE
@@ -212,9 +212,7 @@ class Response(object):
         self.headers = headers
         self.http_status = http_status
         self.detail = detail
-
-        if create_time:
-            self.create_time = create_time
+        self.create_time = create_time
 
     @deprecated
     def get_response(self):
@@ -222,7 +220,7 @@ class Response(object):
         使用上会有些问题，尽量使用 create_flask_response 来替代
         :return:
         """
-        self.create_time = cdatetime.now()
+        self.create_time = self.create_time or cdatetime.now()
         if self.result:
             return http_response_schema.dump(self)
         else:
@@ -233,7 +231,7 @@ class Response(object):
         创建flask相关的返回对象
         :return:
         """
-        self.create_time = cdatetime.now()
+        self.create_time = self.create_time or cdatetime.now()
         if self.http_status == 204:
             response = flask.make_response('', 204) 
         else:
