@@ -222,6 +222,7 @@ class Response(object):
         使用上会有些问题，尽量使用 create_flask_response 来替代
         :return:
         """
+        self.create_time = cdatetime.now()
         if self.result:
             return http_response_schema.dump(self)
         else:
@@ -232,6 +233,7 @@ class Response(object):
         创建flask相关的返回对象
         :return:
         """
+        self.create_time = cdatetime.now()
         if self.http_status == 204:
             response = flask.make_response('', 204) 
         else:
