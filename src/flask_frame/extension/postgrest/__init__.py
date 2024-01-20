@@ -1,64 +1,10 @@
-import requests
 from flask import request
 from ...api.response import Response
+from ...api.request import proxy
 
-flask_app = None
-server_url = None
-proxy_local = None
-
-
-def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
-    """
-    创建代理请求
-    :param method:
-    :param url:
-    :param headers:
-    :param kwargs:
-    :return:
-    """
-    global flask_app, server_url
-
-    # 本地代理
-    if proxy_local:
-        data, headers = local_run(
-            method=method, url=url, params=params, headers=headers, **kwargs
-        )
-        return Response(data=data, headers=headers)
-
-    send_headers = {}
-    if headers:
-        send_headers = (
-            {h[0]: h[1] for h in headers} if not isinstance(headers, dict) else headers
-        )
-        send_headers["Authorization"] = None
-
-    response = requests.request(
-        method=method,
-        url=server_url + url,
-        params=params,
-        headers=send_headers,
-        **kwargs,
-    )
-
-    if (
-        "content-type" in response.headers
-        and "json" in response.headers["content-type"]
-    ):
-        response_json = response.json()
-    else:
-        response_json = {}
-
-    if response.headers.get("Transfer-Encoding"):
-        response.headers.pop("Transfer-Encoding")
-    return Response(
-        result=response.ok,
-        code=response_json.get("code") if not response.ok else 0,
-        message=response_json.get("message") if not response.ok else None,
-        detail=response_json.get("details") if not response.ok else None,
-        data=response_json if response.ok else None,
-        http_status=response.status_code,
-        headers=response.headers,
-    )
+flask_app = None  # 全局应用
+server_url = None  # 服务地址
+proxy_local = None  # 指定代理地址
 
 
 def proxy_response(response):
@@ -79,42 +25,20 @@ def proxy_response(response):
 
     return response.content, response.status_code, headers
 
+
 def is_send_proxy():
     """是否发送请求到代理服务
 
     Returns:
-        boolean: 判断结果 
+        boolean: 判断结果
     """
     global flask_app, server_url
-    
+
     # request.url_rule
     if not flask_app or (request.url_rule and not request.headers.get("proxy")):
         return False
-    
+
     return True
-
-
-def proxy():
-    """
-    发送代理请求
-    :return: 返回
-    """
-    global flask_app, server_url
-
-    # request.url_rule
-    if not is_send_proxy():
-        return
-
-    # 调用远程服务
-    other_param = {}
-    if request.data:
-        other_param["json"] = request.json
-
-    response = proxy_request(
-        request.method, request.path, request.headers, request.args, **other_param
-    )
-    
-    return response.mark_flask_response()
 
 
 def local_run(
@@ -202,4 +126,22 @@ def init_app(app):
 
     @app.before_request
     def app_proxy():
-        return proxy()
+         # request.url_rule
+        if not is_send_proxy():
+            return
+        elif proxy_local:
+            # 代理为本地数据库查询
+            other_param = {}
+            if request.data:
+                other_param["json"] = request.json
+            data, headers = local_run(
+                method=request.method,
+                url=request.path,
+                params=request.args,
+                headers=request.headers,
+                **other_param,
+            )
+            return Response(data=data, headers=headers)
+        else:
+            # 代理为远程服务查询
+            return proxy(server_url)
