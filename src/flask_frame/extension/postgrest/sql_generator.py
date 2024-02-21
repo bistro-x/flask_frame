@@ -5,7 +5,7 @@ def generate_sql(
     method: str, path: str, args: dict = None, data: dict = None, headers: dict = {}
 ):
 
-    """http数据转换成SQL语句
+    """ http数据转换成SQL语句
 
     Args:
         method (str): http方法
@@ -16,7 +16,7 @@ def generate_sql(
 
     Returns:
         str: SQL语句
-    """
+    """ 
 
     sql = ""  # 返回条件
     count_sql = None
@@ -60,12 +60,12 @@ def generate_sql(
 
 
 def condition_bulid(table_name: str, args: dict):
-    """条件转换器
+    """ 条件转换器
 
     Args:
         table_name (str): 表名
         args (dict): 传入参数
-    """
+    """ 
 
     where_sql = " 1 = 1 "  # 条件sql
     select_sql = "*"  # 查询字段 sql
@@ -149,7 +149,7 @@ def condition_bulid(table_name: str, args: dict):
 
 
 def where_sql_build(table_name: str, value: str, key: str = None):
-    """构建where语句
+    """ 构建where语句
 
     Args:
         table_name (str): 表名
@@ -158,7 +158,7 @@ def where_sql_build(table_name: str, value: str, key: str = None):
 
     Returns:
         _type_: _description_
-    """
+    """ 
     parse_map = {
         "not.is": "is not",
         "not.eq": "!=",
@@ -281,10 +281,10 @@ def where_sql_build(table_name: str, value: str, key: str = None):
 
 
 def data_build(table_name, data, merge=False, key_field_list=None, return_sql=""):
-    """数据转换
+    """ 数据转换
     Args:
        data (List[dict]): 传入参数
-    """
+    """ 
     if not key_field_list:
         key_field_list = ["id"]
 
@@ -305,10 +305,10 @@ def data_build(table_name, data, merge=False, key_field_list=None, return_sql=""
 
 
 def update_sql(table_name, data, key_field_list=["id"], where_sql=None, return_sql=""):
-    """构建修改数据
+    """ 构建修改数据
     Args:
         data (_type_): _description_
-    """
+    """ 
     if not where_sql:
         where_sql = []
         for key_field in key_field_list:
@@ -326,7 +326,7 @@ def update_sql(table_name, data, key_field_list=["id"], where_sql=None, return_s
 
 
 def insert_sql(table_name, data, return_sql=""):
-    """生成插入数据
+    """ 生成插入数据
 
     Args:
         table_name (_type_): 表名
@@ -334,7 +334,7 @@ def insert_sql(table_name, data, return_sql=""):
 
     Returns:
         str: 插入语句
-    """
+    """ 
 
     key_sql = ",".join([f"{replace_key(key)}" for key in data.keys()])
     value_sql = ",".join([(f"{replace_value(value)}") for value in data.values()])
@@ -344,14 +344,14 @@ def insert_sql(table_name, data, return_sql=""):
 
 
 def replace_key(value: str):
-    """切换数据值为数据库的字段表示
+    """ 切换数据值为数据库的字段表示
 
     Args:
         value (str): 传入字段
 
     Returns:
         str: 数据库数值
-    """
+    """ 
     if "->>" in value:
         return f"\"{value.split('->>')[0]}\"->>'{value.split('->>')[1]}'"
     elif "->" in value:
@@ -361,14 +361,14 @@ def replace_key(value: str):
 
 
 def replace_value(value: str):
-    """切换数据值为数据库的数值表示
+    """ 切换数据值为数据库的数值表示
 
     Args:
         value (str): 传入数值
 
     Returns:
         str: 数据库数值
-    """
+    """ 
     import json
 
     if value is None:

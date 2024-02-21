@@ -2,11 +2,11 @@ from functools import wraps
 
 
 def get_enum_values(enum):
-    """
+    """ 
     return the enum value
     :param enum:
     :return:
-    """
+    """ 
     print('Got:', enum)
     return [e.value for e in enum]
 

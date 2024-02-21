@@ -26,7 +26,7 @@ class FileLock(object):
         self._fn = None
 
     def locked(self):
-        """判断锁是否已经申请"""
+        """ 判断锁是否已经申请""" 
         if not os.path.exists(self.file):
             return False
         if check_file(self.file) > self.timeout:
@@ -34,7 +34,7 @@ class FileLock(object):
         return True
 
     def acquire(self):
-        """请求锁"""
+        """ 请求锁""" 
         if SYSTEM == WINDOWS:
             while os.path.exists(self.file):
                 time.sleep(0.01)  # wait 10ms
@@ -48,7 +48,7 @@ class FileLock(object):
             self._fn.write("1")
 
     def release(self):
-        """释放锁"""
+        """ 释放锁""" 
         try:
             if SYSTEM == WINDOWS:
                 if os.path.exists(self.file):
@@ -64,6 +64,6 @@ class FileLock(object):
 
 
 def check_file(file_path):
-    """检测文件的修改时间"""
+    """ 检测文件的修改时间""" 
 
     return time.time() - os.path.getmtime(file_path)

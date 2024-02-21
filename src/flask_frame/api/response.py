@@ -24,12 +24,12 @@ class JsonResult:
 
     @deprecated
     def success(msg=None, result=False):
-        """
+        """ 
         返回结果数据
         :param msg: 说明
         :param result: 数据
         :return:
-        """
+        """ 
         if result:
             return jsonify(result)
         else:
@@ -135,7 +135,7 @@ def convert_datetime(value):
 
 
 class HttpResponseSchema(BaseSchema):
-    """错误格式"""
+    """ 错误格式""" 
 
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str(default="0")  # 统一编码 来自数据库 dict
@@ -149,9 +149,15 @@ class HttpResponseSchema(BaseSchema):
         unknown = INCLUDE
 
     def load_by_key(
-        self, code=0, data=None, message=None, provider_code=None, create_time=None, **kwargs
+        self,
+        code=0,
+        data=None,
+        message=None,
+        provider_code=None,
+        create_time=None,
+        **kwargs
     ):
-        """构造函数"""
+        """ 构造函数""" 
         return self.load(
             {
                 code: code,
@@ -159,7 +165,7 @@ class HttpResponseSchema(BaseSchema):
                 message: message,
                 provider_code: provider_code,
                 create_time: create_time,
-                **kwargs
+                **kwargs,
             }
         )
 
@@ -172,7 +178,7 @@ http_response_schema = HttpResponseSchema()
 
 
 class Response(object):
-    """返回对应"""
+    """ 返回对应""" 
 
     def __init__(
         self,
@@ -180,16 +186,16 @@ class Response(object):
         data=None,
         code=0,
         message=None,
-        provider_code=0,
+        provider_code=None,
         task_id=None,
         response_time=None,
         service_id=None,
         headers=None,
         create_time=None,
         http_status=None,
-        detail = None,
+        detail=None,
     ):
-        """
+        """ 
         构造函数
         :param result:
         :param data:
@@ -199,7 +205,7 @@ class Response(object):
         :param headers: 文件报头
         :param http_status: 指定返回http代码
         :param kwargs:
-        """
+        """ 
 
         self.task_id = task_id  # 结果 True or False
         self.result = result  # 结果 True or False
@@ -207,7 +213,7 @@ class Response(object):
         self.code = code or "0"  # 统一编码 来自数据库 dict
         self.service = service_id
         self.provider_code = provider_code
-        self.message = message or "操作成功" # 说明信息
+        self.message = message or "操作成功"  # 说明信息
         self.response_time = response_time
         self.headers = headers
         self.http_status = http_status
@@ -216,29 +222,29 @@ class Response(object):
 
     @deprecated
     def get_response(self):
-        """
+        """ 
         使用上会有些问题，尽量使用 create_flask_response 来替代
         :return:
-        """
+        """ 
         self.create_time = self.create_time or cdatetime.now()
         if self.result:
             return http_response_schema.dump(self)
         else:
-            return http_response_schema.dump(self), (self.http_status or HTTPStatus.INTERNAL_SERVER_ERROR)
+            return http_response_schema.dump(self), (
+                self.http_status or HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
     def mark_flask_response(self) -> flask.Response:
-        """
+        """ 
         创建flask相关的返回对象
         :return:
-        """
+        """ 
         self.create_time = self.create_time or cdatetime.now()
-        if self.http_status == 204:
-            response = flask.make_response('', 204) 
-        else:
-            response = flask.make_response(
-                jsonify(http_response_schema.dump(self)),
-                self.http_status or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
-            )
+        response = flask.make_response(
+            jsonify(http_response_schema.dump(self)),
+            self.http_status
+            or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
+        )
 
         # 定义报头
         response.headers = {**response.headers, **(self.headers or {})}

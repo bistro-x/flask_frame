@@ -1,5 +1,5 @@
 class EnumMeta(type):
-    """自定义枚举元类"""
+    """ 自定义枚举元类""" 
 
     def __new__(mcs, name, bases, dict):
         print("dict:" + str(dict))

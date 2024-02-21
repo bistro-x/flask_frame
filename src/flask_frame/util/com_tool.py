@@ -21,11 +21,11 @@ def get_curr_date():
 
 
 def get_file_path_name_ext(file_path):
-    """
+    """ 
     获取文件路径， 文件名， 后缀名
     :param file_path:
     :return:
-    """
+    """ 
     filepath, tmpfilename = os.path.split(file_path)
     shotname, extension = os.path.splitext(tmpfilename)
     return filepath, shotname, extension
@@ -81,12 +81,12 @@ def unzip_file(src_file, dest_dir, password=None):
 
 
 def zip_dir(dirpath, outFullName):
-    """
+    """ 
     压缩指定文件夹
     :param dirpath: 目标文件夹路径
     :param outFullName: 压缩文件保存路径+xxxx.zip
     :return: 无
-    """
+    """ 
     zip = zipfile.ZipFile(outFullName, "w", zipfile.ZIP_DEFLATED)
     for path, dirnames, filenames in os.walk(dirpath):
         # 去掉目标跟路径，只对目标文件夹下边的文件及文件夹进行压缩
@@ -104,11 +104,11 @@ def create_if_dir_no_exists(dir):
 
 
 def enum_path_files(path):
-    """
+    """ 
      遍历目录（子目录），返回所有文件路径
     :param path: file path
     :return: file list
-    """
+    """ 
     file_paths = []
     if not os.path.isdir(path):
         print('Error:"', path, '" is not a directory or does not exist.')

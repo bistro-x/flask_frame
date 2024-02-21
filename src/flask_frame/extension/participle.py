@@ -13,11 +13,11 @@ def init_app(app):
 
 
 def participle_sentence(sentence):
-    """
+    """ 
     获取句字符串分词结果
     :param sentence: 句字符串
     :return : List
-    """
+    """ 
     global participle_app, participle_service_url
 
     if not participle_app or not participle_service_url:

@@ -4,13 +4,13 @@ from ..util import txt_compare
 
 
 def get_asr_report(base_record, check_record, clauses_tolerance=50):
-    """
+    """ 
     计算准确率等报告信息
     需要以 check_text 去除 base_text 不存在的数据，否则会产生 删除率过高的情况
     base_record 质检数据
     check_record 标注数据
     clauses_tolerance 分句容错
-    """
+    """ 
 
     base_record.sort(key=lambda item: item.get("begin_time"))
     check_record.sort(key=lambda item: item.get("begin_time"))
@@ -80,12 +80,12 @@ def get_asr_report(base_record, check_record, clauses_tolerance=50):
 
 
 def get_intersection_data(check_data: list, result_data: list) -> list:
-    """
+    """ 
     计算两个时间区域的交集
     :param check_data: 标注数据
     :param result_data: 结果数据
     :return: 结果数据
-    """
+    """ 
 
     result = list()
     for ia in result_data:

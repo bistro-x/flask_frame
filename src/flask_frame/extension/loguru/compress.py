@@ -9,8 +9,8 @@ from .macro import k_log_name, k_log_path
 
 
 def zip_logs(config, file_list):
-    """ 超过7天的文件按天打成zip包
-    """
+    """  超过7天的文件按天打成zip包
+    """ 
     day = datetime.datetime.today().date() - datetime.timedelta(days=7)
 
     # 设置zip位置

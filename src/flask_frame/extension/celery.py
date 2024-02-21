@@ -13,11 +13,11 @@ flask_app = None
 
 
 def init_app(app):
-    """初始化模块
+    """ 初始化模块
 
     Args:
         app (_type_): _description_
-    """
+    """ 
     global celery, flask_app
 
     flask_app = app
@@ -68,11 +68,11 @@ def init_app(app):
 
 
 class BaseTask(Task):
-    """基础任务
+    """ 基础任务
 
     Args:
         Task (_type_): _description_
-    """
+    """ 
 
     def run(self, *args, **kwargs):
         raise NotImplementedError

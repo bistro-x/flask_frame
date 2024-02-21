@@ -12,13 +12,13 @@ from .util.text import AppEncoder
 
 
 def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
-    """
+    """ 
     create the app
     :param flask_config_name:
     :param config_custom
     :param kwargs:
     :return:
-    """
+    """ 
     app = Flask(__name__, root_path=os.getcwd())
     app.json_encoder = AppEncoder
 

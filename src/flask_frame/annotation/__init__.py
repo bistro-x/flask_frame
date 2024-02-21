@@ -4,9 +4,9 @@ from pyinstrument import Profiler
 
 
 def deprecated(func):
-    """This is a decorator which can be used to mark functions
+    """ This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    when the function is used.""" 
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -23,10 +23,10 @@ def deprecated(func):
 
 
 def profile(timeout=1000):
-    """
+    """ 
     生成方法的调用性能报告
     路径在 log下 prifle_方法名_时间搓
-    """
+    """ 
 
     def decorate(func):
         @functools.wraps(func)

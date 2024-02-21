@@ -4,9 +4,9 @@ import difflib
 
 
 def compute_edit_distance(base_text: str, text: str) -> int:
-    """
+    """ 
     结算编辑距离
-    """
+    """ 
     leven_cost = 0
     s = difflib.SequenceMatcher(None, base_text, text)
     for tag, i1, i2, j1, j2 in s.get_opcodes():
@@ -22,9 +22,9 @@ def compute_edit_distance(base_text: str, text: str) -> int:
 
 
 def compute_compatibility(base_text: str, text: str) -> int:
-    """
+    """ 
     结算文本相似度
-    """
+    """ 
 
     return 1 - compute_edit_distance(base_text, text) / max(
         len(base_text), len(text))

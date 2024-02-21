@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # print(ddata)
     # 私钥加密
 
-    s = """{"machineInfo": "C8-5B-76-F4-54-66,00-28-F8-68-92-97,02-28-F8-68-92-96,00-50-56-C0-00-01,00-50-56-C0-00-08,00-FF-3B-1A-15-A2,00-28-F8-68-92-96,00-28-F8-68-92-9A", "registTime": "2019-11-06", "dueTime": "2020-11-11", "customName": "\u6d4b\u8bd5\u516c\u53f8", "productName": "\u4f1a\u8bae\u7cfb\u7edf\uff08z_meeting\uff09"}"""
+    s = """ {"machineInfo": "C8-5B-76-F4-54-66,00-28-F8-68-92-97,02-28-F8-68-92-96,00-50-56-C0-00-01,00-50-56-C0-00-08,00-FF-3B-1A-15-A2,00-28-F8-68-92-96,00-28-F8-68-92-9A", "registTime": "2019-11-06", "dueTime": "2020-11-11", "customName": "\u6d4b\u8bd5\u516c\u53f8", "productName": "\u4f1a\u8bae\u7cfb\u7edf\uff08z_meeting\uff09"}""" 
     print(len(s))
     edata = encrypt(s.encode("utf-8"), privkey.d, privkey.n)
     print(edata)

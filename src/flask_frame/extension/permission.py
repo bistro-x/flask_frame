@@ -12,11 +12,11 @@ fetch_user = True  # 是否获取用户
 
 
 def fetch_current_user(token_string):
-    """
+    """ 
     查询当前用户
     :param token_string:
     :return:
-    """
+    """ 
     global app
 
     # get users
@@ -46,7 +46,7 @@ def fetch_current_user(token_string):
 
 
 def get_current_user():
-    """获取当前用户"""
+    """ 获取当前用户""" 
     if not flask.has_request_context():
         return None
 
@@ -57,7 +57,7 @@ def get_current_user():
 
 
 def license_check():
-    """证书检测"""
+    """ 证书检测""" 
     global app
 
     user_auth_url = app.config.get("USER_AUTH_URL")
@@ -76,11 +76,11 @@ def license_check():
 
 
 def check_user_permission(token_string=None):
-    """
+    """ 
     权限检测
     :param token_string: token信息
     :return: 用户信息
-    """
+    """ 
 
     # 请求方法
 
@@ -90,14 +90,14 @@ def check_user_permission(token_string=None):
 
 
 def check_url_permission(user, product_key=None):
-    """检测是否有相关接口权限
+    """ 检测是否有相关接口权限
 
 
     Args:
         user (_type_): 检测用户
     Returns:
         _type_: 是否通过
-    """
+    """ 
     # 没有用户信息直接返回
     check_path = request.url_rule.rule if request.url_rule else request.path
     method = request.method
@@ -136,11 +136,11 @@ def check_url_permission(user, product_key=None):
 
 
 def param_add_department_filter(params={}):
-    """
+    """ 
     添加组织权限过滤
     :param params: 当前参数
     :return: 过滤参数
-    """
+    """ 
     user = g.current_user
 
     depart_list = []

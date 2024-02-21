@@ -5,11 +5,11 @@ from flask_frame.api.response import Response
 
 
 def get_request_param():
-    """获取请求发送的所有参数
+    """ 获取请求发送的所有参数
 
     Returns:
         json: 请求传入的所有参数
-    """
+    """ 
 
     json_data = request.get_json(silent=True)
 
@@ -29,14 +29,14 @@ def get_request_param():
 
 
 def proxy(server_url, response_standard=True):
-    """代理请求到另一个服务
+    """ 代理请求到另一个服务
 
     Args:
         server_url (string):  请求地址
 
     Returns:
         _type_: 响应
-    """
+    """ 
 
     # 调用远程服务
     other_param = {}
@@ -55,7 +55,7 @@ def proxy(server_url, response_standard=True):
     )
 
     if not response_standard:
-        return (response.text, response.status_code, response.headers.items())
+        return (response.text, response.status_code)
 
     # 标准化
     if (
@@ -83,7 +83,7 @@ def proxy(server_url, response_standard=True):
 def proxy_request(
     server_url=None, path="", method="GET", headers=None, params=None, **kwargs
 ):
-    """创建代理请求
+    """ 创建代理请求
 
     Args:
         server_url (_type_, optional): _description_. Defaults to None.
@@ -94,7 +94,7 @@ def proxy_request(
 
     Returns:
         Response: 响应
-    """
+    """ 
 
     # 本地代理
     send_headers = {}

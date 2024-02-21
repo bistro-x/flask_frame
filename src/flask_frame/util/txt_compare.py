@@ -7,7 +7,7 @@ import numpy as np
 
 
 def enum_path_files(path):
-    """遍历目录（子目录），返回所有文件路径"""
+    """ 遍历目录（子目录），返回所有文件路径""" 
 
     path_len = len(path)
     file_paths = []
@@ -22,7 +22,7 @@ def enum_path_files(path):
 
 
 def standardized_file_encode(path):
-    """标准化文件编码"""
+    """ 标准化文件编码""" 
 
     with open(path, "rb") as f:
         data = f.read()
@@ -46,7 +46,7 @@ def standardized_mark_file(path, filename):
 
 
 def num_to_char(num):
-    """数字转中文"""
+    """ 数字转中文""" 
     num = str(num)
     num = num.replace("1_", "幺")
     new_str = ""
@@ -81,12 +81,12 @@ def init(origin_str, compare_str):
 
 
 def str_compare(origin_str, compare_str):
-    """
+    """ 
     计算准确率等数据
     :param origin_str: 正确的原始数据
     :param compare_str: 要比对的数据
     :return:
-    """
+    """ 
     if origin_str == '' and compare_str == '':
         return {
             "mark_different": "", "length_different": 0, "origin_str_valid": "",
@@ -213,7 +213,7 @@ def str_compare(origin_str, compare_str):
 
 
 def batch_row_compare(origin_file, compare_file):
-    """批量计算:多行比较"""
+    """ 批量计算:多行比较""" 
 
     total_str_length = 0
     total_accuracy = 0  # 准确率
@@ -256,9 +256,9 @@ def batch_row_compare(origin_file, compare_file):
 
 
 def batch_file_compare(origin_dir, compare_dir):
-    """
+    """ 
     batch file compare
-    """
+    """ 
 
     total_str_length = 0
     total_accuracy = 0
@@ -314,9 +314,9 @@ def batch_file_compare(origin_dir, compare_dir):
 
 
 def min_distance(word1: str, word2: str) -> int:
-    """
+    """ 
         计算最小编辑距离
-    """
+    """ 
 
     n1 = len(word1)
     n2 = len(word2)

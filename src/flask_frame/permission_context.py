@@ -31,10 +31,10 @@ def load_permission():
     global permission_map
     permission_map = {}
     with current_app.app_context():
-        sql = f"""
+        sql = f""" 
             SET search_path to {db_schema};
             select * from permission_role
-            """
+            """ 
         res = db.session.execute(sql).fetchall()
         permission_list = queryToDict(res)
         for permission in permission_list:
