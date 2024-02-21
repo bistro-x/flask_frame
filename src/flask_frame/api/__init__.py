@@ -6,11 +6,11 @@ from urllib.parse import urljoin
 
 
 def proxy(server_url):
-    """ 
+    """
     代理请求发送到别的服务i
     :param server_url:
     :return:
-    """ 
+    """
     method = request.method
     data = request.data or request.form or None
     headers = dict()

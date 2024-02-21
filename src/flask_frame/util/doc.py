@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-""" doc文件操作工具类
-""" 
+"""doc文件操作工具类
+"""
 
 
 import os
@@ -11,7 +11,7 @@ import mammoth
 
 
 def docx_convert_to_html(file_path: str, result_path: str):
-    """ docx 文件 转换成 html 文件
+    """docx 文件 转换成 html 文件
 
     Args:
         file_path (str): 源文件路径
@@ -19,7 +19,7 @@ def docx_convert_to_html(file_path: str, result_path: str):
 
     Returns:
         str: html数据
-    """ 
+    """
 
     convert_image = mammoth.images.inline(ImageWriter(os.path.dirname(result_path)))
 
@@ -41,11 +41,11 @@ def docx_convert_to_html(file_path: str, result_path: str):
 
 
 class ImageWriter(object):
-    """ 图片读写
+    """图片读写
 
     Args:
         object (_type_): _description_
-    """ 
+    """
 
     def __init__(self, output_dir):
         self._output_dir = output_dir

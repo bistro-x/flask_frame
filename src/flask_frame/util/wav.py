@@ -14,10 +14,10 @@ from ..api.exception import ResourceError
 
 
 def get_wav_info(wav_path):
-    """ 
+    """
     获取 wave 文件信息
     :param wav_path: 文件路径
-    """ 
+    """
     with wave.open(wav_path, "rb") as f:
         params = f.getparams()
         # print(params)
@@ -35,7 +35,7 @@ def cut_wav(
     file_save_path=None,
     min_audio_length=None,
 ):
-    """ 
+    """
     根据音频 开始结束 进行音频切割
     :param wave_data:
     :param begin:
@@ -46,7 +46,7 @@ def cut_wav(
     :param save_path:
     :param min_audio_length: 引擎识别最小音频长度
     :return:
-    """ 
+    """
     # print("cut_wav: %s----%s len:%s" % (begin,end,(end-begin)/16000))
     file_name = file_save_path or os.path.join(
         save_path,
@@ -74,10 +74,10 @@ def cut_wav(
 
 
 def check_wav_format(wav_path):
-    """ 
+    """
     检测是否是单声道
     :param wav_path: 文件路径
-    """ 
+    """
 
     params = get_wav_info(wav_path)
     # 判断音频是否是单声道
@@ -89,13 +89,13 @@ def check_wav_format(wav_path):
 
 
 def cut_wav_by_length(file, save_path, length=100):
-    """ 
+    """
     根据音频长度切割音频
     :param file: 切割文件
     :param save_path: 保存路径
     :param length: 每段切割长度
     :return: 切割的文件
-    """ 
+    """
     result = []
 
     # 创建目录
@@ -146,13 +146,13 @@ def cut_wav_by_length(file, save_path, length=100):
 
 
 def volume_ave(arr, begin, end):
-    """ 
+    """
     获取当前数据的平均音调
     :param arr: 数据组
     :param begin: 开始位置
     :param end: 结束位置
     :return: 平均音调
-    """ 
+    """
     avg_en = 0
     for i in range(begin, end):
         avg_en = avg_en + abs(arr[i])
@@ -162,13 +162,13 @@ def volume_ave(arr, begin, end):
 
 
 def get_ground_avg(arr, begin, end):
-    """ 
+    """
     获取底噪量
     :param arr: 数据组
     :param begin: 开始位置
     :param end: 结束位置
     :return: 底噪音调
-    """ 
+    """
     handle_data = abs(arr[begin:end])
     no_valid_avg = handle_data.sum() / handle_data.shape[0] / 100  # 无效段落的平均
 
@@ -194,7 +194,7 @@ def convert_to_wav(
     sound_track=None,
     bits_per_raw_sample=None,
 ):
-    """ 
+    """
     音频文件为 wave 文件
     :param file_path: 文件路径
     :param save_path: 保存路径
@@ -204,7 +204,7 @@ def convert_to_wav(
     :param bits_per_raw_sample: 采样位数
     :return: 转换后的wav文件路径
 
-    """ 
+    """
     if not os.path.exists(file_path):
         raise ResourceError(f"{file_path}文件不存在！")
 
@@ -231,14 +231,14 @@ def convert_to_wav(
 
 
 def wav_standardized(file_path, result_path, framerate=None):
-    """ 
+    """
     根据系统要求 标准化音频
     不做任何采样率或者声道的修改，只是为了修正某些特殊情况下 无法正常读取音频的问题
     :param file_path:
     :param result_path:
     :param framerate:
     :return:
-    """ 
+    """
     import ffmpeg
 
     if os.path.splitext(file_path)[-1].lower() == ".pcm":
@@ -278,7 +278,7 @@ def vad_cut(
     sound_track=1,
     min_audio_length=None,
 ):
-    """ 
+    """
     根据音量进行断句
     :param wave_path: 音频文件
     :param save_path: 保存路径
@@ -288,7 +288,7 @@ def vad_cut(
     :param sound_track: 声道信息 1就是单声道，2就是立体声
     :param min_audio_length: 引擎识别最小音频长度
     :return:
-    """ 
+    """
 
     # 单位转换
     min_audio_second = min_audio_millisecond / 1000
@@ -404,14 +404,14 @@ def vad_cut(
 
 
 def get_wav_dBV(data=None, wav=None, rms=None):
-    """ 
+    """
     获取 wav 音频dBV分贝数
     dBV = log(rms, 10) * 20
     :param data: 文件文件二进制
     :param wav : 文件路径或AudioSegment对象
     :param rms : 音频文件rms
     :return wav 音频的dBV分贝数
-    """ 
+    """
     if data:
         if isinstance(data, bytes):
             rms = AudioSegment(data=data).rms

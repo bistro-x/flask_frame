@@ -6,13 +6,13 @@ def get_all_column_list(model):
 
 
 def add_filter(model, query, args):
-    """ 
+    """
     add pararm filter to query on model
     :param model:
     :param query:
     :param param:
     :return:
-    """ 
+    """
     # set query
     mapper = inspect(model)
 

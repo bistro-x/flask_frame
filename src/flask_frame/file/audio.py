@@ -4,13 +4,13 @@ import sndhdr
 
 
 def is_audio(info) -> bool:
-    """ 判断是否是音频
+    """判断是否是音频
     Args:
         info (_type_): 扩展名或者文件信息
 
     Returns:
         bool: 判断结果
-    """ 
+    """
     ext_list = ["midi", "mp3", "m4a", "ogg", "flac", "wav", "amr", "pcm"]
 
     if info in ext_list:
@@ -24,11 +24,11 @@ def is_audio(info) -> bool:
 
 
 def get_file_info_audio(file_path):
-    """ 
+    """
     统计音频文件信息
     :param file_path: 文件路径
     :return: 文件信息
-    """ 
+    """
     header = sndhdr.what(file_path)
     if not header:
         return {}
@@ -46,10 +46,10 @@ def get_file_info_audio(file_path):
 
 
 def get_file_info_wave(file_path):
-    """ 
+    """
     统计 wave 信息
     # param file_path 文件路径
-    """ 
+    """
     if not file_path:
         return {}
 

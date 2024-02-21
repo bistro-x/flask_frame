@@ -1,10 +1,10 @@
 def zip_path(path, result_path):
-    """ 
+    """
     压缩文件夹
     :param path: 压缩路径
     :param result_path: 结果文件路径
     :return: 结果文件路径
-    """ 
+    """
     import os
     import zipfile
 

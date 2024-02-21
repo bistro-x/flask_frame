@@ -24,12 +24,12 @@ class JsonResult:
 
     @deprecated
     def success(msg=None, result=False):
-        """ 
+        """
         返回结果数据
         :param msg: 说明
         :param result: 数据
         :return:
-        """ 
+        """
         if result:
             return jsonify(result)
         else:
@@ -135,7 +135,7 @@ def convert_datetime(value):
 
 
 class HttpResponseSchema(BaseSchema):
-    """ 错误格式""" 
+    """错误格式"""
 
     data = fields.Raw()  # 数据 json or string or Boolean
     code = fields.Str(default="0")  # 统一编码 来自数据库 dict
@@ -157,7 +157,7 @@ class HttpResponseSchema(BaseSchema):
         create_time=None,
         **kwargs
     ):
-        """ 构造函数""" 
+        """构造函数"""
         return self.load(
             {
                 code: code,
@@ -178,7 +178,7 @@ http_response_schema = HttpResponseSchema()
 
 
 class Response(object):
-    """ 返回对应""" 
+    """返回对应"""
 
     def __init__(
         self,
@@ -195,7 +195,7 @@ class Response(object):
         http_status=None,
         detail=None,
     ):
-        """ 
+        """
         构造函数
         :param result:
         :param data:
@@ -205,7 +205,7 @@ class Response(object):
         :param headers: 文件报头
         :param http_status: 指定返回http代码
         :param kwargs:
-        """ 
+        """
 
         self.task_id = task_id  # 结果 True or False
         self.result = result  # 结果 True or False
@@ -222,10 +222,10 @@ class Response(object):
 
     @deprecated
     def get_response(self):
-        """ 
+        """
         使用上会有些问题，尽量使用 create_flask_response 来替代
         :return:
-        """ 
+        """
         self.create_time = self.create_time or cdatetime.now()
         if self.result:
             return http_response_schema.dump(self)
@@ -235,10 +235,10 @@ class Response(object):
             )
 
     def mark_flask_response(self) -> flask.Response:
-        """ 
+        """
         创建flask相关的返回对象
         :return:
-        """ 
+        """
         self.create_time = self.create_time or cdatetime.now()
         response = flask.make_response(
             jsonify(http_response_schema.dump(self)),

@@ -1,11 +1,11 @@
 def is_video(info) -> bool:
-    """ 判断是否是视频
+    """判断是否是视频
     Args:
         info (_type_): 扩展名或者文件信息
 
     Returns:
         bool: 判断结果
-    """ 
+    """
     ext_list = ["mp4", "m4v", "mkv", "webm", "mov", "avi", "wmv", "mpg", "flv"]
     if info in ext_list:
         return True

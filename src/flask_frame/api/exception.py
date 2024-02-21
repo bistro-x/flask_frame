@@ -3,9 +3,9 @@ from werkzeug.exceptions import HTTPException
 
 
 class ResourceError(HTTPException):
-    """ 
+    """
     服务调用异常
-    """ 
+    """
     code = 500  # http代码
     error_code = 500  # 标准错误代码
 
@@ -30,12 +30,12 @@ class ResourceError(HTTPException):
         return text
 
     def get_headers(self, environ=None):
-        """ Get a list of headers.""" 
+        """Get a list of headers."""
         return [('Content-Type', 'application/json')]
 
 
 class BusiError(HTTPException):
-    """ deprecated""" 
+    """deprecated"""
     code = 500
     msg = "this is message!"
     traceback = None
@@ -63,7 +63,7 @@ class BusiError(HTTPException):
         return text
 
     def get_headers(self, environ=None):
-        """ Get a list of headers.""" 
+        """Get a list of headers."""
         return [('Content-Type', 'application/json')]
 
     @staticmethod

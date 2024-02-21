@@ -7,11 +7,11 @@ redis_client = None
 
 
 def init_app(app):
-    """ redis 客户端
+    """redis 客户端
 
     Args:
         app (_type_): _description_
-    """ 
+    """
     global redis_client
 
     redis_cache_server_url = app.config.get("REDIS_URL")

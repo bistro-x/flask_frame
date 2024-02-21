@@ -12,11 +12,11 @@ class FileType:
 
 
 def get_file_info(file_path):
-    """ 
+    """
     统计文件信息
     :param file_path: 文件路径
     :return:
-    """ 
+    """
     kind = filetype.guess(file_path)
 
     if kind is None:

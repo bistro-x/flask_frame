@@ -22,11 +22,11 @@ def json_dumps(*data, **kwargs):
 
 
 def init_app(app):
-    """ 初始化数据库
+    """初始化数据库
 
     Args:
         app (flask app): _description_
-    """ 
+    """
 
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
@@ -117,9 +117,9 @@ def init_app(app):
             update_db(db, db_schema, update_file_list)
 
     class BaseModel:
-        """ 
+        """
         schema base model
-        """ 
+        """
 
         __table_args__ = {"extend_existing": True, "schema": db_schema}
 
@@ -127,12 +127,12 @@ def init_app(app):
 
 
 def compare_version(version1: str, version2: str) -> int:
-    """ 
+    """
     版本号管理 版本1 - 版本2
     :param version1: 版本1
     :param version2: 版本2
     :return: 版本距离
-    """ 
+    """
     version1 = version1.split("/")[-1]
 
     for v1, v2 in zip_longest(version1.split("."), version2.split("."), fillvalue=0):
@@ -150,13 +150,13 @@ def file_compare_version(file1: str, file2: str) -> int:
 
 
 def init_db(db, schema, file_list, version_file_list):
-    """ 
+    """
     初始化数据库到当前
     :param db: 数据库实例
     :param schema: schema
     :param file_list: 文件列表
     :param version_file_list: 版本文件列表
-    """ 
+    """
     lock = get_lock("init-db")  # 给app注入一个外部锁
     time.sleep(random.randint(0, 3))
     lock.acquire()
@@ -235,12 +235,12 @@ def init_db(db, schema, file_list, version_file_list):
 
 
 def update_db(db, schema, file_list):
-    """ 
+    """
     初始化数据库到当前
     :param db: 数据库实例
     :param schema: schema
     :param file_list: 文件列表
-    """ 
+    """
     lock = get_lock("update-db")
     time.sleep(random.randint(0, 3))
     if lock.locked():
@@ -288,12 +288,12 @@ def update_db(db, schema, file_list):
 
 @retry(reraise=True, stop=stop_after_attempt(2))
 def run_sql(file_path, db, first_sql):
-    """ 
+    """
     对数据库云信脚本文件
     :param file_path: 文件路径
     :param db: 数据库对象
     :param first_sql: 估计头部语句
-    """ 
+    """
     # Create an empty command string
     db.session.execute(first_sql)
 
@@ -330,12 +330,12 @@ def run_sql(file_path, db, first_sql):
 
 
 def sql_concat(file_path, param):
-    """ 
+    """
     sql 语句拼接
     :param file_path: 文件路径
     :param param: 传入参数
     :return: 返回完整的 sql 语句
-    """ 
+    """
     sql_command = ""
 
     with open(file_path) as sql_file:

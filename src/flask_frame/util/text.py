@@ -25,36 +25,36 @@ class AppEncoder(json.JSONEncoder):
 
 
 def tel_convert(sentences):
-    """ 电话转换""" 
+    """电话转换"""
     telRegex = re.compile(
-        r""" (
+        r"""(
         (\d{3}|\(\d{3}\))?              # area code
         (\s|-|\.)?                      # separator
         (\d{3})                         # first 3 digits
         (\s|-|\.)                       # separator
         (\d{4})                         # last 4 digits
         (\s*(ext|x|ext\.)\s*(\d{2,5}))? # extension
-        )""" ,
+        )""",
         re.VERBOSE,
     )
 
     telRegex2 = re.compile(
-        r""" (
+        r"""(
         (\d{4}|\(\d{4}\))?              # area code
         (\s|-|\.)?                      # separator
         (\d{4})                         # first 3 digits
         (\s|-|\.)                       # separator
         (\d{4})                         # last 4 digits
-        )""" ,
+        )""",
         re.VERBOSE,
     )
 
     telRegex3 = re.compile(
-        r""" (
+        r"""(
         (?<=\D)1
         [34789]
         (\d{9})
-    )""" ,
+    )""",
         re.VERBOSE,
     )
 
@@ -130,20 +130,20 @@ def number_convert(num):
 
 
 def stock_code_convert(sentences):
-    """ 股票代码转换""" 
+    """股票代码转换"""
     stockRegex = re.compile(
-        r""" 
+        r"""
     [\(|（]|[代码]
     \d{6}
     [\)|）]?
-    """ ,
+    """,
         re.VERBOSE,
     )
     stockRegex2 = re.compile(
-        r""" 
+        r"""
     (?<=[\D])0
     \d{5}
-    """ ,
+    """,
         re.VERBOSE,
     )
     stock_find = stockRegex.findall(sentences)
@@ -156,14 +156,14 @@ def stock_code_convert(sentences):
 
 
 def email_convert(sentences):
-    """ 邮箱转换""" 
+    """邮箱转换"""
     emailRegex = re.compile(
-        r""" (
+        r"""(
         [a-zA-Z0-9._%+-]+
         @
         [a-zA-Z0-9.-]+
         (\.[a-zA-Z]{2,4})
-    )""" ,
+    )""",
         re.VERBOSE,
     )
 
@@ -177,7 +177,7 @@ def email_convert(sentences):
 
 
 def punctuation_convert(sentences):
-    """ 替换掉没有歧义的符号""" 
+    """替换掉没有歧义的符号"""
     return (
         sentences.replace("+", "加", -1)
         .replace("*ST", "星号ST", -1)
@@ -193,7 +193,7 @@ def punctuation_convert(sentences):
 
 
 def remove_punctuation(sentences, includ_variable=True, replace_text=""):
-    """ 去除标点符号
+    """去除标点符号
 
 
     Args:
@@ -203,7 +203,7 @@ def remove_punctuation(sentences, includ_variable=True, replace_text=""):
 
     Returns:
         _type_: 返回文本
-    """ 
+    """
 
     if not sentences:
         return sentences
@@ -223,9 +223,9 @@ def remove_punctuation(sentences, includ_variable=True, replace_text=""):
 
 
 def time_convert(sentences):
-    """ 时间替换""" 
+    """时间替换"""
     timeRegex = re.compile(
-        r""" (
+        r"""(
         ((?<=[\D])\d{4}|^\d{4})?
         (\s|\/|[年])?
         ((?<=\D)\d{1,2})
@@ -238,7 +238,7 @@ def time_convert(sentences):
         (\s|:|[分])?
         (\d{1,2})?
         ([秒])?
-    )""" ,
+    )""",
         re.VERBOSE,
     )
 
@@ -262,13 +262,13 @@ def time_convert(sentences):
 
 
 def percent_convent(sentences):
-    """ 百分比替换""" 
+    """百分比替换"""
     percentRegex = re.compile(
-        r""" (
+        r"""(
         (\d+)
         (\.\d+)?
         %
-    )""" ,
+    )""",
         re.VERBOSE,
     )
     percent_find = percentRegex.findall(sentences)
@@ -284,11 +284,11 @@ def percent_convent(sentences):
 
 def hyphen_convent(sentences):
     hyphenRegex = re.compile(
-        r""" (
+        r"""(
            (\d?|[年月日时分秒点])
            -
            (\d?|[一二三四五六七八九十])
-       )""" ,
+       )""",
         re.VERBOSE,
     )
     hyphen_find = hyphenRegex.findall(sentences)
@@ -327,12 +327,12 @@ def text_convent(text):
 
 
 def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
-    """ 
+    """
     对输入的句子进行分词和中文数字替换
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
     :param sentence:  待转换的句子字符串
     :param no_convert_words:  不处理的字符串
-    """ 
+    """
     from ..extension.participle import participle_sentence
 
     numbers = ["零", "一", "幺", "二", "两", "三", "四", "五", "六", "七", "八", "九", "十"]
@@ -379,11 +379,11 @@ def convert_sentence_chinese_number_to_arabic(sentence, no_convert_words=None):
 
 
 def convert_sentence_arabic_number_to_chinese(sentence):
-    """ 
+    """
     对输入的句子进行分词和阿拉伯数字替换
     使用hanlp进行分词 doc: https://hanlp.hankcs.com/docs/
     :param sentence:  待转换的句子字符串
-    """ 
+    """
     from ..extension.participle import participle_sentence
 
     words = participle_sentence(sentence)
@@ -397,10 +397,10 @@ def convert_sentence_arabic_number_to_chinese(sentence):
 
 
 def convert_chinese_number_to_arabic(word):
-    """ 
+    """
     中文数字转阿拉伯数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     :param word:   待转换的单词字符串
-    """ 
+    """
     from ..extension.participle import participle_app
 
     def cn2an_convert(target, method, method_model=None):
@@ -443,12 +443,12 @@ def convert_chinese_number_to_arabic(word):
 
 
 def convert_arabic_number_to_chinese(word, model="low"):
-    """ 
+    """
     阿拉伯数字转中文数字 使用cn2an进行转换 doc: https://github.com/Ailln/cn2an
     example: 1989年 -> 一千九百八十九年  2287 -> 二千二百八十七
     :param word:   待转换的单词字符串
     :param model:  cn2an转换模式 low/up/rmb/direct
-    """ 
+    """
     from ..extension.participle import participle_app
 
     number_reg_check = "\d+\.?\d*"

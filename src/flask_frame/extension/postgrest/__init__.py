@@ -8,14 +8,14 @@ proxy_local = None  # 指定代理地址
 
 
 def proxy_response(response):
-    """ 转换代理回应
+    """转换代理回应
 
     Args:
         response (_type_): _description_
 
     Returns:
         _type_: _description_
-    """ 
+    """
 
     headers = {
         key: response.headers.get(key)
@@ -27,11 +27,11 @@ def proxy_response(response):
 
 
 def is_send_proxy():
-    """ 是否发送请求到代理服务
+    """是否发送请求到代理服务
 
     Returns:
         boolean: 判断结果
-    """ 
+    """
     global flask_app, server_url
 
     # request.url_rule
@@ -44,11 +44,11 @@ def is_send_proxy():
 def local_run(
     schema=None, method="GET", url="", headers=None, params=None, data=[], **kwargs
 ):
-    """ 本地运行数据库操作
+    """本地运行数据库操作
 
     Returns:
         _type_: data, headers
-    """ 
+    """
     global flask_app
 
     from .sql_generator import generate_sql

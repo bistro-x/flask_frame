@@ -47,7 +47,7 @@ if celery:
 
     @celery.task(name="api_log_clean")
     def api_log_clean():
-        """ API日志清理""" 
+        """API日志清理"""
         from ..database import db
 
         api_log_retention_days = flask_app.config.get("API_LOG_RETENTION_DAYS", 30)
