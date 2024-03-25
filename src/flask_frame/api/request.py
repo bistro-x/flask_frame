@@ -109,6 +109,6 @@ def proxy_request(
         url=server_url + path,
         params=params,
         headers=send_headers,
-        timeout=10,  # Add a timeout argument (e.g., 10 seconds)
+        timeout=30,  # Add a timeout argument (e.g., 10 seconds)
         **kwargs,
     )
