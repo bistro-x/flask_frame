@@ -40,8 +40,8 @@ def proxy(server_url, response_standard=True):
 
     # 调用远程服务
     other_param = {}
-    if request.is_json:
-        other_param["json"] = request.json
+    if request.is_json and request.data:
+        other_param["json"] = request.get_json()
     elif request.data:
         other_param["data"] = request.data
 
