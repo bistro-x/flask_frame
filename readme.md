@@ -92,6 +92,8 @@ requirements.txt 框架依赖的库
 
 ## 插件支持
 
+ENABLED_EXTENSION 是配置项目中需要的插件
+
 ### api_log
 
 - api_log: 记录 API 请求到数据库中进行保留

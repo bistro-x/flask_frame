@@ -67,7 +67,7 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
         if isinstance(error, ResourceError):
             return error
         elif hasattr(error, "description") and hasattr(error, "code"):
-            return flask.jsonify(error.description), error.code
+            return error.description, error.code
         else:
             return (
                 flask.jsonify(
