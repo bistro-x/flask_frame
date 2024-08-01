@@ -1,4 +1,5 @@
 from flask import request
+import requests
 from ...api.response import Response
 from ...api.request import proxy
 
@@ -6,6 +7,59 @@ flask_app = None  # 全局应用
 server_url = None  # 服务地址
 proxy_local = None  # 指定代理地址
 
+
+def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
+    """
+    创建代理请求
+    :param method:
+    :param url:
+    :param headers:
+    :param kwargs:
+    :return:
+    """
+    global flask_app, server_url
+
+    # 本地代理
+    if proxy_local:
+        data, headers = local_run(
+            method=method, url=url, params=params, headers=headers, **kwargs
+        )
+        return Response(data=data, headers=headers)
+
+    send_headers = {}
+    if headers:
+        send_headers = (
+            {h[0]: h[1] for h in headers} if not isinstance(headers, dict) else headers
+        )
+        send_headers["Authorization"] = None
+
+    response = requests.request(
+        method=method,
+        url=server_url + url,
+        params=params,
+        headers=send_headers,
+        **kwargs,
+    )
+
+    if (
+        "content-type" in response.headers
+        and "json" in response.headers["content-type"]
+    ):
+        response_json = response.json()
+    else:
+        response_json = {}
+
+    if response.headers.get("Transfer-Encoding"):
+        response.headers.pop("Transfer-Encoding")
+    return Response(
+        result=response.ok,
+        code=response_json.get("code") if not response.ok else 0,
+        message=response_json.get("message") if not response.ok else None,
+        detail=response_json.get("details") if not response.ok else None,
+        data=response_json if response.ok else None,
+        http_status=response.status_code,
+        headers=response.headers,
+    )
 
 def proxy_response(response):
     """转换代理回应
@@ -134,6 +188,7 @@ def init_app(app):
             other_param = {}
             if request.data:
                 other_param["json"] = request.json
+                
             data, headers = local_run(
                 method=request.method,
                 url=request.path,
@@ -141,6 +196,7 @@ def init_app(app):
                 headers=request.headers,
                 **other_param,
             )
+            
             return Response(data=data, headers=headers)
         else:
             # 代理为远程服务查询
