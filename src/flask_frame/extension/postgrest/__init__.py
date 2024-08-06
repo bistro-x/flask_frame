@@ -170,7 +170,7 @@ def local_run(
 def init_app(app):
     global flask_app, server_url, proxy_local
     flask_app = app
-    server_url = flask_app.config.get("PROXY_SERVER_URL")
+    server_url = flask_app.config.get("PROXY_SERVICE_URL")
     proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
     proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
 

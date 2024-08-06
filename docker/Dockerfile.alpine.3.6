@@ -1,9 +1,9 @@
 FROM alpine:3.9
 
 ENV PYTHONUNBUFFERED=1
-ENV API_SERVER_HOME=/opt/www
+ENV API_SERVICE_HOME=/opt/www
 
-WORKDIR "$API_SERVER_HOME"
+WORKDIR "$API_SERVICE_HOME"
 
 COPY "./requirements.txt" "./requirements.txt"
 

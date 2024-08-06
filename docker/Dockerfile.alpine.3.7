@@ -1,10 +1,10 @@
 FROM alpine:3.10
 
 ENV PYTHONUNBUFFERED=1
-ENV API_SERVER_HOME=/opt/www
+ENV API_SERVICE_HOME=/opt/www
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
-WORKDIR "$API_SERVER_HOME"
+WORKDIR "$API_SERVICE_HOME"
 
 COPY "./requirements.txt" "./requirements.txt"
 COPY "./requirements_all.txt" "./requirements_all.txt"
