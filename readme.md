@@ -37,6 +37,7 @@ docker build -f ./frame/docker/Dockerfile.encrypt  .
 
 ```shell
 pip3 install twine
+
 rm -rf dist
 python3 setup.py sdist bdist_wheel
 twine upload dist/*
