@@ -23,7 +23,7 @@ RUN  echo "**** install Python ****" && \
     echo "**** install pip ****" && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
-    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --no-cache pip --upgrade setuptools wheel && \
+    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/ --no-cache pip --upgrade setuptools wheel && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 RUN apk add --no-cache --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ libressl-dev && \
@@ -31,7 +31,7 @@ RUN apk add --no-cache --virtual=.build_dependencies python3-dev musl-dev libeve
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone
 
-RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
+RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
 
 
 # minio命令

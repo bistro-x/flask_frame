@@ -20,11 +20,11 @@ RUN  echo "**** install Python ****" && \
     echo "**** install pip ****" && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
-    pip3 install  -U -i https://mirrors.aliyun.com/pypi/simple/ --no-cache --upgrade pip setuptools wheel && \
+    pip3 install  -U -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/ --no-cache --upgrade pip setuptools wheel && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 RUN  apk add --no-cache  --virtual=.build_dependencies python3-dev musl-dev libevent-dev  py3-cffi linux-headers  openssl-dev libxslt libxslt-dev g++ && \
     apk add --no-cache  tzdata postgresql-dev gcc libffi-dev yasm ffmpeg make && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone  &&  \
-    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ../requirements_all.txt
+    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ../requirements_all.txt

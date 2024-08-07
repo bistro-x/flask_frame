@@ -71,7 +71,7 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
         else:
             return (
                 flask.jsonify(
-                    {"message": str(error), "code": HTTPStatus.INTERNAL_SERVER_ERROR}
+                    {"message": type(error).__name__ +":"+str(error), "code": HTTPStatus.INTERNAL_SERVER_ERROR}
                 ),
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )

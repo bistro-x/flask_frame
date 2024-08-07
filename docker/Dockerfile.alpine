@@ -22,7 +22,7 @@ RUN  echo "**** install Python ****" && \
     echo "**** install pip ****" && \
     python3 -m ensurepip && \
     rm -r /usr/lib/python*/ensurepip && \
-    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --no-cache pip --upgrade setuptools wheel && \
+    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/ --no-cache pip --upgrade setuptools wheel && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 
@@ -38,7 +38,7 @@ RUN wget http://ffmpeg.org/releases/ffmpeg-4.4.1.tar.bz2 --no-check-certificate 
     && make \
     && make install
 
-RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
+RUN pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ./requirements_all.txt --use-deprecated=legacy-resolver
 
 
 # minio命令
