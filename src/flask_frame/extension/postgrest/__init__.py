@@ -32,6 +32,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
             {h[0]: h[1] for h in headers} if not isinstance(headers, dict) else headers
         )
         send_headers["Authorization"] = None
+        send_headers["Host"] = None
 
     response = requests.request(
         method=method,
