@@ -12,7 +12,7 @@ ffmpeg-python~=0.2.0
 natsort~=7.0.1
 
 pydub~=0.24.1
-aiohttp==3.6.2
+aiohttp==3.8.3
 zhon~=1.1.5
 
 chardet~=3.0.4

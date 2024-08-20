@@ -30,6 +30,7 @@ class FileLock(object):
         if not os.path.exists(self.file):
             return False
         if check_file(self.file) > self.timeout:
+            self.release()
             return False
         return True
 
@@ -37,7 +38,7 @@ class FileLock(object):
         """请求锁"""
         if SYSTEM == WINDOWS:
             while os.path.exists(self.file):
-                time.sleep(0.01)  # wait 10ms
+                time.sleep(1)  # wait 10ms
                 continue
 
             with open(self.file, "w") as f:
