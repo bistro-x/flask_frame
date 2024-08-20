@@ -16,7 +16,7 @@ redis_client = None
 def init_app(app):
     global redis_client, lock_type, lock_index
 
-    lock_index = app.config.get("PRODUCT_KEY")
+    lock_index = app.config.get("PRODUCT_KEY")+":lock"
 
     import socket
 
@@ -76,13 +76,23 @@ class Lock:
     def get_redis_lock(lock_name, timeout=600):
         global redis_client, lock_index
 
-        if redis_client is None:
-            return FileLock(lock_name, timeout)
-
         if lock_index:
-            lock_name = f"{lock_index}.{lock_name}"
+            lock_name = f"{lock_index}:{lock_name}"
 
         return redis_client.lock(lock_name, timeout=timeout)
+
+
+    @staticmethod
+    def clear():
+        global lock_index
+
+        cursor = 0  # 初始 cursor 值为整数 0
+        while True:
+            cursor, keys = redis_client.scan(cursor=cursor, match=f"{lock_index}:*")
+            if keys:
+                redis_client.delete(*keys)
+            if cursor == 0:
+                break
 
     @staticmethod
     def lock_type():

@@ -17,10 +17,11 @@ class FileLock(object):
     def __init__(self, lock_file="FLASK_LOCK", timeout=600):
 
         if SYSTEM == WINDOWS:
-            lock_dir = os.environ["tmp"]
+            lock_dir = os.environ["lock"]
         else:
-            lock_dir = "./"
+            lock_dir = "./lock"
 
+        self.lock_dir = lock_dir
         self.file = os.path.join(lock_dir, lock_file)
         self.timeout = timeout
         self._fn = None
@@ -37,7 +38,7 @@ class FileLock(object):
     def acquire(self):
         """请求锁"""
         if SYSTEM == WINDOWS:
-            while os.path.exists(self.file):
+            while self.locked():
                 time.sleep(1)  # wait 10ms
                 continue
 
@@ -48,6 +49,8 @@ class FileLock(object):
             fcntl.flock(self._fn.fileno(), fcntl.LOCK_EX)
             self._fn.write("1")
 
+        
+        
     def release(self):
         """释放锁"""
         try:
@@ -66,5 +69,4 @@ class FileLock(object):
 
 def check_file(file_path):
     """检测文件的修改时间"""
-
     return time.time() - os.path.getmtime(file_path)
