@@ -17,9 +17,9 @@ class FileLock(object):
     def __init__(self, lock_file="FLASK_LOCK", timeout=600):
 
         if SYSTEM == WINDOWS:
-            lock_dir = os.environ["lock"]
+            lock_dir = os.environ["tmp"]
         else:
-            lock_dir = "./lock"
+            lock_dir = "./"
 
         self.lock_dir = lock_dir
         self.file = os.path.join(lock_dir, lock_file)
