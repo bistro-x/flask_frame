@@ -18,4 +18,3 @@ setup(
     package_dir={"": "src"},
     install_requires=install_requires,
 )
-w
