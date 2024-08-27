@@ -28,7 +28,7 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     )
     app.config.from_object(config[config_name])
     if config_custom:
-        app.config = {**app.config, **config_custom}
+        app.config.update(config_custom)
     app.config.FLASK_CONFIG = config_name
 
     # 加载配置文件
