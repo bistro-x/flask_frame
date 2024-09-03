@@ -40,3 +40,4 @@ pydevd-pycharm~=202.6397.94
 cn2an~=0.5.11
 chardet~=3.0.4
 tenacity==8.0.1
+aiohttp==3.8.3
