@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import os
 
 import flask
 import requests
@@ -7,8 +8,43 @@ from flask import request, abort, g
 app = None
 
 # 配置参数
-check_api = True  # 检查API权限
 fetch_user = True  # 是否获取用户
+check_api = True  # 检查API权限
+
+
+def init_app(flask_app):
+    """初始化 extension
+
+    Args:
+        flask_app (_type_): _description_
+    """
+    global app, check_api, fetch_user, get_user_extend_info
+
+    app = flask_app
+    check_api = app.config.get("CHECK_API", True)
+    admin_token = app.config.get(
+        "ADMIN_TOKEN", os.getenv("ADMIN_TOKEN")
+    )  # 固定可跳过校验的 TOKEN
+
+    fetch_user = app.config.get("FETCH_USER", True)
+
+    @app.before_request
+    def app_proxy():
+        # 获取 token
+        token_string = request.headers.environ.get("HTTP_AUTHORIZATION")
+        token_string = token_string.split(" ")[1] if token_string else None
+
+        # 全局 TOKEN 校验
+        if admin_token and token_string == admin_token:
+            return
+
+        # 检测权限和用户
+        if fetch_user and not check_user_permission(token_string):
+            if check_api:
+                if not get_current_user():
+                    abort(HTTPStatus.UNAUTHORIZED, {"message": "无法获取用户"})
+                else:
+                    abort(HTTPStatus.FORBIDDEN, {"message": "API未授权"})
 
 
 def fetch_current_user(token_string):
@@ -57,7 +93,11 @@ def get_current_user():
 
 
 def license_check():
-    """证书检测"""
+    """检测 license
+
+    Returns:
+        _type_: _description_
+    """
     global app
 
     user_auth_url = app.config.get("USER_AUTH_URL")
@@ -105,7 +145,7 @@ def check_url_permission(user, product_key=None):
     # 静态文件不进行限制
     if check_path and check_path.startswith("/static/"):
         return True
-    
+
     if not user:
         return False
 
@@ -116,7 +156,7 @@ def check_url_permission(user, product_key=None):
     # 客户端校验
     if user and user.get("client_id") and not user.get("id"):
         return True
-    
+
     # 权限库没有定义的接口，就不进行限制。
     product_key = product_key or app.config.get("PRODUCT_KEY")
     if (
@@ -154,23 +194,3 @@ def param_add_department_filter(params={}):
         params["department_key"] = "is.null"
 
     return params
-
-
-def init_app(flask_app):
-    global app, check_api, fetch_user, get_user_extend_info
-
-    app = flask_app
-    check_api = app.config.get("CHECK_API", True)
-    fetch_user = app.config.get("FETCH_USER", True)
-
-    @app.before_request
-    def app_proxy():
-        # check permission
-        token_string = request.headers.environ.get("HTTP_AUTHORIZATION")
-        token_string = token_string.split(" ")[1] if token_string else None
-        if fetch_user and not check_user_permission(token_string):
-            if check_api:
-                if not get_current_user():
-                    abort(HTTPStatus.UNAUTHORIZED, {"message": "无法获取用户"})
-                else:
-                    abort(HTTPStatus.FORBIDDEN, {"message": "API未授权"})

@@ -59,7 +59,8 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     def exception_handle(error):
         from .extension.database import db
 
-        db.session.rollback()
+        if db:
+            db.session.rollback()
 
         app.logger.exception(error)
 
