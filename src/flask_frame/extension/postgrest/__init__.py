@@ -132,6 +132,7 @@ def local_run(
                 item and data.append(dict(item))
             else:
                 db.session.execute(first_sql + item_sql)
+                
     elif "select" in exec_sql:
         if "application/vnd.pgrst.object+json" in request.headers.get("Accept"):
             query_result = db.session.execute(first_sql + exec_sql).fetchone()
@@ -159,12 +160,13 @@ def local_run(
                     "Content-Range"
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
+        
         if "returning" in exec_sql:
             query_result = db.session.execute(first_sql + exec_sql).fetchall()
             data = [dict(row) for row in query_result]
         else:
             db.session.execute(first_sql + exec_sql)
-
+    
     return data, headers
 
 
@@ -197,8 +199,8 @@ def init_app(app):
                 headers=request.headers,
                 **other_param,
             )
-            
             return Response(data=data, headers=headers).mark_flask_response()
+        
         else:
             # 代理为远程服务查询
             return proxy(server_url)
