@@ -100,11 +100,17 @@ def init_app(app):
         import os
 
         version_file_list = app.config.get("DB_VERSION_FILE")
+        
         if not version_file_list:
             sql_path = "sql/migrate"
-            version_file_list = [
-                os.path.join(sql_path, item) for item in os.listdir(sql_path)
-            ]
+            
+            #如果文件不存在跳过
+            if os.path.exists(sql_path):
+                version_file_list = [
+                    os.path.join(sql_path, item) for item in os.listdir(sql_path)
+                ]
+            else:
+                version_file_list = []
 
         if init_file_list:
             init_db(db, db_schema, init_file_list, version_file_list)
