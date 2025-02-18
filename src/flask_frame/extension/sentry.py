@@ -25,5 +25,6 @@ def init_app(flask_app):
         sentry_sdk.init(
             dsn=flask_app.config.get("SENTRY_DS", ""),
             integrations=[sentry_logging, FlaskIntegration()],
+            verify_ssl=False  # 忽略 SSL 验证
             **other_param
         )

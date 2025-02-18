@@ -6,6 +6,7 @@ ENV API_SERVICE_HOME=/opt/www
 WORKDIR "$API_SERVICE_HOME"
 
 COPY "./requirements.txt" "./requirements.txt"
+COPY "./requirements_all.txt" "./requirements_all.txt"
 
 EXPOSE 5000
 
@@ -27,4 +28,4 @@ RUN  apk add --no-cache  --virtual=.build_dependencies python3-dev musl-dev libe
     apk add --no-cache  tzdata postgresql-dev gcc libffi-dev yasm ffmpeg make && \
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&  \
     echo "Asia/Shanghai" >/etc/timezone  &&  \
-    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ../requirements_all.txt
+    pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ./requirements_all.txt
