@@ -1,0 +1,9 @@
+FROM python:3.9.21-alpine3.21
+
+COPY "./requirements.txt" "./requirements.txt"
+
+RUN apk add --no-cache  tzdata postgresql-dev  
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" >/etc/timezone  
+
+RUN  pip3 install  -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url  https://pypi.org/simple/  -r ./requirements_all.txt
+

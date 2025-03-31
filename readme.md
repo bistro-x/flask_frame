@@ -9,6 +9,8 @@
 基础镜像
 
 ```bash
+docker build . --force-rm=true -f docker/Dockerfile.python -t wuhanchu/python:flask_frame_master && docker push wuhanchu/python:flask_frame_master
+
 #3.6
 docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/python:3.6_alpie && docker push wuhanchu/python:3.6_alpie
 
