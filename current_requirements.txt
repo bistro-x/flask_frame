@@ -386,7 +386,7 @@ sqlparse==0.5.3
 sshtunnel==0.4.0
 stable-ts @ git+https://github.com/jianfch/stable-ts.git@fd0d4c75ca7a173ee60f281eacae56fe170c258e
 stack-data==0.6.2
-starlette==0.25.0
+starlette==0.40.0
 subfinder==2.2.1
 svglib==1.5.1
 sympy==1.13.2
