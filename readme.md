@@ -1,50 +1,62 @@
-基于 flask 快速搭建 提供 restful 接口的应用。并提供丰富的应该扩展相关功能。
+# Flask RESTful 应用框架
 
-## 使用
+基于 Flask 快速搭建提供 RESTful 接口的应用框架，并提供丰富的扩展功能。
 
-## 基础镜像
+## 功能特性
 
-### python
+- 快速搭建 RESTful API 服务
+- 丰富的扩展功能支持
+- 完善的日志管理
+- 数据库集成支持
+- 插件化架构
 
-基础镜像
+## 使用指南
+
+### 基础镜像构建
+
+#### Python 基础镜像
 
 ```bash
+# 主镜像
 docker build . --force-rm=true -f docker/Dockerfile.python -t wuhanchu/python:flask_frame_master && docker push wuhanchu/python:flask_frame_master
 
-#3.6
+# Python 3.6 Alpine 版本
 docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/python:3.6_alpie && docker push wuhanchu/python:3.6_alpie
 
-# image first build
+# 首次构建 Alpine 镜像（后台运行）
 nohup docker build . --force-rm=true -f docker/Dockerfile.alpine -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine > build_alpine.log 2>&1 &
 
-# image update
+# 更新 Alpine 镜像（后台运行）
 nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine &
 ```
 
-## 编译
 
-普通编译
 
-```bash
-docker build -f ./frame/docker/Dockerfile.source  .
-```
+### 应用编译
 
-加密编译
+#### 普通编译
 
 ```bash
-docker build -f ./frame/docker/Dockerfile.encrypt  .
+docker build -f ./frame/docker/Dockerfile.source .
 ```
 
-## 测试
+#### 加密编译
 
-```shell
+```bash
+docker build -f ./frame/docker/Dockerfile.encrypt .
+```
+
+### 本地测试
+
+```bash
 pip install -e .
 ```
-使用上面的命令安装到本地，进行相关项目的调试。
 
-## 发布
+使用上述命令将应用安装到本地环境，便于项目调试。
 
-```shell
+### 发布到 PyPI
+
+```bash
 pip3 install twine
 
 rm -rf dist
@@ -52,73 +64,71 @@ python3 setup.py sdist bdist_wheel
 twine upload dist/*
 ```
 
-## 使用
+## 框架使用
 
-### 调试
+### 调试模式
 
-请求在 url 参数中加入 profile=true 可进入调试模式。
+在请求 URL 参数中加入 `profile=true` 可进入调试模式。
 
 ### 默认接口
 
-get /flask/log 读取日志列表
-get /flask/log/download 下载日志列表
-get /static/log/{文件路径} 显示对应日志信息
+- `GET /flask/log` - 读取日志列表
+- `GET /flask/log/download` - 下载日志文件
+- `GET /static/log/{文件路径}` - 显示指定日志内容
 
-## 配置
-
-### 文件夹
-
-http: 网络请求相关文件
-requirements.txt 框架依赖的库
-
-## 目录结构
+## 项目结构
 
 ```
-|-- http                                  # 网络请求相关文件
-|-- util                                  # 工具文件夹
-|-- extension                             # 插件文件夹
-|   |-- logura                            # 日志管理插件
-|-- schema                                # 返回对象
-|-- docker                                # 容器编译
-|-- file                                  # 文件管理
-|-- requirements.txt                      # 框架依赖的库
-|-- requirements_all.txt                  # 规定使用项目用到的所有库和版本，作为基础镜像打包
+|-- http/                  # 网络请求相关文件
+|-- util/                   # 工具类
+|-- extension/              # 插件系统
+|   |-- logura/             # 日志管理插件
+|-- schema/                 # 数据模型和返回对象
+|-- docker/                 # Docker 相关配置
+|-- file/                   # 文件管理
+|-- requirements.txt        # 框架核心依赖
+|-- requirements_all.txt    # 完整依赖（用于基础镜像构建）
 ```
 
-## 配置信息
+## 配置参考
 
-| 分组   | 配置项                  | 说明                                                            |
-| ------ | ----------------------- | --------------------------------------------------------------- |
-| 数据库 | SQLALCHEMY_DATABASE_URI | 数据库链接地址                                                  |
-| 数据库 | DB_SCHEMA               | 对接的数据库 schema                                             |
-| 数据库 | AUTO_UPDATE             | 是否自动更新数据库(DB_INIT_FILE,DB_VERSION_FILE,DB_UPDATE_FILE) |
-| 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开则每次创建运行，关则必须有版本更新才会调用）    |
-| 数据库 | RECREATE_SCHEMA         | 如果 schema 已经存在强制重新创建 schema，默认 False             |
-| 数据库 | DB_INIT_FILE            | 数据库初始化脚本                                                |
-| 数据库 | DB_VERSION_FILE         | 数据库迭代脚本（根据版本更新）                                  |
-| 数据库 | DB_UPDATE_FILE          | 数据库开发脚本（本次启动运行）                                  |
-| 权限   | FETCH_USER              | 是否获取用户                                                    |
-| 权限   | CHECK_API               | API 接口检查                                                    |
-| 插件   | API_LOG_RETENTION_DAYS  | API 日志保留天数,默认 30 天                                     |
+| 分类   | 配置项                  | 说明                                                                   |
+| ------ | ----------------------- | ---------------------------------------------------------------------- |
+| 数据库 | SQLALCHEMY_DATABASE_URI | 数据库连接地址                                                         |
+| 数据库 | DB_SCHEMA               | 数据库 schema                                                          |
+| 数据库 | AUTO_UPDATE             | 是否自动更新数据库(依赖 DB_INIT_FILE, DB_VERSION_FILE, DB_UPDATE_FILE) |
+| 数据库 | DB_UPDATE_SWITCH        | 更新脚本开关（开启则每次启动运行，关闭则仅在版本更新时运行）           |
+| 数据库 | RECREATE_SCHEMA         | 强制重新创建 schema（默认 False）                                      |
+| 数据库 | DB_INIT_FILE            | 数据库初始化脚本路径                                                   |
+| 数据库 | DB_VERSION_FILE         | 数据库版本迭代脚本                                                     |
+| 数据库 | DB_UPDATE_FILE          | 数据库开发脚本（每次启动运行）                                         |
+| 权限   | FETCH_USER              | 是否启用用户获取功能                                                   |
+| 权限   | CHECK_API               | 是否启用 API 接口检查                                                  |
+| 日志   | API_LOG_RETENTION_DAYS  | API 日志保留天数（默认 30 天）                                         |
 
-## 插件支持
+## 插件系统
 
-ENABLED_EXTENSION 是配置项目中需要的插件
+通过 `ENABLED_EXTENSION` 配置启用项目所需的插件。
 
-| 插件 | 说明 |
-｜ redis | redis 客户端|
-｜ lock | 锁,依赖 redis ｜
+### 核心插件
 
-### api_log
+| 插件名称 | 描述             | 依赖  |
+| -------- | ---------------- | ----- |
+| redis    | Redis 客户端支持 | -     |
+| lock     | 分布式锁支持     | redis |
 
-- api_log: 记录 API 请求到数据库中进行保留
-  - api_log_clean: celery 支持的自动日志清理函数，需要在 config 配置对应任务启用。
+### 扩展插件
 
-### sentry
+#### api_log
 
-支持配置 sentry 插件和对应的初始化参数。
-初始化参数会从 app.config 取前缀未 sentry 的配置值。如果你想修改 sentry 的初始化参数，可以使用下面的对应逻辑。
+- 记录 API 请求到数据库
+- 提供 `api_log_clean` 清理函数（需配合 Celery 使用）
 
-environment -> SENTRY_ENVIRONMENT
+#### sentry
 
-只要 app.config 包含 SENTRY_ENVIRONMENT 的数据就可以在 sentry_sdk.init 传入 environment 参数。
+支持 Sentry 错误监控系统，自动从 app.config 加载配置（以 `SENTRY_` 为前缀的配置项）。
+
+例如：
+
+- `SENTRY_ENVIRONMENT` → `environment` 参数
+- `SENTRY_DSN` → `dsn` 参数

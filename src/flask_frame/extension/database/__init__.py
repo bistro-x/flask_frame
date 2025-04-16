@@ -7,7 +7,7 @@ import functools
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 from tenacity import retry, stop_after_attempt
-
+from sqlalchemy import text
 from ..lock import get_lock, Lock
 
 db = None
@@ -164,81 +164,81 @@ def init_db(db, schema, file_list, version_file_list):
     :param file_list: 文件列表
     :param version_file_list: 版本文件列表
     """
-    lock = get_lock("init-db")  # 给app注入一个外部锁
-    time.sleep(random.randint(0, 3))
-    lock.acquire()
+    with current_app.app_context():
 
-    try:
-        first_sql = f"set search_path to {schema}; "
-
-        schema_exist = db.engine.execute(
-            f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'"
-        ).fetchone()
-
-        # 获取版本
-        version = None
-        if schema_exist:
-            table_exist = db.engine.execute(
-                f"select *  from pg_tables where tablename='param' and schemaname='{schema}'"
+        lock = get_lock("init-db")  # 给app注入一个外部锁
+        time.sleep(random.randint(0, 3))
+        lock.acquire()
+        try:
+            first_sql = f"set search_path to {schema}; "
+            schema_exist = db.session.execute(
+                text(f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'")
             ).fetchone()
-            if table_exist:
-                version = db.engine.execute(
-                    first_sql + "select value from param where key='version';"
+
+            # 获取版本
+            version = None
+            if schema_exist:
+                table_exist = db.session.execute(
+                    text(f"select *  from pg_tables where tablename='param' and schemaname='{schema}'")
                 ).fetchone()
-            if version:
-                version = version[0]
+                if table_exist:
+                    version = db.session.execute(
+                        text( first_sql + "select value from param where key='version';")
+                    ).fetchone()
+                if version:
+                    version = version[0]
 
-        # 初始化
-        if not version:
-            current_app.logger.info("初始化数据库")
+            # 初始化
+            if not version:
+                current_app.logger.info("初始化数据库")
 
-            # 重新构建schema
-            from distutils.util import strtobool
+                # 重新构建schema
+                from distutils.util import strtobool
 
-            # 获取配置数据
-            recreate_schema = False
-            recreate_schema_key = "RECREATE_SCHEMA"
-            if current_app.config.get(recreate_schema_key):
-                recreate_schema = current_app.config.get(recreate_schema_key)
-            elif os.environ.get(recreate_schema_key):
-                recreate_schema = bool(strtobool(os.environ.get(recreate_schema_key)))
+                # 获取配置数据
+                recreate_schema = False
+                recreate_schema_key = "RECREATE_SCHEMA"
+                if current_app.config.get(recreate_schema_key):
+                    recreate_schema = current_app.config.get(recreate_schema_key)
+                elif os.environ.get(recreate_schema_key):
+                    recreate_schema = bool(strtobool(os.environ.get(recreate_schema_key)))
 
-            # 判断是否创建
-            if schema_exist and recreate_schema:
-                db.engine.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
-            elif not schema_exist:
-                db.engine.execute(sqlalchemy.schema.CreateSchema(db_schema))
-                db.engine.execute(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
+                # 判断是否创建
+                if schema_exist and recreate_schema:
+                    db.session.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+                elif not schema_exist:
+                    db.session.execute(sqlalchemy.schema.CreateSchema(db_schema))
+                    db.session.execute(text(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;"))
 
-            # 运行初始化脚本
-            for file_path in file_list:
-                run_sql(file_path, db, first_sql)
+                # 运行初始化脚本
+                for file_path in file_list:
+                    run_sql(file_path, db, first_sql)
 
-        elif version_file_list:
-            #  根据版本运行更新脚本
-            update_db_sign = False  # 数据库更新脚本执行标志
-            for version_file in sorted(
-                version_file_list, key=functools.cmp_to_key(file_compare_version)
-            ):
-                (file_path, temp_file_name) = os.path.split(version_file)
-                (current_version, extension) = os.path.splitext(temp_file_name)
+            elif version_file_list:
+                #  根据版本运行更新脚本
+                update_db_sign = False  # 数据库更新脚本执行标志
+                for version_file in sorted(
+                    version_file_list, key=functools.cmp_to_key(file_compare_version)
+                ):
+                    (file_path, temp_file_name) = os.path.split(version_file)
+                    (current_version, extension) = os.path.splitext(temp_file_name)
 
-                # 小于当前版本 不执行
-                if compare_version(current_version, version) < 1:
-                    continue
+                    # 小于当前版本 不执行
+                    if compare_version(current_version, version) < 1:
+                        continue
 
-                run_sql(version_file, db, first_sql)
-                update_db_sign = True
+                    run_sql(version_file, db, first_sql)
+                    update_db_sign = True
 
-            # 在版本更新的时候去更新脚本
-            if update_db_sign:
-                update_file_list = current_app.config.get("DB_UPDATE_FILE")
-                update_file_switch = current_app.config.get("DB_UPDATE_SWITCH", False)
+                # 在版本更新的时候去更新脚本
+                if update_db_sign:
+                    update_file_list = current_app.config.get("DB_UPDATE_FILE")
+                    update_file_switch = current_app.config.get("DB_UPDATE_SWITCH", False)
 
-                if update_file_list and not update_file_switch:
-                    update_db(db, db_schema, update_file_list)
-    finally:
-        lock.release()
+                    if update_file_list and not update_file_switch:
+                        update_db(db, db_schema, update_file_list)
+        finally:
+            lock.release()
 
 
 def update_db(db, schema, file_list):
@@ -248,49 +248,50 @@ def update_db(db, schema, file_list):
     :param schema: schema
     :param file_list: 文件列表
     """
-    lock = get_lock("update-db")
-    time.sleep(random.randint(0, 3))
-    if lock.locked():
-        current_app.logger.info(f"worker: {os.getpid()} detect update-db locked")
-        return
+    with current_app.app_context():  # 添加这一行
+        lock = get_lock("update-db")
+        time.sleep(random.randint(0, 3))
+        if lock.locked():
+            current_app.logger.info(f"worker: {os.getpid()} detect update-db locked")
+            return
 
-    lock.acquire()
+        lock.acquire()
 
-    # 判断服务实例本地是否有文件锁
-    if Lock.get_file_lock("had-update-db", timeout=999999).locked():
-        current_app.logger.info("had update db file lock locked")
-        return
+        # 判断服务实例本地是否有文件锁
+        if Lock.get_file_lock("had-update-db", timeout=999999).locked():
+            current_app.logger.info("had update db file lock locked")
+            return
 
-    # 查询是否有分布式锁
-    if Lock.lock_type() == "redis_lock" and get_lock("had-update-db").locked():
-        # 如果有分布式进程在执行 当前进程添加文件锁
-        current_app.logger.info("had update db redis lock locked")
-        Lock.get_file_lock("had-update-db", timeout=999999).acquire()
-        return
+        # 查询是否有分布式锁
+        if Lock.lock_type() == "redis_lock" and get_lock("had-update-db").locked():
+            # 如果有分布式进程在执行 当前进程添加文件锁
+            current_app.logger.info("had update db redis lock locked")
+            Lock.get_file_lock("had-update-db", timeout=999999).acquire()
+            return
 
-    try:
-        first_sql = f"set search_path to {schema}; "
+        try:
+            first_sql = f"set search_path to {schema}; "
 
-        for file_path in file_list:
-            current_app.logger.info(
-                f"worker: {os.getpid()} run: " + file_path + " begin"
-            )
-            run_sql(file_path, db, first_sql)
-            current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " end")
+            for file_path in file_list:
+                current_app.logger.info(
+                    f"worker: {os.getpid()} run: " + file_path + " begin"
+                )
+                run_sql(file_path, db, first_sql)
+                current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " end")
 
-        # 添加分布式锁
-        if Lock.lock_type() == "redis_lock":
-            get_lock("had-update-db", timeout=600).acquire()
+            # 添加分布式锁
+            if Lock.lock_type() == "redis_lock":
+                get_lock("had-update-db", timeout=600).acquire()
 
-        # 任何锁方式都添加文件锁
-        Lock.get_file_lock("had-update-db", timeout=999999).acquire()
+            # 任何锁方式都添加文件锁
+            Lock.get_file_lock("had-update-db", timeout=999999).acquire()
 
-        current_app.logger.info(f"worker: {os.getpid()} executed update db")
+            current_app.logger.info(f"worker: {os.getpid()} executed update db")
 
-    except Exception as e:
-        current_app.logger.exception(e)
-    finally:
-        lock.release()
+        except Exception as e:
+            current_app.logger.exception(e)
+        finally:
+            lock.release()
 
 
 @retry(reraise=True, stop=stop_after_attempt(2))
@@ -302,7 +303,7 @@ def run_sql(file_path, db, first_sql):
     :param first_sql: 估计头部语句
     """
     # Create an empty command string
-    db.session.execute(first_sql)
+    db.session.execute(text(first_sql))
 
     sql_command = ""
     with open(file_path) as sql_file:
