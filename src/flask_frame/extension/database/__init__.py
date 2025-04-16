@@ -129,7 +129,8 @@ def init_app(app):
 
         __table_args__ = {"extend_existing": True, "schema": db_schema}
 
-    db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
+    with app.app_context():
+        db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
 
 def compare_version(version1: str, version2: str) -> int:

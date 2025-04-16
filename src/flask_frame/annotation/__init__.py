@@ -19,6 +19,7 @@ def deprecated(func):
         warnings.simplefilter("default", DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
 
+    # 返回
     return new_func
 
 

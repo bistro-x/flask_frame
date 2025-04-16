@@ -5,9 +5,11 @@ from http import HTTPStatus
 
 import flask
 from flask import jsonify
-from flask_sqlalchemy import Model
+from flask_sqlalchemy.model import Model
 from marshmallow import fields, post_dump, INCLUDE
-from sqlalchemy import DateTime, Numeric, Date, Time  # 有时又是DateTime
+from sqlalchemy import DateTime, Numeric, Date, Time
+
+from flask_frame.util.db import result_to_dict  # 有时又是DateTime
 
 # 返回结果： 成功code=100； 失败：code=-1
 from ..annotation import deprecated
@@ -86,14 +88,6 @@ def queryToDict(models):
             return res
 
 
-# 当结果为result对象列表时，result有key()方法
-@deprecated
-def result_to_dict(results):
-    res = [dict(zip(r.keys(), r)) for r in results]
-    # 这里r为一个字典，对象传递直接改变字典属性
-    for r in res:
-        data_chg(r)
-    return res
 
 
 @deprecated

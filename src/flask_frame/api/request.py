@@ -1,7 +1,8 @@
 # 当结果为result对象列表时，result有key()方法
 from flask import request
 import requests
-from flask_frame.api.response import Response
+
+from .response import Response
 
 
 def get_request_param():

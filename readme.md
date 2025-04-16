@@ -35,6 +35,13 @@ docker build -f ./frame/docker/Dockerfile.source  .
 docker build -f ./frame/docker/Dockerfile.encrypt  .
 ```
 
+## 测试
+
+```shell
+pip install -e .
+```
+使用上面的命令安装到本地，进行相关项目的调试。
+
 ## 发布
 
 ```shell
@@ -99,8 +106,8 @@ requirements.txt 框架依赖的库
 ENABLED_EXTENSION 是配置项目中需要的插件
 
 | 插件 | 说明 |
-｜ redis | redis客户端|
-｜ lock | 锁,依赖 redis｜
+｜ redis | redis 客户端|
+｜ lock | 锁,依赖 redis ｜
 
 ### api_log
 

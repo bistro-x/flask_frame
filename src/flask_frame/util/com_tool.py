@@ -166,6 +166,3 @@ def if_null(arg1, arg2):
     else:
         return arg2
 
-
-if __name__ == "__main__":
-    print(from_base64("asdfad"))

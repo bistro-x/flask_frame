@@ -1,8 +1,6 @@
 # encoding: utf-8
-
-
 def api_init(app, table_list):
-    from frame.extension.database import db
+    from flask_frame.util import db
 
     db.Model.metadata.reflect(bind=db.engine, schema='user_auth')
 

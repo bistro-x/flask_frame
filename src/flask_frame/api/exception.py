@@ -6,6 +6,7 @@ class ResourceError(HTTPException):
     """
     服务调用异常
     """
+
     code = 500  # http代码
     error_code = 500  # 标准错误代码
 
@@ -22,20 +23,18 @@ class ResourceError(HTTPException):
         return "代码:%s, 信息%s" % (error_code, self.description)
 
     def get_body(self, environ=None):
-        body = dict(
-            message=self.description,
-            code=self.error_code
-        )
+        body = dict(message=self.description, code=self.error_code)
         text = json.dumps(body)
         return text
 
     def get_headers(self, environ=None):
         """Get a list of headers."""
-        return [('Content-Type', 'application/json')]
+        return [("Content-Type", "application/json")]
 
 
 class BusiError(HTTPException):
     """deprecated"""
+
     code = 500
     msg = "this is message!"
     traceback = None
@@ -56,18 +55,18 @@ class BusiError(HTTPException):
         body = dict(
             msg=self.msg,
             error_code=self.error_code,
-            request=request.method + ' ' + self.get_url_no_param(),
-            traceback=self.traceback
+            request=request.method + " " + self.get_url_no_param(),
+            traceback=self.traceback,
         )
         text = json.dumps(body)
         return text
 
     def get_headers(self, environ=None):
         """Get a list of headers."""
-        return [('Content-Type', 'application/json')]
+        return [("Content-Type", "application/json")]
 
     @staticmethod
     def get_url_no_param():
         full_path = str(request.full_path)
-        main_path = full_path.split('?')
+        main_path = full_path.split("?")
         return main_path[0]

@@ -1,5 +1,4 @@
-from frame.extension.database import db
-
+from src.flask_frame.extension.database import db
 
 class Permission(db.Model):
     __tablename__ = 'permission'
