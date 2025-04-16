@@ -319,7 +319,7 @@ python-dateutil==2.8.2
 python-dotenv==0.21.1
 python-Levenshtein==0.12.2
 python-linux-procfs==0.7.3
-python-multipart==0.0.17
+python-multipart==0.0.18
 python-nvd3==0.16.0
 python-slugify==8.0.4
 pytz==2025.1
