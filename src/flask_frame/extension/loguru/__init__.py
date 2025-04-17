@@ -12,6 +12,9 @@ def configure_celery_logging(app, intercept_handler):
     Args:
         app: Flask 应用实例，用于记录配置状态
         intercept_handler: 用于拦截日志的处理器实例
+    
+    Returns:
+        bool: 配置成功返回True，失败返回False
     """
     try:
         # 配置 Celery 主日志记录器
@@ -28,14 +31,20 @@ def configure_celery_logging(app, intercept_handler):
             logger.propagate = False
             logger.addHandler(intercept_handler)
             
-        app.logger.info("Celery logging configured with Loguru")
+        app.logger.info("Celery 日志已配置使用 Loguru")
         return True
     except Exception as e:
-        app.logger.debug(f"Celery logging configuration skipped: {e}")
+        app.logger.debug(f"Celery 日志配置跳过: {e}")
         return False
     
 def _set_logger(app, config):
-    # project
+    """设置日志记录器的具体配置
+    
+    Args:
+        app: Flask应用实例
+        config: 日志配置字典
+    """
+    # 导入项目相关模块
     from .compress import zip_logs
     from .macro import (
         k_log_path,
@@ -48,76 +57,101 @@ def _set_logger(app, config):
         k_log_level,
     )
 
+    # 构建日志文件路径
     path = config[k_log_name]
     if config[k_log_path] is not None:
         path = os.path.join(config[k_log_path], config[k_log_name])
 
-    app.logger.setLevel(config[k_log_level] or "ERROR")
+    # 获取日志级别并设置
+    log_level = config[k_log_level] or "ERROR"
+    app.logger.setLevel(log_level)
 
+    # 移除所有现有日志处理器并添加新配置
     logger.remove()
-    logger.add(sys.stdout, format=config[k_log_format])
+    # 添加标准输出处理器
+    logger.add(sys.stdout, format=config[k_log_format], level=log_level)
 
+    # 添加文件日志处理器
     logger.add(
         path,
-        level=(config[k_log_level] or "ERROR"),
+        level=log_level,
         format=config[k_log_format],
-        enqueue=True,  # 确保设置为 True
+        enqueue=config[k_log_enqueue],
         serialize=config[k_log_serialize],
         rotation=config[k_log_rotation],
         retention=config[k_log_retention],
-        backtrace=True,  # 启用堆栈跟踪
-        diagnose=True,   # 启用诊断信息
+        backtrace=True,  # 启用堆栈跟踪，方便调试
+        diagnose=True,   # 启用诊断信息，提供更详细的错误信息
     )
 
     class InterceptHandler(logging.Handler):
+        """拦截标准日志库的日志并转发到Loguru
+        
+        将来自Python标准日志库的日志记录拦截并重定向到Loguru处理
+        """
         def emit(self, record):
+            """处理拦截的日志记录
+            
+            Args:
+                record: 日志记录对象
+            """
+            from ..lock import Lock
+
+            # 始终使用锁，因为这是用来替代队列模式的（enqueue会和gevent冲突）
+            lock = Lock.get_file_lock("log_lock", timeout=10)
+            
             try:
-                # 尝试获取对应的 Loguru 日志级别名称
-                level = logger.level(record.levelname).name
-            except ValueError:
-                # 如果找不到对应的名称，则使用原始的数字级别
-                level = record.levelno
+                # 获取锁以确保线程安全
+                lock.acquire()
 
-            # 查找日志消息的原始调用位置
-            frame, depth = logging.currentframe(), 2
-            while frame.f_code.co_filename == logging.__file__:
-                frame = frame.f_back
-                depth += 1
+                # 获取对应的Loguru日志级别
+                try:
+                    level = logger.level(record.levelname).name
+                except ValueError:
+                    level = record.levelno
 
-            # 使用正确的调用深度和异常信息记录日志，保留原始调用者信息
-            logger.opt(depth=depth, exception=record.exc_info).log(
-                level, record.getMessage()
-            )
+                # 查找日志消息的来源调用者
+                frame, depth = logging.currentframe(), 2
+                while frame and frame.f_code.co_filename == logging.__file__:
+                    frame = frame.f_back
+                    depth += 1
 
+                # 使用Loguru记录日志，保留异常信息
+                logger.opt(depth=depth, exception=record.exc_info).log(
+                    level, record.getMessage()
+                )
+            finally:
+                # 释放锁
+                lock.release()
 
-    # 获取 gunicorn 的错误日志记录器，用于与 Flask 应用集成
+    # 获取gunicorn的错误日志记录器，与Flask应用集成
     gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
 
     # 移除所有现有的处理程序，防止重复日志
     for handler in list(app.logger.handlers):
         app.logger.removeHandler(handler)
+        
     # 创建拦截处理程序
     intercept_handler = InterceptHandler()
     
-    # 添加自定义拦截处理程序，将 Flask 日志重定向到 Loguru
+    # 添加自定义拦截处理程序，将Flask日志重定向到Loguru
     app.logger.addHandler(intercept_handler)
     
-    # 配置 Python 根日志记录器使用我们的拦截处理程序
-    # 捕获所有模块的日志，level=0 表示捕获所有级别
-    # force=True 确保覆盖任何现有配置
-    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
+    # 配置Python根日志记录器使用拦截处理程序
+    # force=True确保覆盖任何现有配置
+    logging.basicConfig(handlers=[intercept_handler], level=log_level, force=True)
 
-    # 配置 Celery 日志拦截
+    # 配置Celery日志拦截
     configure_celery_logging(app, intercept_handler)
     
 def init_app(app):
-    """初始化 Flask 应用的 Loguru 日志系统
+    """初始化Flask应用的Loguru日志系统
     
     配置日志系统，设置适当的处理程序、格式和轮转策略
     
     Args:
-        app: 需要配置日志的 Flask 应用实例
+        app: 需要配置日志的Flask应用实例
     """
     # 导入项目特定模块
     from .compress import zip_logs

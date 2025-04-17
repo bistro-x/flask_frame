@@ -22,12 +22,12 @@ class ResourceError(HTTPException):
         error_code = self.error_code if self.error_code is not None else "???"
         return "代码:%s, 信息%s" % (error_code, self.description)
 
-    def get_body(self, environ=None):
+    def get_body(self, environ=None, scope=None):
         body = dict(message=self.description, code=self.error_code)
         text = json.dumps(body)
         return text
 
-    def get_headers(self, environ=None):
+    def get_headers(self, environ=None, scope=None):
         """Get a list of headers."""
         return [("Content-Type", "application/json")]
 
@@ -51,7 +51,7 @@ class BusiError(HTTPException):
             self.traceback = traceback
         super(BusiError, self).__init__(msg, None)
 
-    def get_body(self, environ=None):
+    def get_body(self, environ=None, scope=None):
         body = dict(
             msg=self.msg,
             error_code=self.error_code,
@@ -61,7 +61,7 @@ class BusiError(HTTPException):
         text = json.dumps(body)
         return text
 
-    def get_headers(self, environ=None):
+    def get_headers(self, environ=None, scope=None):
         """Get a list of headers."""
         return [("Content-Type", "application/json")]
 
