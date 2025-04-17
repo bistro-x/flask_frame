@@ -12,6 +12,7 @@ celery = None
 flask_app = None
 
 
+
 def init_app(app):
     """初始化模块
 
