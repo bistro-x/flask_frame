@@ -233,13 +233,47 @@ class Response(object):
         创建flask相关的返回对象
         :return:
         """
+        import json
+        import pytz
+        
+        # 使用当前时间
         self.create_time = self.create_time or cdatetime.now()
+        
+        # 自定义JSON编码器处理时区问题
+        class ChineseTimezoneJSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                beijing_tz = pytz.timezone('Asia/Shanghai')
+                
+                if isinstance(obj, cdatetime):
+                    # 如果是datetime对象，转换为北京时间
+                    if obj.tzinfo is None:
+                        # 无时区信息，假设为UTC，转换为北京时间
+                        obj = obj.replace(tzinfo=pytz.UTC).astimezone(beijing_tz)
+                    else:
+                        # 有时区信息，直接转换
+                        obj = obj.astimezone(beijing_tz)
+                    # 包含时区信息的时间格式 (例如: 2023-05-15 14:30:45+08:00)
+                    return obj.strftime("%Y-%m-%d %H:%M:%S%z")
+                elif isinstance(obj, date):
+                    return obj.strftime("%Y-%m-%d")
+                elif isinstance(obj, time):
+                    return obj.strftime("%H:%M:%S")
+                return super().default(obj)
+        
+        # 使用自定义编码器序列化数据
+        dumped_data = http_response_schema.dump(self)
+        json_data = json.dumps(dumped_data, cls=ChineseTimezoneJSONEncoder, ensure_ascii=False)
+        
+        # 创建响应
         response = flask.make_response(
-            jsonify(http_response_schema.dump(self)),
+            json_data,
             self.http_status
             or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
         )
-
+        
+        # 设置正确的Content-Type
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        
         # 定义报头
         response.headers = {**response.headers, **(self.headers or {})}
 
