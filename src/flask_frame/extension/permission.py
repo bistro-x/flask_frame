@@ -73,9 +73,15 @@ def fetch_current_user(token_string,params={}):
                 ),
             },
         )
-
+        
+        # 检查请求是否成功
+        if not response.ok:
+            app.logger.error(f"获取用户信息失败: {response.status_code} - {response.text}")
+            g.current_user = None
+            return user
+            
         # 获取用户设置到全局中
-        user = response.json()
+        user = response.json().get("data",None)
         g.current_user = user
         return user
     except requests.exceptions.RequestException as e:
