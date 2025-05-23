@@ -29,4 +29,5 @@ gevent==24.11.1                   # 协程库，用于异步 I/O 和并发编程
 
 # 工具库
 tenacity==9.1.2                  # 通用重试库，支持各种重试策略
-loguru==0.7.3                    # 更好用的 Python 日志库，替代标准库 logging
+loguru==0.7.3                    # 更好用的 Python 日志库，替代标准库 logging.
+pytz~=2025.2 # 时区处理
