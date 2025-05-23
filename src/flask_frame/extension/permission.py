@@ -47,7 +47,7 @@ def init_app(flask_app):
                     abort(HTTPStatus.FORBIDDEN, {"message": "API未授权"})
 
 
-def fetch_current_user(token_string):
+def fetch_current_user(token_string,params={}):
     """
     查询当前用户
     :param token_string:
@@ -65,7 +65,8 @@ def fetch_current_user(token_string):
             return None
 
         response = requests.get(
-            url=user_auth_url + "/user/current",
+            url=user_auth_url + "/auth/current",
+            params=params,
             headers={
                 "Authorization": "Bearer {token_string}".format(
                     token_string=token_string
@@ -138,6 +139,12 @@ def check_url_permission(user, product_key=None):
     Returns:
         _type_: 是否通过
     """
+    global check_api
+    
+    # 无需检测权限
+    if not check_api:
+        return True
+    
     # 没有用户信息直接返回
     check_path = request.url_rule.rule if request.url_rule else request.path
     method = request.method
