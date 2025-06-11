@@ -32,7 +32,7 @@ def init_app(flask_app):
     def app_proxy():
         # 获取 token
         token_string = request.headers.environ.get("HTTP_AUTHORIZATION")
-        token_string = token_string.split(" ")[1] if token_string else None
+        token_string = token_string.split(" ")[1] if token_string and len(token_string.split(" ")) >1  else None
 
         # 全局 TOKEN 校验
         if admin_token and token_string == admin_token:
