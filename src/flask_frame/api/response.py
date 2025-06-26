@@ -207,7 +207,7 @@ class Response(object):
         self.code = code or "0"  # 统一编码 来自数据库 dict
         self.service = service_id
         self.provider_code = provider_code
-        self.message = message or "操作成功"  # 说明信息
+        self.message = message or ("操作成功" if result else "操作失败")  # 说明信息
         self.response_time = response_time
         self.headers = headers
         self.http_status = http_status
