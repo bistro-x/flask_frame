@@ -54,6 +54,16 @@ pip install -e .
 
 使用上述命令将应用安装到本地环境，便于项目调试。
 
+#### Flask Frame 开发调试：使用 pip link 关联
+
+如果你在开发 `flask_frame` 并希望在其他项目中实时同步代码变更，可以使用 pip 的“editable”模式（软链接安装）：
+
+```bash
+pip install -e .
+```
+
+这样，其他依赖 `flask_frame` 的项目只需在虚拟环境中安装一次，后续对 `flask_frame` 代码的修改会立即生效，无需重新安装。
+
 ### 发布到 PyPI
 
 ```bash
