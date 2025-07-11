@@ -7,5 +7,4 @@ dist
 .pytest_cache
 build
 .pytest_cache
-.vscode
 log

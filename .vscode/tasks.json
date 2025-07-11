@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "pypi_push",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "git push  && source ~/.bashrc && rm -rf dist && python3 setup.py sdist bdist_wheel && twine upload dist/*"
+            ],
+            "problemMatcher": [],
+        },
+        {
+            "label": "docker_build_continue",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine"
+            ],
+            "problemMatcher": [],
+        }
+    ]
+}
