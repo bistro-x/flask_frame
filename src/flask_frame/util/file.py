@@ -44,6 +44,25 @@ def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
         return file_link.split("/")[-1]
 
 
+
+def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
+    """
+    获取文件名。
+    优先顺序：file_path > file > file_link
+    :param file: werkzeug.datastructures.FileStorage对象
+    :param file_link: 文件链接（字符串）
+    :param file_path: 文件路径（字符串）
+    :return: 文件名字符串
+    """
+    if file_path:
+        return os.path.basename(file_path)
+    if file:
+        return file.filename
+    if file_link:
+        return os.path.basename(urllib.parse.urlparse(file_link).path)
+    return None
+
+
 @retry(reraise=True, stop=stop_after_attempt(3), after=retry_warning)
 def save_file(file=None, file_link=None, file_path=None, **kwargs):
     """
