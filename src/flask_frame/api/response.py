@@ -227,8 +227,12 @@ class Response(object):
             return http_response_schema.dump(self), (
                 self.http_status or HTTPStatus.INTERNAL_SERVER_ERROR
             )
-
-    def mark_flask_response(self) -> flask.Response:
+            
+    def make_flask_response(self) -> flask.Response:
+        """
+        创建flask相关的返回对象
+        :return:
+        """
         """
         创建flask相关的返回对象
         :return:
@@ -279,6 +283,11 @@ class Response(object):
 
         # 返回
         return response
+
+    @deprecated
+    def mark_flask_response(self) -> flask.Response:
+        return self.make_flask_response()
+        
 
     @classmethod
     def force_type(self, rv, environ=None):

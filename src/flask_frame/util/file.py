@@ -21,9 +21,10 @@ def retry_warning(retry_state):
     :param retry_state: tenacity.RetryCallState对象，包含重试状态信息
     """
     from flask import current_app as app
+
     app.logger.warning(
         f"save file args: {retry_state.args} kwargs: {retry_state.kwargs} except {retry_state.outcome.exception()}"
-    ) 
+    )
 
 
 def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
@@ -44,7 +45,6 @@ def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
         return file_link.split("/")[-1]
 
 
-
 def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
     """
     获取文件名。
@@ -63,8 +63,27 @@ def get_file_name(file=None, file_link=None, file_path=None, **kwargs):
     return None
 
 
+def clean_file_param(param):
+    """清楚参数里面的文件相关参数
+
+    Args:
+        param (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    if "file" in param:
+        del param["file"]
+    if "file_path" in param:
+        del param["file_path"]
+    if "file_link" in param:
+        del param["file_link"]
+    return param
+
+
 @retry(reraise=True, stop=stop_after_attempt(3), after=retry_warning)
-def save_file(file=None, file_link=None, file_path=None, **kwargs):
+def save_file(file=None, file_link=None, file_path=None, save_dir=None, **kwargs):
     """
     保存上传文件，支持三种方式：
     1. 直接指定文件路径（file_path）
@@ -75,23 +94,40 @@ def save_file(file=None, file_link=None, file_path=None, **kwargs):
     :param file: werkzeug.datastructures.FileStorage对象
     :return: 保存后的文件路径
     """
+    from context import app
+
     if file_path:
         return file_path
 
-    # 保存文件
-    result_file_path = os.path.join(
-        get_upload_item_root_path(),
-        str(time.time()) + os.path.splitext(file.filename)[-1],
-    )
-    
+    if not file and not file_link and not file_path:
+        # 没有文件参数，直接返回空
+        raise ValueError("没有提供文件参数")
+
+    if not save_dir:
+        save_dir = get_upload_item_root_path()
+
     # 保存
     if file:
+        # 上传了文件
+        result_file_path = os.path.join(
+            save_dir,
+            str(time.time()) + os.path.splitext(file.filename)[-1],
+        )
         not os.path.exists(os.path.dirname(result_file_path)) and os.makedirs(
             os.path.dirname(result_file_path)
         )
         file.save(result_file_path)
 
     elif file_link:
+        # ftp 文件
+        file_type = os.path.splitext(file_link)[-1] or ""
+        result_file_path = os.path.join(save_dir, str(time.time()) + file_type)
+
+        result_file_path = result_file_path
+        not os.path.exists(os.path.dirname(result_file_path)) and os.makedirs(
+            os.path.dirname(result_file_path)
+        )
+
         headers = {
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
         }
@@ -138,7 +174,7 @@ def get_item_temp_path():
             os.makedirs(tmp_path)
         except FileExistsError:
             ...
-            
+
     # 返回
     return tmp_path
 
@@ -183,7 +219,6 @@ def create_upload_file_path(extension):
     )
 
 
-
 def get_file_link(file_path, file_link_prefix=None, remove_path_prefix=None):
     """
     获取文件的外网访问链接。
@@ -194,9 +229,7 @@ def get_file_link(file_path, file_link_prefix=None, remove_path_prefix=None):
     """
     from flask import current_app as app
 
-    file_link_prefix = file_link_prefix or app.config.get(
-        "FILE_SERVICE_PREFIX", None
-    )
+    file_link_prefix = file_link_prefix or app.config.get("FILE_SERVICE_PREFIX", None)
 
     # 没有指定文件服务前缀的默认使用当前服务的地址
     if not file_link_prefix and has_request_context():
@@ -216,6 +249,7 @@ def get_file_link(file_path, file_link_prefix=None, remove_path_prefix=None):
     # 返回
     return file_link
 
+
 def file_to_base64(file_path: str) -> str:
     """
     将文件内容转换为Base64编码字符串。
@@ -225,8 +259,9 @@ def file_to_base64(file_path: str) -> str:
     with open(file_path, "rb") as file:
         file_data = file.read()
         base64_encoded_data = base64.b64encode(file_data)
-        base64_message = base64_encoded_data.decode('utf-8')
+        base64_message = base64_encoded_data.decode("utf-8")
         return base64_message
+
 
 def zip_path(path, result_path):
     """
