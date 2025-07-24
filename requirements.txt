@@ -34,4 +34,4 @@ tenacity==9.1.2                  # 通用重试库，支持各种重试策略
 loguru==0.7.3                    # 更好用的 Python 日志库，替代标准库 logging.
 pytz~=2025.2 # 时区处理
 
-consulate==0.6.0            # Consul 客户端库，用于与 Consul 交互
+python-consul2==0.1.5
