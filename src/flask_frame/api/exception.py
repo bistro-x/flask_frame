@@ -30,6 +30,33 @@ class ResourceError(HTTPException):
     def get_headers(self, environ=None, scope=None):
         """Get a list of headers."""
         return [("Content-Type", "application/json")]
+    
+class CallException(HTTPException):
+    """
+    第三方调用异常
+    """
+
+    code = 500
+    msg = "调用异常"
+    error_code = 1001
+
+    def __init__(self, msg=None, error_code=None, code=None, **kwargs):
+        if code:
+            self.code = code
+        if error_code:
+            self.error_code = error_code
+        if msg:
+            self.msg = msg
+        super(CallException, self).__init__(msg, None)
+
+    def get_body(self, environ=None, scope=None):
+        body = dict(msg=self.msg, error_code=self.error_code)
+        text = json.dumps(body)
+        return text
+
+    def get_headers(self, environ=None, scope=None):
+        """Get a list of headers."""
+        return [("Content-Type", "application/json")]
 
 
 class BusiError(HTTPException):
