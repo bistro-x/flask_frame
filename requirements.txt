@@ -14,7 +14,7 @@ pyinstrument==5.0.1              # Python 代码性能分析工具
 sentry_sdk==2.26.1               # 错误跟踪和监控平台
 
 # 网络与通信
-Requests==2.32.3                 # HTTP 客户端库，用于发送 HTTP 请求
+Requests==2.32.4                 # HTTP 客户端库，用于发送 HTTP 请求
 redis==5.2.1                     # Redis 客户端，用于缓存和消息队列
 
 # 数据库
