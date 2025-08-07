@@ -83,6 +83,6 @@ def get_service_url(service_name):
     node = nodes[0]
     address = node["Service"]["Address"]
     port = node["Service"]["Port"]
-    return f"http://{address}:{port}"
-    port = node["Service"]["Port"]
+    
+    
     return f"http://{address}:{port}"
