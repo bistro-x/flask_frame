@@ -1,5 +1,5 @@
 import os
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from minio import Minio
 
 # MinIO 客户端实例
@@ -39,9 +39,12 @@ def init_app(app):
 
     # 获取文件访问基础 URL，优先使用 ACCESS_URL 配置
     access_url = app.config.get(
-        "ACCESS_URL",
+        "MINIO_ACCESS_URL",
         service_url,
     )
+    # 确保以 / 结尾，避免 urljoin 覆盖路径
+    if access_url and not access_url.endswith("/"):
+        access_url = access_url + "/"
 
 
 def upload_file_to_minio(bucket_name, file_path, object_name):
@@ -84,8 +87,31 @@ def get_access_url(file_path):
     Returns:
         str: 完整访问 URL
     """
+    # 去掉前导 /，避免覆盖 access_url 的路径前缀
+    path = (file_path or "").lstrip("/")
+    return urljoin(access_url, path)
 
-    return urljoin(access_url, file_path)
+
+def convert_to_access_url(full_url: str) -> str:
+    """
+    将任意完整URL的域名替换为配置的 access_url，保留原 path 与 query。
+    常用于将 MinIO 预签名URL（原服务域名）转换为代理域名访问。
+
+    Args:
+        full_url (str): 原始完整URL
+
+    Returns:
+        str: 使用 access_url 作为域名的完整URL
+    """
+    if not full_url:
+        return full_url
+    parsed = urlparse(full_url)
+    # 使用已存在的方法拼接代理域名 + 原始路径
+    base = get_access_url(parsed.path)
+    if parsed.query:
+        sep = "&" if "?" in base else "?"
+        base = f"{base}{sep}{parsed.query}"
+    return base
 
 
 def delete_file_from_minio(file_path):
@@ -105,7 +131,9 @@ def delete_file_from_minio(file_path):
         path = file_path.lstrip("/")
         parts = path.split("/", 1)
         if len(parts) != 2:
-            raise Exception("文件路径格式错误，需为 /bucket_name/object_name 或 bucket_name/object_name")
+            raise Exception(
+                "文件路径格式错误，需为 /bucket_name/object_name 或 bucket_name/object_name"
+            )
         bucket_name, object_name = parts
         client.remove_object(bucket_name, object_name)
         return True
