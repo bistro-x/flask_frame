@@ -1,5 +1,6 @@
 import consul
 import socket
+import os
 
 consul_client = None  # 全局 Consul 客户端实例
 
@@ -7,10 +8,10 @@ consul_client = None  # 全局 Consul 客户端实例
 def init_app(app):
     global consul_client
 
-    # 获取配置
-    consul_host = app.config.get("CONSUL_HOST")
-    consul_port = app.config.get("CONSUL_PORT")
-    consul_token = app.config.get("CONSUL_TOKEN")
+    # 优先从 Flask 配置获取，否则从环境变量获取
+    consul_host = app.config.get("CONSUL_HOST") or os.environ.get("CONSUL_HOST")
+    consul_port = app.config.get("CONSUL_PORT") or os.environ.get("CONSUL_PORT")
+    consul_token = app.config.get("CONSUL_TOKEN") or os.environ.get("CONSUL_TOKEN")
 
     service_name = app.config.get("PRODUCT_KEY")
     service_port = app.config.get("RUN_PORT")
@@ -49,11 +50,10 @@ def init_app(app):
         check=check,
     )
 
-
-    
     # 获取注册名
     url = get_service_url(service_name)  # 确保服务已注册
     print(f"Consul service {service_name} registered at {url}")
+
 
 def get_local_ip():
     """自动获取本机 IP 地址（非 127.0.0.1）"""
@@ -83,6 +83,6 @@ def get_service_url(service_name):
     node = nodes[0]
     address = node["Service"]["Address"]
     port = node["Service"]["Port"]
-    
-    
+
+    # 返回
     return f"http://{address}:{port}"
