@@ -47,7 +47,7 @@ def init_app(app):
         access_url = access_url + "/"
 
 
-def upload_file_to_minio(bucket_name, file_path, object_name):
+def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None):
     """
     上传文件到 MinIO 指定存储桶。
 
@@ -55,6 +55,19 @@ def upload_file_to_minio(bucket_name, file_path, object_name):
         bucket_name (_type_): 存储桶名称
         file_path (_type_): 本地文件路径
         object_name (_type_): 存储到 MinIO 的对象名
+        content_type (str, optional): 文件 MIME 类型
+            # 常见选项:
+            # - "application/pdf"
+            # - "image/png"
+            # - "image/jpeg"
+            # - "application/msword"
+            # - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            # - "application/vnd.ms-excel"
+            # - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            # - "application/zip"
+            # - "text/plain"
+            # - "application/octet-stream"
+            # 也可用 mimetypes.guess_type(file_path)[0] 自动推断
 
     Returns:
         str: 文件在 MinIO 的相对路径
@@ -66,8 +79,14 @@ def upload_file_to_minio(bucket_name, file_path, object_name):
         if not client.bucket_exists(bucket_name):
             client.make_bucket(bucket_name)
 
-        # 上传文件到 MinIO
-        client.fput_object(bucket_name, object_name, file_path)
+        # 自动推断 content_type
+        if not content_type:
+            import mimetypes
+            content_type, _ = mimetypes.guess_type(file_path)
+            if not content_type:
+                content_type = "application/octet-stream"
+
+        client.fput_object(bucket_name, object_name, file_path, content_type=content_type)
 
         # 获取文件在 MinIO 的相对路径
         relative_url = f"/{bucket_name}/{object_name}"
