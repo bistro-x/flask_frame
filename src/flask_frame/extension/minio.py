@@ -82,11 +82,14 @@ def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None)
         # 自动推断 content_type
         if not content_type:
             import mimetypes
+
             content_type, _ = mimetypes.guess_type(file_path)
             if not content_type:
                 content_type = "application/octet-stream"
 
-        client.fput_object(bucket_name, object_name, file_path, content_type=content_type)
+        client.fput_object(
+            bucket_name, object_name, file_path, content_type=content_type
+        )
 
         # 获取文件在 MinIO 的相对路径
         relative_url = f"/{bucket_name}/{object_name}"
@@ -158,3 +161,51 @@ def delete_file_from_minio(file_path):
         return True
     except Exception as e:
         raise Exception("从 MinIO 删除文件失败:" + str(e))
+
+
+def upload_bytes_to_minio(
+    data_bytes,
+    object_name,
+    bucket_name="datacenter",
+    content_type=None,
+):
+    """上传字节流到MinIO
+
+    Args:
+        data_bytes (bytes): 要上传的字节数据
+        object_name (str): 对象名称
+        bucket_name (str): 存储桶名称，默认为 'datacenter'
+        content_type (str): 内容类型，可选
+
+    Returns:
+        str: 相对URL路径
+
+    Raises:
+        Exception: 上传失败时抛出异常
+    """
+    global client
+
+    try:
+        # 检查存储桶是否存在
+        if not client.bucket_exists(bucket_name):
+            client.make_bucket(bucket_name)
+
+        # 将字节数据转换为BytesIO对象
+        data_stream = BytesIO(data_bytes)
+        data_length = len(data_bytes)
+
+        # 上传字节流
+        client.put_object(
+            bucket_name,
+            object_name,
+            data_stream,
+            data_length,
+            content_type=content_type,
+        )
+
+        # 获取相对地址
+        relative_url = f"/{bucket_name}/{object_name}"
+        return relative_url
+
+    except Exception as e:
+        raise Exception("上传字节流到 MinIO 失败:" + str(e))
