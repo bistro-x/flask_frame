@@ -265,8 +265,14 @@ class Response(object):
                 return super().default(obj)
         
         # 使用自定义编码器序列化数据
-        dumped_data = http_response_schema.dump(self)
-        json_data = json.dumps(dumped_data, cls=ChineseTimezoneJSONEncoder, ensure_ascii=False)
+        try:
+            dumped_data = http_response_schema.dump(self)
+            json_data = json.dumps(dumped_data, cls=ChineseTimezoneJSONEncoder, ensure_ascii=False)
+        except Exception as e:
+            import logging
+            logging.exception("序列化响应数据出错")
+            # 返回错误信息，便于排查
+            return flask.make_response(jsonify({"error": "响应序列化失败", "detail": str(e)}), 500)
         
         # 创建响应
         response = flask.make_response(

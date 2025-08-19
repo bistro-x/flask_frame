@@ -70,6 +70,11 @@ def proxy(server_url, response_standard=True):
     if response.headers.get("Transfer-Encoding"):
         response.headers.pop("Transfer-Encoding")
 
+    # 删除 preference-applied 和 content-length 报头（不区分大小写）
+    for key in list(response.headers.keys()):
+        if key.lower() in ("content-length"):
+            response.headers.pop(key)
+
     return Response(
         result=response.ok,
         code=response_json.get("code") if not response.ok else 0,
@@ -78,7 +83,7 @@ def proxy(server_url, response_standard=True):
         data=response_json if response.ok else None,
         http_status=response.status_code,
         headers=response.headers,
-    ).mark_flask_response()
+    ).make_flask_response()
 
 
 def proxy_request(

@@ -199,7 +199,7 @@ def init_app(app):
                 headers=request.headers,
                 **other_param,
             )
-            return Response(data=data, headers=headers).mark_flask_response()
+            return Response(data=data, headers=headers).make_flask_response()
         
         else:
             # 代理为远程服务查询
