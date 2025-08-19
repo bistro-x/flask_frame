@@ -209,3 +209,48 @@ def upload_bytes_to_minio(
 
     except Exception as e:
         raise Exception("上传字节流到 MinIO 失败:" + str(e))
+
+
+def download_file_from_minio(file_path, target_file_path=None):
+    """
+    根据 MinIO 路径下载文件内容并保存到本地
+
+    Args:
+        file_path (str): MinIO 文件路径（格式: /bucket_name/object_name 或 bucket_name/object_name）
+        target_file_path (str): 本地保存路径，若为 None 则自动生成临时文件
+
+    Returns:
+        str: 本地文件路径
+
+    Raises:
+        Exception: 下载失败时抛出异常
+    """
+    global client
+    from flask_frame.util.file import create_temp_file_path
+
+    try:
+        # 去除前导斜杠并分割
+        path = file_path.lstrip("/")
+        parts = path.split("/", 1)
+        if len(parts) != 2:
+            raise Exception(
+                "文件路径格式错误，需为 /bucket_name/object_name 或 bucket_name/object_name"
+            )
+        bucket_name, object_name = parts
+
+        # 自动生成临时文件路径，传入扩展名
+        if target_file_path is None:
+            import os
+
+            ext = os.path.splitext(object_name)[1]
+            target_file_path = create_temp_file_path(ext)
+
+        response = client.get_object(bucket_name, object_name)
+        with open(target_file_path, "wb") as f:
+            for chunk in response.stream(32 * 1024):
+                f.write(chunk)
+        response.close()
+        response.release_conn()
+        return target_file_path
+    except Exception as e:
+        raise Exception("从 MinIO 下载文件失败:" + str(e))
