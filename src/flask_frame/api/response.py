@@ -299,4 +299,4 @@ class Response(object):
     def force_type(self, rv, environ=None):
         if isinstance(rv, dict):
             rv = jsonify(rv)
-        return self.mark_flask_response()
+        return self.make_flask_response()
