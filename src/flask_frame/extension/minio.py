@@ -244,6 +244,13 @@ def download_file_from_minio(file_path, target_file_path=None):
 
             ext = os.path.splitext(object_name)[1]
             target_file_path = create_temp_file_path(ext)
+        else:
+            # 确保多级目录存在
+            import os
+
+            dir_path = os.path.dirname(target_file_path)
+            if dir_path and not os.path.exists(dir_path):
+                os.makedirs(dir_path, exist_ok=True)
 
         response = client.get_object(bucket_name, object_name)
         with open(target_file_path, "wb") as f:
