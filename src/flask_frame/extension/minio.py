@@ -261,3 +261,30 @@ def download_file_from_minio(file_path, target_file_path=None):
         return target_file_path
     except Exception as e:
         raise Exception("从 MinIO 下载文件失败:" + str(e))
+
+
+def file_exists(file_path):
+    """
+    检查 MinIO 文件是否存在
+
+    Args:
+        file_path (str): MinIO 文件路径（格式: /bucket_name/object_name 或 bucket_name/object_name）
+
+    Returns:
+        bool: 存在返回 True，否则 False
+    """
+    global client
+    from minio.error import S3Error
+
+    path = (file_path or "").lstrip("/")
+    parts = path.split("/", 1)
+    if len(parts) != 2:
+        raise Exception("文件路径格式错误，需为 /bucket_name/object_name 或 bucket_name/object_name")
+    bucket_name, object_name = parts
+    try:
+        client.stat_object(bucket_name, object_name)
+        return True
+    except S3Error as e:
+        if e.code in ("NoSuchKey", "NoSuchObject", "NotFound", "NoSuchBucket"):
+            return False
+        raise
