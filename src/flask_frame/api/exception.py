@@ -5,15 +5,15 @@ from werkzeug.exceptions import HTTPException
 class ResourceError(HTTPException):
     """
     服务调用异常
+    用于处理服务端调用错误，返回标准化的错误信息和错误码。
     """
-
     code = 500  # http代码
     error_code = 500  # 标准错误代码
 
     def __init__(self, description=None, response=None, error_code=None):
         super(ResourceError, self).__init__(description, response)
         self.error_code = error_code or self.error_code
-
+        # 如果有响应对象，尝试从响应中获取错误码和描述
         if response and response.json:
             self.error_code = response.json.get("error_code", self.error_code)
             self.pa = response.json.get("description", self.description)
@@ -23,12 +23,13 @@ class ResourceError(HTTPException):
         return "代码:%s, 信息%s" % (error_code, self.description)
 
     def get_body(self, environ=None, scope=None):
+        # 构造返回体
         body = dict(message=self.description, code=self.error_code)
         text = json.dumps(body)
         return text
 
     def get_headers(self, environ=None, scope=None):
-        """Get a list of headers."""
+        """返回响应头列表。"""
         return [("Content-Type", "application/json")]
     
 class CallException(HTTPException):

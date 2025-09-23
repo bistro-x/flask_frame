@@ -36,3 +36,5 @@ pytz~=2025.2 # 时区处理
 
 python-consul2==0.1.5
 minio==7.2.9
+
+cryptography==46.0.1

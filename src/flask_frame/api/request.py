@@ -6,21 +6,21 @@ from .response import Response
 
 
 def get_request_param():
-    """获取请求发送的所有参数
-
-    Returns:
-        json: 请求传入的所有参数
     """
-
+    获取请求发送的所有参数，支持 JSON、表单、文件和 URL 参数。
+    :return: 参数字典和可选的 JSON 列表
+    """
     json_data = request.get_json(silent=True)
 
     if isinstance(json_data, list):
+        # 如果请求体是列表，返回所有表单、文件和 URL 参数
         return {
             **(request.form or {}),
             **request.files,
             **(request.args or {}),
         }, json_data
     else:
+        # 否则合并所有参数
         return {
             **(json_data or {}),
             **(request.form or {}),

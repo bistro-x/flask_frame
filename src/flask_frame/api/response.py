@@ -22,6 +22,7 @@ ERROR_CODE = -1
 class JsonResult:
     @deprecated
     def custom(code=None, msg=None, result=None):
+        # 返回自定义结构的 JSON 响应
         return jsonify({"code": code, "msg": msg, "data": result})
 
     @deprecated
@@ -39,6 +40,7 @@ class JsonResult:
 
     @deprecated
     def error(msg=None, result=None):
+        # 返回错误结构的 JSON 响应
         return (
             jsonify({"code": ERROR_CODE, "message": msg, "data": result}),
             HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -46,15 +48,18 @@ class JsonResult:
 
     @deprecated
     def queryResult(result=None):
+        # 查询结果转为字典并返回 JSON
         return jsonify(queryToDict(result))
 
     @deprecated
     def res_page(list, total):
+        # 分页结果返回
         result = {"total": total, "list": queryToDict(list)}
         return jsonify(result)
 
     @deprecated
     def page(page):
+        # 分页对象转为 JSON
         items = queryToDict(page.items)
         result = {"total": page.total, "list": items}
         return jsonify(result)
