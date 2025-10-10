@@ -49,9 +49,11 @@ def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
         response_json = response.json()
     else:
         response_json = {}
-
-    if response.headers.get("Transfer-Encoding"):
-        response.headers.pop("Transfer-Encoding")
+        
+    for key in ["Content-Encoding", "Content-Length"]:
+        if key in response.headers:
+            response.headers.pop(key)
+        
     return Response(
         result=response.ok,
         code=response_json.get("code") if not response.ok else 0,
