@@ -9,14 +9,37 @@ consul_client = None  # 全局 Consul 客户端实例
 def init_app(app):
     global consul_client
 
-    # 优先从 Flask 配置获取，否则从环境变量获取
-    consul_host = app.config.get("CONSUL_HOST") or os.environ.get("CONSUL_HOST")
-    consul_port = app.config.get("CONSUL_PORT") or os.environ.get("CONSUL_PORT")
-    consul_token = app.config.get("CONSUL_TOKEN") or os.environ.get("CONSUL_TOKEN")
+    # 简化：从 app.config 或环境读取，"None"/空字符串视为缺失
+    def _get_conf(key):
+        v = app.config.get(key, None)
+        if v is None:
+            v = os.environ.get(key)
+        if isinstance(v, str):
+            s = v.strip()
+            if not s or s.lower() == "none":
+                return None
+        return v
 
-    # 如果没有传入配置，跳过
-    if not consul_host or not consul_port or not consul_token:
-        app.logger.warning("Consul 配置不完整，跳过注册服务")
+    consul_host = _get_conf("CONSUL_HOST")
+    consul_port = _get_conf("CONSUL_PORT")
+    consul_token = _get_conf("CONSUL_TOKEN")
+
+    # 尝试将端口转换为整数（转换失败则跳过注册）
+    if consul_port is not None:
+        try:
+            consul_port = int(consul_port)
+        except Exception:
+            app.logger.warning("CONSUL_PORT 无效，跳过注册服务：%r", consul_port)
+            return
+
+    # 必须同时有 host/port/token，缺一则跳过注册
+    if not (consul_host and consul_port and consul_token):
+        app.logger.warn(
+            "Consul 未配置完全，跳过注册 (host=%r, port=%r, token_present=%s)",
+            consul_host,
+            consul_port,
+            bool(consul_token),
+        )
         return
 
     # 注册服务名称和端口
