@@ -13,35 +13,47 @@ service_url = None
 def init_app(app):
     """
     初始化 MinIO 客户端，读取 Flask 配置中的 MinIO 相关参数。
+    优先从 app.config 获取，若未设置则从环境变量读取。
+    支持 MINIO_USE_HTTPS 的多种真值表示（"1","true","yes","on"）。
     """
     global client
     global service_url
     global access_url
 
-    # 从 Flask 配置中获取 MinIO 配置信息
-    minio_server = app.config.get("MINIO_SERVER")
-    access_key = app.config.get("MINIO_ACCESS_KEY")
-    secret_key = app.config.get("MINIO_SECRET_KEY")
-    use_https = app.config.get("MINIO_USE_HTTPS", "false").lower() == "true"
+    # 优先从 app.config 获取，若不存在则从环境变量读取
+    minio_server = app.config.get("MINIO_SERVER") or os.environ.get("MINIO_SERVER")
+    access_key = app.config.get("MINIO_ACCESS_KEY") or os.environ.get("MINIO_ACCESS_KEY")
+    secret_key = app.config.get("MINIO_SECRET_KEY") or os.environ.get("MINIO_SECRET_KEY")
+
+    # MINIO_ACCESS_URL 可选，优先使用 app.config，否则使用环境变量
+    access_url = app.config.get("MINIO_ACCESS_URL") or os.environ.get("MINIO_ACCESS_URL")
+
+    # MINIO_USE_HTTPS 支持多种表示方式
+    use_https_raw = app.config.get("MINIO_USE_HTTPS")
+    if use_https_raw is None:
+        use_https_raw = os.environ.get("MINIO_USE_HTTPS", "false")
+    use_https = str(use_https_raw).lower() in ("1", "true", "yes", "on")
+
+    # 必要配置校验
+    if not minio_server or not access_key or not secret_key:
+        raise Exception(
+            "MinIO 配置缺失：请在 app.config 或环境变量中设置 MINIO_SERVER、MINIO_ACCESS_KEY、MINIO_SECRET_KEY"
+        )
 
     # 初始化 MinIO 客户端
     client = Minio(
-        minio_server,  # MinIO 服务器地址
+        minio_server,
         access_key=access_key,
         secret_key=secret_key,
-        secure=use_https,  # 是否使用 HTTPS
+        secure=use_https,
     )
 
     # 构建服务基础 URL
-    service_url = (
-        f"http://{minio_server}" if not use_https else f"https://{minio_server}"
-    )
+    service_url = f"https://{minio_server}" if use_https else f"http://{minio_server}"
 
-    # 获取文件访问基础 URL，优先使用 ACCESS_URL 配置
-    access_url = app.config.get(
-        "MINIO_ACCESS_URL",
-        service_url,
-    )
+    # 获取文件访问基础 URL，优先使用配置或环境变量，再回退到 service_url
+    if not access_url:
+        access_url = service_url
     # 确保以 / 结尾，避免 urljoin 覆盖路径
     if access_url and not access_url.endswith("/"):
         access_url = access_url + "/"
