@@ -102,6 +102,11 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     def index():
         return "app is running"
 
+    # 健康检查路由，返回服务状态
+    @app.route("/healthy", methods=["GET"])
+    def healthy():
+        return flask.jsonify({"status": "healthy"}), 200
+
     # 手动触发错误路由，用于调试 Sentry
     @app.route("/debug-sentry")
     def trigger_error():
