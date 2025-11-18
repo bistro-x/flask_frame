@@ -8,6 +8,41 @@ server_url = None  # 服务地址
 proxy_local = None  # 指定代理地址
 
 
+def init_app(app):
+    global flask_app, server_url, proxy_local
+    flask_app = app
+    server_url = flask_app.config.get("PROXY_SERVICE_URL","http://postgrest:3000")  # 代理服务地址
+    proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
+    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
+
+    # get proxy config
+    if proxy_custom:
+        return
+
+    @app.before_request
+    def app_proxy():
+         # request.url_rule
+        if not is_send_proxy():
+            return
+        elif proxy_local:
+            # 代理为本地数据库查询
+            other_param = {}
+            if request.data:
+                other_param["json"] = request.json
+                
+            data, headers = local_run(
+                method=request.method,
+                url=request.path,
+                params=request.args,
+                headers=request.headers,
+                **other_param,
+            )
+            return Response(data=data, headers=headers).make_flask_response()
+        
+        else:
+            # 代理为远程服务查询
+            return proxy(server_url)
+
 def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
     """
     创建代理请求
@@ -171,38 +206,3 @@ def local_run(
     
     return data, headers
 
-
-def init_app(app):
-    global flask_app, server_url, proxy_local
-    flask_app = app
-    server_url = flask_app.config.get("PROXY_SERVICE_URL")
-    proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
-    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
-
-    # get proxy config
-    if proxy_custom:
-        return
-
-    @app.before_request
-    def app_proxy():
-         # request.url_rule
-        if not is_send_proxy():
-            return
-        elif proxy_local:
-            # 代理为本地数据库查询
-            other_param = {}
-            if request.data:
-                other_param["json"] = request.json
-                
-            data, headers = local_run(
-                method=request.method,
-                url=request.path,
-                params=request.args,
-                headers=request.headers,
-                **other_param,
-            )
-            return Response(data=data, headers=headers).make_flask_response()
-        
-        else:
-            # 代理为远程服务查询
-            return proxy(server_url)
