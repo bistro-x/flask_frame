@@ -208,3 +208,21 @@ def if_null(arg1, arg2):
     else:
         return arg2
 
+
+def str_to_bool(val):
+    """将字符串表示的真值转换为 True 或 False。
+
+    True 值包括 'y', 'yes', 't', 'true', 'on', '1'
+    False 值包括 'n', 'no', 'f', 'false', 'off', '0'
+    如果输入为空或 None，返回 False。
+    如果 'val' 是其他值，则引发 ValueError。
+    """
+    if not val:
+        return False
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return 1
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return 0
+    else:
+        raise ValueError(f"无效的真值 {val!r}")

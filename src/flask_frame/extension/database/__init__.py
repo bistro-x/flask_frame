@@ -193,7 +193,7 @@ def init_db(db, schema, file_list, version_file_list):
                 current_app.logger.info("初始化数据库")
 
                 # 重新构建schema
-                from distutils.util import strtobool
+                from util.com_tool import str_to_bool
 
                 # 获取配置数据
                 recreate_schema = False
@@ -201,7 +201,7 @@ def init_db(db, schema, file_list, version_file_list):
                 if current_app.config.get(recreate_schema_key):
                     recreate_schema = current_app.config.get(recreate_schema_key)
                 elif os.environ.get(recreate_schema_key):
-                    recreate_schema = bool(strtobool(os.environ.get(recreate_schema_key)))
+                    recreate_schema = str_to_bool(os.environ.get(recreate_schema_key))
 
                 # 判断是否创建
                 if schema_exist and recreate_schema:
