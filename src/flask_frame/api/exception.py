@@ -10,9 +10,11 @@ class ResourceError(HTTPException):
     code = 500  # http代码
     error_code = 500  # 标准错误代码
 
-    def __init__(self, description=None, response=None, error_code=None):
+    def __init__(self, description=None, response=None, error_code=None, code=None):
         super(ResourceError, self).__init__(description, response)
-        self.error_code = error_code or self.error_code
+        self.code = code or self.code
+        self.error_code = self.code
+        
         # 如果有响应对象，尝试从响应中获取错误码和描述
         if response and response.json:
             self.error_code = response.json.get("error_code", self.error_code)
