@@ -66,7 +66,6 @@ class CallException(HTTPException):
         """Get a list of headers."""
         return [("Content-Type", "application/json")]
 
-@deprecated
 class BusiError(HTTPException):
     """deprecated"""
 

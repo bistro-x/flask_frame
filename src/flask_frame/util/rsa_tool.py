@@ -2,7 +2,7 @@ import os
 
 from rsa import common, transform, core, PrivateKey, PublicKey
 
-from ..api.exception import BusiError
+from ..api.exception import ResourceError
 
 # 加载公钥和私钥，异常时抛出业务错误
 try:
@@ -13,7 +13,7 @@ try:
     # 加载私钥文件
     privkey = PrivateKey.load_pkcs1(open("resource/private.pem").read())
 except:
-    raise BusiError("证书文件路径错误！")
+    raise ResourceError("证书文件路径错误！")
 
 
 def _pad_for_encryption(message, target_length):
