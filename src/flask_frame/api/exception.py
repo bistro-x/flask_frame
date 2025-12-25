@@ -1,5 +1,6 @@
 from flask import request, json
 from werkzeug.exceptions import HTTPException
+from flask_frame.annotation import deprecated
 
 
 class ResourceError(HTTPException):
@@ -10,7 +11,7 @@ class ResourceError(HTTPException):
     code = 500  # http代码
     error_code = 500  # 标准错误代码
 
-    def __init__(self, description=None, response=None, error_code=None, code=None):
+    def __init__(self, description=None, response=None, error_code=None, code=None, data=None):
         super(ResourceError, self).__init__(description, response)
         self.code = code or self.code
         self.error_code = self.code
@@ -19,6 +20,8 @@ class ResourceError(HTTPException):
         if response and response.json:
             self.error_code = response.json.get("error_code", self.error_code)
             self.pa = response.json.get("description", self.description)
+        
+        self.data = data  # 新增 data 参数
 
     def __str__(self):
         error_code = self.error_code if self.error_code is not None else "???"
@@ -27,6 +30,8 @@ class ResourceError(HTTPException):
     def get_body(self, environ=None, scope=None):
         # 构造返回体
         body = dict(message=self.description, code=self.error_code)
+        if self.data is not None:
+            body["data"] = self.data  # 如果有 data，添加到返回体
         text = json.dumps(body)
         return text
 
@@ -61,7 +66,7 @@ class CallException(HTTPException):
         """Get a list of headers."""
         return [("Content-Type", "application/json")]
 
-
+@deprecated
 class BusiError(HTTPException):
     """deprecated"""
 
