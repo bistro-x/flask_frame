@@ -31,6 +31,10 @@ def init_app(app):
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
+    
+    # 如果db_schema是字符串且包含逗号分隔符，则分割成列表
+    if isinstance(db_schema, str) and ',' in db_schema:
+        db_schema = [s.strip() for s in db_schema.split(',') if s.strip()]
 
     # 编码密码，防止特殊字符
     password = (
@@ -126,11 +130,19 @@ def init_app(app):
         """
         schema base model
         """
-
-        __table_args__ = {"extend_existing": True, "schema": db_schema}
+        # 如果db_schema是列表，使用第一个schema；否则使用db_schema
+        schema_value = db_schema[0] if isinstance(db_schema, list) else db_schema
+        __table_args__ = {"extend_existing": True, "schema": schema_value}
 
     with app.app_context():
-        db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
+        # 使用SQLAlchemy的reflect功能，从数据库中自动发现并加载指定schema中的所有表结构
+        # 这允许在运行时动态获取表定义，而无需手动定义每个模型类
+        # 如果db_schema是列表，则反射多个schema；如果是字符串，则反射单个schema
+        if isinstance(db_schema, list):
+            for schema in db_schema:
+                db.Model.metadata.reflect(bind=db.engine, schema=schema)
+        else:
+            db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
 
 
 def compare_version(version1: str, version2: str) -> int:
