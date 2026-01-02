@@ -31,10 +31,10 @@ def init_app(app):
     global db, db_schema, BaseModel, AutoMapModel, current_app
     current_app = app
     db_schema = app.config.get("DB_SCHEMA")
-    
+
     # 如果db_schema是字符串且包含逗号分隔符，则分割成列表
-    if isinstance(db_schema, str) and ',' in db_schema:
-        db_schema = [s.strip() for s in db_schema.split(',') if s.strip()]
+    if isinstance(db_schema, str) and "," in db_schema:
+        db_schema = [s.strip() for s in db_schema.split(",") if s.strip()]
 
     # 编码密码，防止特殊字符
     password = (
@@ -83,13 +83,18 @@ def init_app(app):
         db = SQLAlchemy(
             app,
             engine_options={
-                "json_serializer": json_dumps,
-                # 配置成1200 会导致对接 高斯 断开报错
-                "pool_recycle": 600,
-                "pool_size": 5,
-                "max_overflow": 30,
-                "pool_pre_ping": True,
-                **engine_options_env,
+                "json_serializer": json_dumps,  # 自定义 JSON 序列化函数，确保非 ASCII 字符正确处理
+                "pool_recycle": 300,  # 连接池回收时间（秒），防止数据库连接过期
+                "pool_size": 5,  # 连接池基础大小，保持的持久连接数
+                "max_overflow": 30,  # 最大溢出连接数，允许额外创建的连接数
+                "pool_pre_ping": True,  # 在使用连接前 ping 数据库，确保连接有效性
+                "connect_args": {
+                    "keepalives": 1,  # 启用 TCP keepalive 机制
+                    "keepalives_idle": 60,  # 60秒空闲就开始发送探测包
+                    "keepalives_interval": 10,  # 每次探测间隔10秒
+                    "keepalives_count": 5,  # 连续5次失败才认为连接断开
+                },
+                **engine_options_env,  # 从环境变量获取的额外引擎选项
             },
             **params,
         )
@@ -104,11 +109,11 @@ def init_app(app):
         import os
 
         version_file_list = app.config.get("DB_VERSION_FILE")
-        
+
         if not version_file_list:
             sql_path = "sql/migrate"
-            
-            #如果文件不存在跳过
+
+            # 如果文件不存在跳过
             if os.path.exists(sql_path):
                 version_file_list = [
                     os.path.join(sql_path, item) for item in os.listdir(sql_path)
@@ -130,6 +135,7 @@ def init_app(app):
         """
         schema base model
         """
+
         # 如果db_schema是列表，使用第一个schema；否则使用db_schema
         schema_value = db_schema[0] if isinstance(db_schema, list) else db_schema
         __table_args__ = {"extend_existing": True, "schema": schema_value}
@@ -184,18 +190,22 @@ def init_db(db, schema, file_list, version_file_list):
         try:
             first_sql = f"set search_path to {schema}; "
             schema_exist = db.session.execute(
-                text(f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'")
+                text(
+                    f"SELECT 1 FROM information_schema.schemata WHERE schema_name = '{schema}'"
+                )
             ).fetchone()
 
             # 获取版本
             version = None
             if schema_exist:
                 table_exist = db.session.execute(
-                    text(f"select *  from pg_tables where tablename='param' and schemaname='{schema}'")
+                    text(
+                        f"select *  from pg_tables where tablename='param' and schemaname='{schema}'"
+                    )
                 ).fetchone()
                 if table_exist:
                     version = db.session.execute(
-                        text( first_sql + "select value from param where key='version';")
+                        text(first_sql + "select value from param where key='version';")
                     ).fetchone()
                 if version:
                     version = version[0]
@@ -217,10 +227,14 @@ def init_db(db, schema, file_list, version_file_list):
 
                 # 判断是否创建
                 if schema_exist and recreate_schema:
-                    db.session.execute(sqlalchemy.schema.DropSchema(db_schema, cascade=True))
+                    db.session.execute(
+                        sqlalchemy.schema.DropSchema(db_schema, cascade=True)
+                    )
                 elif not schema_exist:
                     db.session.execute(sqlalchemy.schema.CreateSchema(db_schema))
-                    db.session.execute(text(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;"))
+                    db.session.execute(
+                        text(f"GRANT ALL ON SCHEMA {db_schema} TO current_user;")
+                    )
 
                 # 运行初始化脚本
                 for file_path in file_list:
@@ -245,7 +259,9 @@ def init_db(db, schema, file_list, version_file_list):
                 # 在版本更新的时候去更新脚本
                 if update_db_sign:
                     update_file_list = current_app.config.get("DB_UPDATE_FILE")
-                    update_file_switch = current_app.config.get("DB_UPDATE_SWITCH", False)
+                    update_file_switch = current_app.config.get(
+                        "DB_UPDATE_SWITCH", False
+                    )
 
                     if update_file_list and not update_file_switch:
                         update_db(db, db_schema, update_file_list)
@@ -289,7 +305,9 @@ def update_db(db, schema, file_list):
                     f"worker: {os.getpid()} run: " + file_path + " begin"
                 )
                 run_sql(file_path, db, first_sql)
-                current_app.logger.info(f"worker: {os.getpid()} run: " + file_path + " end")
+                current_app.logger.info(
+                    f"worker: {os.getpid()} run: " + file_path + " end"
+                )
 
             # 添加分布式锁
             if Lock.lock_type() == "redis_lock":
