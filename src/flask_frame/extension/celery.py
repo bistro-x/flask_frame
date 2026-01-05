@@ -12,18 +12,17 @@ celery = None
 flask_app = None
 
 
-
 def init_app(app):
     """初始化模块
 
     Args:
-        app (_type_): _description_
+        app (_type_): Flask应用实例
     """
     global celery, flask_app
 
     flask_app = app
 
-    # redis 主从集群 master name
+    # 获取Redis URL作为broker
     broker_url = app.config.get("REDIS_URL")
     celery = Celery(
         app.import_name,
@@ -31,7 +30,7 @@ def init_app(app):
         broker=broker_url,
     )
 
-    # redis sentinel 模式
+    # 如果broker URL以sentinel开头，使用Redis Sentinel模式
     if broker_url.startswith("sentinel"):
         redis_master_name = app.config.get("REDIS_MASTER_NAME", None)
         redbeat_redis_url = broker_url
@@ -39,6 +38,7 @@ def init_app(app):
 
         password = None
         sentinels = []
+        # 解析sentinel URL，提取主机、端口和密码
         urls = broker_url.split(";")
         for url in urls:
             url = urlparse(url)
@@ -50,48 +50,55 @@ def init_app(app):
         if password:
             redbeat_redis_options["password"] = password
 
-        # 增加定时任务
+        # 配置定时任务，使用redbeat
         celery.config_from_object(
             {
-                "CELERY_TIMEZONE": "Asia/Shanghai",
-                "ENABLE_UTC": True,
-                "redbeat_key_prefix": app.config.get("CELERY_DEFAULT_QUEUE")
-                or app.config.get("PRODUCT_KEY"),
-                "redbeat_lock_timeout": app.config.get("REDBEAT_LOCK_TIMEOUT", 360),
-                "redbeat_redis_url": redbeat_redis_url,
-                "redbeat_redis_options": redbeat_redis_options,
-                **app.config,
+                "timezone": "Asia/Shanghai",  # 时区设置为亚洲上海
+                "enable_utc": True,  # 启用UTC时间
+                "redbeat_key_prefix": app.config.get(
+                    "CELERY_DEFAULT_QUEUE"
+                )  # redbeat键前缀，使用默认队列或产品键
+                or app.config.get("PRODUCT_KEY"),  # 产品键
+                "redbeat_lock_timeout": app.config.get(
+                    "REDBEAT_LOCK_TIMEOUT", 360
+                ),  # redbeat锁超时时间，默认360秒
+                "redbeat_redis_url": redbeat_redis_url,  # redbeat Redis URL
+                "redbeat_redis_options": redbeat_redis_options,  # redbeat Redis选项
+                **app.config,  # 展开应用配置
             }
         )
 
+        # 设置broker传输选项
         celery.conf.broker_transport_options.update(master_name=redis_master_name)
         celery.conf.result_backend_transport_options = (
             celery.conf.broker_transport_options
         )
     else:
-        # 增加定时任务
+        # 如果配置是大写 需要增加前缀 CELERY_
+        # 非sentinel模式，配置定时任务
         celery.config_from_object(
             {
-                "CELERY_TIMEZONE": "Asia/Shanghai",
-                "ENABLE_UTC": True,
-                **app.config,
+                "timezone": "Asia/Shanghai",  # 时区设置为亚洲上海
+                "enable_utc": True,  # 启用UTC时间
+                **app.config,  # 展开应用配置
             }
         )
 
-    # 设置上下文
+    # 定义上下文任务类，确保在Flask应用上下文中运行
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return self.run(*args, **kwargs)
 
+    # 将Celery的Task基类替换为上下文任务类
     celery.Task = ContextTask
 
 
 class BaseTask(Task):
-    """基础任务
+    """基础任务类
 
     Args:
-        Task (_type_): _description_
+        Task (_type_): Celery Task基类
     """
 
     def run(self, *args, **kwargs):
