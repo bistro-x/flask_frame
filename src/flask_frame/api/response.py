@@ -93,8 +93,6 @@ def queryToDict(models):
             return res
 
 
-
-
 @deprecated
 def model_to_dict(model):  # 这段来自于参考资源
     for col in model.__table__.columns:
@@ -115,7 +113,9 @@ def model_to_dict(model):  # 这段来自于参考资源
 def data_chg(value):
     for v in value:
         if isinstance(value[v], cdatetime):
-            value[v] = convert_datetime(value[v])  # 这里原理类似，修改的字典对象，不用返回即可修改
+            value[v] = convert_datetime(
+                value[v]
+            )  # 这里原理类似，修改的字典对象，不用返回即可修改
         elif isinstance(value[v], decimal.Decimal):
             value[v] = float(value[v])
 
@@ -232,7 +232,7 @@ class Response(object):
             return http_response_schema.dump(self), (
                 self.http_status or HTTPStatus.INTERNAL_SERVER_ERROR
             )
-            
+
     def make_flask_response(self) -> flask.Response:
         """
         创建flask相关的返回对象
@@ -244,17 +244,22 @@ class Response(object):
         """
         import json
         import pytz
-        
+
         # 使用当前时间
         self.create_time = self.create_time or cdatetime.now()
-        
+
         # 自定义JSON编码器处理时区问题
-        class ChineseTimezoneJSONEncoder(json.JSONEncoder):
+        class FlaskJSONEncoder(json.JSONEncoder):
+            """
+            自定义 JSON 编码器，用于处理 datetime、date、time 和 Decimal 对象的序列化。
+            将 datetime 转换为北京时区格式，Decimal 转换为 float。
+            """
+
             def default(self, obj):
-                beijing_tz = pytz.timezone('Asia/Shanghai')
-                
+                beijing_tz = pytz.timezone("Asia/Shanghai")
+
                 if isinstance(obj, cdatetime):
-                    # 如果是datetime对象，转换为北京时间
+                    # 处理 datetime 对象：转换为北京时区并格式化为字符串
                     if obj.tzinfo is None:
                         # 无时区信息，假设为UTC，转换为北京时间
                         obj = obj.replace(tzinfo=pytz.UTC).astimezone(beijing_tz)
@@ -264,31 +269,42 @@ class Response(object):
                     # 包含时区信息的时间格式 (例如: 2023-05-15 14:30:45+08:00)
                     return obj.strftime("%Y-%m-%d %H:%M:%S%z")
                 elif isinstance(obj, date):
+                    # 处理 date 对象：格式化为 YYYY-MM-DD
                     return obj.strftime("%Y-%m-%d")
                 elif isinstance(obj, time):
+                    # 处理 time 对象：格式化为 HH:MM:SS
                     return obj.strftime("%H:%M:%S")
+                elif isinstance(obj, decimal.Decimal):
+                    # 处理 Decimal 对象：转换为 float
+                    return float(obj)
+
                 return super().default(obj)
-        
+
         # 使用自定义编码器序列化数据
         try:
             dumped_data = http_response_schema.dump(self)
-            json_data = json.dumps(dumped_data, cls=ChineseTimezoneJSONEncoder, ensure_ascii=False)
+            json_data = json.dumps(
+                dumped_data, cls=FlaskJSONEncoder, ensure_ascii=False
+            )
         except Exception as e:
             import logging
+
             logging.exception("序列化响应数据出错")
             # 返回错误信息，便于排查
-            return flask.make_response(jsonify({"error": "响应序列化失败", "detail": str(e)}), 500)
-        
+            return flask.make_response(
+                jsonify({"error": "响应序列化失败", "detail": str(e)}), 500
+            )
+
         # 创建响应
         response = flask.make_response(
             json_data,
             self.http_status
             or (HTTPStatus.OK if self.result else HTTPStatus.INTERNAL_SERVER_ERROR),
         )
-        
+
         # 设置正确的Content-Type
-        response.headers['Content-Type'] = 'application/json; charset=utf-8'
-        
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+
         # 定义报头
         response.headers = {**response.headers, **(self.headers or {})}
 
@@ -298,7 +314,6 @@ class Response(object):
     @deprecated
     def mark_flask_response(self) -> flask.Response:
         return self.make_flask_response()
-        
 
     @classmethod
     def force_type(self, rv, environ=None):
