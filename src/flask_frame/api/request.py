@@ -81,7 +81,7 @@ def proxy(server_url, response_standard=True, includ_schema_prefix=False):
 
     # 若要求包含 schema/profile 前缀，则从 request.path 中提取 schema（第一个 path 段）
     # 并将其放入 Accept-Profile / Content-Profile，同时将 proxied_path 去掉该前缀
-    if includ_schema_prefix:
+    if includ_schema_prefix or "/" in (request.path or "").lstrip("/"):
         # 规范化并分割路径；例如 "/schema/items/1" -> schema="schema", remaining="/items/1"
         raw_path = (request.path or "").lstrip("/")
         if raw_path:
