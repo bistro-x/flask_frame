@@ -93,6 +93,10 @@ def init_app(app):
                     "keepalives_idle": 60,  # 60秒空闲就开始发送探测包
                     "keepalives_interval": 10,  # 每次探测间隔10秒
                     "keepalives_count": 5,  # 连续5次失败才认为连接断开
+                    # 针对 Python 运算的 options 组合
+                    "options": (
+                        "-c tcp_keepalives_idle=60 "  # 3. 核心：让数据库定时响应 Python
+                    ),
                 },
                 **engine_options_env,  # 从环境变量获取的额外引擎选项
             },
