@@ -4,7 +4,6 @@
 def generate_sql(
     method: str, path: str, args: dict = None, data: dict = None, headers: dict = {}
 ):
-
     """http数据转换成SQL语句
 
     Args:
@@ -29,7 +28,9 @@ def generate_sql(
     else:
         select_sql = "*"
 
-    return_data = "return=representation" in headers.get("Prefer", "")  # 是否返回修改数据
+    return_data = "return=representation" in headers.get(
+        "Prefer", ""
+    )  # 是否返回修改数据
     return_sql = " returning * " if return_data else ""  # 数据返回语句
 
     if method.casefold() == "get":
@@ -51,8 +52,8 @@ def generate_sql(
         sql = update_sql(table_name, data, None, where_sql, return_sql)
 
     else:
-        # todo throw error
-        print("error")
+        raise ValueError(f"不支持的请求方法：{method}")
+
     print("sql:" + str(sql))
     print("count_sql:" + (count_sql or ""))
 
