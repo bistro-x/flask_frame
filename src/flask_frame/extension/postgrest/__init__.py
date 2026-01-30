@@ -43,16 +43,49 @@ def init_app(app):
             # 代理为远程服务查询
             return proxy(server_url)
 
-def proxy_request(method="GET", url="", headers=None, params=None, **kwargs):
+def proxy_request(method="GET", url="", headers=None, params=None, includ_schema_prefix=True, **kwargs):
     """
     创建代理请求
     :param method:
     :param url:
     :param headers:
+    :param params:
+    :param includ_schema_prefix: 是否在 URL 中包含 schema 前缀，并设置相应的 Profile 报头
     :param kwargs:
     :return:
     """
     global flask_app, server_url
+
+    # 处理 includ_schema_prefix 逻辑
+    if includ_schema_prefix:
+        # 从 URL 中提取 schema（第一个 path 段）
+        raw_path = url.lstrip("/")
+        if raw_path:
+            parts = raw_path.split("/", 1)
+            
+            schema = parts[0] if parts[0] else None
+            
+            if schema and len(parts) > 1:
+                remaining = "/" + parts[1] if len(parts) > 1 else "/"
+
+                # 根据方法设置 Accept-Profile 或 Content-Profile
+                if method.upper() in ("GET", "HEAD"):
+                    if headers is None:
+                        headers = {}
+                    elif not isinstance(headers, dict):
+                        headers = dict(headers)
+                    headers["Accept-Profile"] = schema
+                else:
+                    if headers is None:
+                        headers = {}
+                    elif not isinstance(headers, dict):
+                        headers = dict(headers)
+                    headers["Content-Profile"] = schema
+                    
+                # 更新 URL，去掉 schema 前缀
+                url = remaining
+        else:
+            url = "/"
 
     # 本地代理
     if proxy_local:

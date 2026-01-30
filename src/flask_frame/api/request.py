@@ -87,8 +87,9 @@ def proxy(server_url, response_standard=True, includ_schema_prefix=False):
         if raw_path:
             parts = raw_path.split("/", 1)
             schema = parts[0] if parts[0] else None
-            remaining = "/" + parts[1] if len(parts) > 1 else "/"
-            if schema:
+            
+            if schema and len(parts) > 1:
+                remaining = "/" + parts[1] if len(parts) > 1 else "/"
                 method = (request.method or "GET").upper()
                 if method in ("GET", "HEAD"):
                     # 对于查询类请求，使用 Accept-Profile 指定 schema/tenant
