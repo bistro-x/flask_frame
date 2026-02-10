@@ -2,6 +2,7 @@ from flask import request
 import requests
 from ...api.response import Response
 from ...api.request import proxy
+import os
 
 flask_app = None  # 全局应用
 server_url = None  # 服务地址
@@ -11,9 +12,9 @@ proxy_local = None  # 指定代理地址
 def init_app(app):
     global flask_app, server_url, proxy_local
     flask_app = app
-    server_url = flask_app.config.get("PROXY_SERVICE_URL","http://postgrest:3000")  # 代理服务地址
-    proxy_local = flask_app.config.get("PROXY_LOCAL", False)  # 本地代理
-    proxy_custom = flask_app.config.get("PROXY_CUSTOM", False)  # 个性化代理
+    server_url = flask_app.config.get("PROXY_SERVICE_URL") or os.environ.get("PROXY_SERVICE_URL", "http://postgrest:3000")  # 代理服务地址
+    proxy_local = flask_app.config.get("PROXY_LOCAL") or (os.environ.get("PROXY_LOCAL", "False").lower() == "true")  # 本地代理
+    proxy_custom = flask_app.config.get("PROXY_CUSTOM") or (os.environ.get("PROXY_CUSTOM", "False").lower() == "true")  # 个性化代理
 
     # get proxy config
     if proxy_custom:
