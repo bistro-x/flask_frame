@@ -1,16 +1,17 @@
-import pkg_resources
 import pathlib
 from setuptools import find_packages, setup
 
+# 直接读取 requirements.txt 文件，去除空行和注释
 with pathlib.Path("requirements.txt").open() as requirements_txt:
     install_requires = [
-        str(requirement)
-        for requirement in pkg_resources.parse_requirements(requirements_txt)
+        line.strip()
+        for line in requirements_txt
+        if line.strip() and not line.startswith("#")
     ]
 
 setup(
     name="flask_frame",
-    version="1.1.36",
+    version="1.1.37",
     author="wuhanchu",
     author_email="whcwuhanchu@gmail.com",
     description="基于FLASK快速开发REST接口框架",

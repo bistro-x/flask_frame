@@ -44,7 +44,7 @@ def init_app(app):
             # 代理为远程服务查询
             return proxy(server_url)
 
-def proxy_request(method="GET", url="", headers=None, params=None, includ_schema_prefix=True, **kwargs):
+def proxy_request(method="GET", url="", headers=None, params=None, includ_schema_prefix=True, custom_server_url=None, **kwargs):
     """
     创建代理请求
     :param method:
@@ -52,10 +52,15 @@ def proxy_request(method="GET", url="", headers=None, params=None, includ_schema
     :param headers:
     :param params:
     :param includ_schema_prefix: 是否在 URL 中包含 schema 前缀，并设置相应的 Profile 报头
+    :param server_url: 可选的服务器地址，默认使用全局配置的 server_url
     :param kwargs:
     :return:
     """
-    global flask_app, server_url
+    global flask_app
+
+    # 使用传入的 server_url 参数，如果没有则使用全局配置
+    global server_url
+    target_url = custom_server_url if custom_server_url else server_url
 
     # 处理 includ_schema_prefix 逻辑
     if includ_schema_prefix:
@@ -105,7 +110,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, includ_schema
 
     response = requests.request(
         method=method,
-        url=server_url + url,
+        url=target_url + url,
         params=params,
         headers=send_headers,
         **kwargs,
