@@ -119,6 +119,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, includ_schema
     if (
         "content-type" in response.headers
         and "json" in response.headers["content-type"]
+        and response.text
     ):
         response_json = response.json()
     else:
