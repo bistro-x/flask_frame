@@ -150,9 +150,9 @@ def init_app(app):
         # 如果db_schema是列表，则反射多个schema；如果是字符串，则反射单个schema
         if isinstance(db_schema, list):
             for schema in db_schema:
-                db.Model.metadata.reflect(bind=db.engine, schema=schema)
+                db.Model.metadata.reflect(bind=db.engine, schema=schema, views=True)
         else:
-            db.Model.metadata.reflect(bind=db.engine, schema=db_schema)
+            db.Model.metadata.reflect(bind=db.engine, schema=db_schema, views=True)
 
 
 def compare_version(version1: str, version2: str) -> int:
