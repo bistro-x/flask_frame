@@ -38,3 +38,4 @@ python-consul2==0.1.5
 minio==7.2.9
 
 cryptography==46.0.1
+simplejson==3.20.2
