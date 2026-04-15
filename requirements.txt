@@ -24,6 +24,7 @@ psycopg2-binary==2.9.10
 
 # 安全与加密
 rsa==4.9                         # RSA 加密算法的纯 Python 实现
+pycryptodome==3.23.0             # 加密库
 
 # 部署与服务
 gunicorn==23.0.0                 # Python WSGI HTTP 服务器，用于生产环境部署
