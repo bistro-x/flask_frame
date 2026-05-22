@@ -2,24 +2,19 @@
 
 基于 Flask 快速搭建 RESTful 接口应用，支持丰富插件扩展。
 
-## 项目说明
-
-本项目旨在为中小型后端服务、微服务接口、数据平台等场景，提供一个易用、可扩展的 Flask RESTful 框架。通过插件化设计，开发者可根据实际需求灵活集成日志、权限、分布式锁、异步任务、文件存储等功能。框架适合快速原型开发、企业级接口服务、自动化运维平台等应用。
-
-**主要优势：**
-
-- 结构清晰，易于二次开发和维护
-- 插件系统灵活，扩展性强
-- 支持数据库自动迁移、权限校验、API 日志等企业级特性
-- 适配多种部署环境（Docker、Alpine、PyPI）
-
-**目标用户：**
-
-- 需要快速搭建 RESTful API 的 Python 开发者
-- 关注可维护性和扩展性的后端团队
-- 有插件化、自动化运维需求的项目组
-
 ## 快速开始
+
+### 本地开发
+
+```bash
+pip install -e .
+```
+
+### 发布到 PyPI
+
+```bash
+rm -rf dist && python3.12 setup.py sdist bdist_wheel && twine upload dist/*
+```
 
 ### 镜像构建
 
@@ -27,10 +22,7 @@
 # 主镜像
 docker build . --force-rm=true -f docker/Dockerfile.python -t wuhanchu/python:flask_frame_master && docker push wuhanchu/python:flask_frame_master
 
-# Python 3.6 Alpine 版本
-docker build . --force-rm=true -f docker/Dockerfile.alpine.3.6 -t wuhanchu/python:3.6_alpie && docker push wuhanchu/python:3.6_alpie
-
-# 构建/更新 Alpine 镜像（后台运行）
+# Alpine 镜像
 nohup docker build . --force-rm=true -f docker/Dockerfile.alpine -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine > build_alpine.log 2>&1 &
 nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuhanchu/python:3_alpine && docker push wuhanchu/python:3_alpine &
 ```
@@ -40,150 +32,119 @@ nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuh
 - 普通编译：`docker build -f ./frame/docker/Dockerfile.source .`
 - 加密编译：`docker build -f ./frame/docker/Dockerfile.encrypt .`
 
-### 本地开发调试
+## 默认接口
 
-```bash
-pip install -e .
-```
+- `GET /` - 健康检查（返回 "app is running"）
+- `GET /healthy` - 健康状态（JSON）
+- `GET /flask/log` - 日志文件列表
+- `GET /flask/log/download` - 下载日志压缩包
+- `GET /debug-sentry` - 触发错误（调试 Sentry）
+- 任意接口加 `?profile` 参数可获取性能分析报告
 
-使用 pip 的 editable 模式，便于调试和代码同步。
+## 配置项
 
-### 发布到 PyPI
+### 基础配置
 
-```bash
-pip3 install twine
-rm -rf dist
-python3 setup.py sdist bdist_wheel
-twine upload dist/*
-```
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| PRODUCT_KEY | str | | 项目名称，也作为数据库 schema、锁前缀等 |
+| SQLALCHEMY_DATABASE_URI | str | | 数据库连接地址（PostgreSQL） |
+| DB_SCHEMA | str | | 数据库 schema，支持逗号分隔多 schema（如 `"public,user_auth"`） |
+| AUTO_UPDATE | bool | True | 启动时自动执行数据库迁移 |
+| DB_UPDATE_SWITCH | bool | False | 是否执行 DB_UPDATE_FILE |
+| RECREATE_SCHEMA | bool | False | 是否强制重建 schema |
+| DB_INIT_FILE | str/list | | 初始化 SQL 脚本路径 |
+| DB_VERSION_FILE | str/list | | 版本迁移脚本路径，默认扫描 `sql/migrate/` 目录 |
+| DB_UPDATE_FILE | str/list | | 开发更新脚本路径 |
+| ENABLED_EXTENSION | list | | 启用的插件列表，如 `['database', 'redis', 'lock']` |
+| FETCH_USER | bool | True | 是否获取用户信息（需 permission 插件） |
+| CHECK_API | bool | True | 是否启用 API 权限校验（需 permission 插件） |
+| ADMIN_TOKEN | str | | 可跳过鉴权的固定 Token |
+| ENCRYPTION_KEY | str | | 数据加密 Key，未指定时使用 PRODUCT_KEY |
+| DB_POOL_SIZE | int | 5 | 数据库连接池大小 |
+| DB_MAX_OVERFLOW | int | 30 | 最大溢出连接数 |
+| DB_VERSION | str | | 指定数据库版本号（兼容 GaussDB） |
 
-## 框架功能
+### 插件配置
 
-- RESTful API 快速开发
-- 插件系统，支持多种扩展
-- 日志管理、权限校验、数据库自动迁移等
-
-### 默认接口
-
-- `GET /flask/log` - 日志列表
-- `GET /flask/log/download` - 下载日志
-- `GET /static/log/{文件路径}` - 查看指定日志
-
-## 配置项说明
-
-### 项目基础配置
-
-| 配置项                  | 类型 | 默认值            | 说明                                      |
-| ----------------------- | ---- | ----------------- | ----------------------------------------- |
-| PPRODUCT_KEY            | str  | 空字符串          | 项目名称                                  |
-| SQLALCHEMY_DATABASE_URI | str  | 空字符串          | 数据库连接地址                            |
-| DB_SCHEMA               | str  | 空字符串          | 数据库 schema 名称                        |
-| AUTO_UPDATE             | bool | True              | 自动更新数据库结构                        |
-| DB_UPDATE_SWITCH        | bool | False             | 数据库更新脚本开关                        |
-| RECREATE_SCHEMA         | bool | False             | 是否强制重建 schema                       |
-| DB_INIT_FILE            | str  | ./sql/init.sql    | 初始化脚本路径                            |
-| DB_VERSION_FILE         | str  | ./sql/version.sql | 版本迭代脚本路径                          |
-| DB_UPDATE_FILE          | str  | ./sql/update.sql  | 开发脚本路径                              |
-| FETCH_USER              | bool | True              | 启用用户信息获取                          |
-| CHECK_API               | bool | True              | 启用 API 权限检查                         |
-| API_LOG_RETENTION_DAYS  | int  | 30                | API 日志保留天数                          |
-| ENABLED_EXTENSION       | list | [redis, lock]     | 启用插件列表                              |
-| ENCRYPTION_KEY          | str  | 空字符串          | 数据加密 Key，如果不指定使用 PPRODUCT_KEY |
-
-### 插件相关配置
-
-| 配置项             | 类型 | 默认值   | 说明               | 关联插件    |
-| ------------------ | ---- | -------- | ------------------ | ----------- |
-| SENTRY_DSN         | str  | 空字符串 | Sentry DSN 地址    | sentry      |
-| SENTRY_ENVIRONMENT | str  | dev      | Sentry 环境标识    | sentry      |
-| REDIS_URL          | str  | 空字符串 | Redis 连接地址     | redis, lock |
-| MINIO_ENDPOINT     | str  | 空字符串 | MinIO 服务地址     | minio       |
-| MINIO_ACCESS_KEY   | str  | 空字符串 | MinIO Access Key   | minio       |
-| MINIO_SECRET_KEY   | str  | 空字符串 | MinIO Secret Key   | minio       |
-| CELERY_BROKER_URL  | str  | 空字符串 | Celery Broker 地址 | celery      |
-| CONSUL_HOST        | str  | 空字符串 | Consul 服务地址    | consul      |
-| CONSUL_PORT        | int  | 8500     | Consul 服务端口    | consul      |
-| API_LOG_DB_URI     | str  | 空字符串 | API 日志数据库地址 | api_log     |
-
-> 插件相关配置仅在对应插件启用时生效，具体参数请参考插件源码或目录下 README。
+| 配置项 | 关联插件 | 说明 |
+|--------|----------|------|
+| REDIS_URL | redis, lock, celery | Redis 连接地址，支持 Sentinel 模式（`sentinel://...`） |
+| REDIS_MASTER_NAME | redis, lock, celery | Sentinel 模式的 master 名称 |
+| SENTRY_DS | sentry | Sentry DSN 地址 |
+| LOG_LEVEL | sentry, loguru | 日志级别 |
+| MINIO_SERVER | minio | MinIO 服务地址（host:port） |
+| MINIO_ACCESS_KEY | minio | MinIO Access Key |
+| MINIO_SECRET_KEY | minio | MinIO Secret Key |
+| MINIO_ACCESS_URL | minio | MinIO 文件访问基础 URL |
+| MINIO_USE_HTTPS | minio | 是否使用 HTTPS（`"1"/"true"/"yes"/"on"`） |
+| CONSUL_HOST | consul | Consul 地址 |
+| CONSUL_PORT | consul | Consul 端口 |
+| CONSUL_TOKEN | consul | Consul Token（必需） |
+| API_LOG_DB_URI | api_log | API 日志数据库地址 |
+| API_LOG_RETENTION_DAYS | api_log | API 日志保留天数，默认 30 |
+| CELERY_DEFAULT_QUEUE | celery | Celery 默认队列名 |
+| PROXY_SERVICE_URL | postgrest | PostgREST 代理服务地址 |
+| PROXY_LOCAL | postgrest | 是否使用本地数据库代理（`"True"`/`"False"`） |
+| PROXY_CUSTOM | postgrest | 是否自定义代理路由 |
+| USER_AUTH_URL | permission | 用户认证服务地址 |
+| LICENSE_CHECK | permission | 是否检查 License |
 
 ## 插件系统
 
 插件目录：`src/flask_frame/extension/`
 
-典型插件：
+在 `ENABLED_EXTENSION` 配置列表中添加插件名称即可启用。每个插件实现 `init_app(app)` 方法。
 
-| 插件名称 | 说明         | 依赖   |
-| -------- | ------------ | ------ |
-| redis    | Redis 客户端 | -      |
-| lock     | 分布式锁     | redis  |
-| api_log  | API 日志     | 数据库 |
-| sentry   | 错误监控     | -      |
-| celery   | 任务队列     | -      |
-| minio    | 文件存储     | -      |
-| consul   | 服务发现     | -      |
-
-插件启用：在配置项 `ENABLED_EXTENSION` 中添加插件名称。
-
-插件开发建议：
-
-- 实现 `init_app(app)` 方法，供主应用加载
-- 通过 `app.config` 获取配置
-
----
-
-如需详细开发文档或插件扩展说明，请参考各目录下 README 或源码注释。
-
-- 每个插件建议实现 `init_app(app)` 方法，供主应用统一加载。
-- 插件通过读取 `app.config` 获取所需配置。
-
-## 详细项目结构
+| 插件名称 | 说明 | 依赖 |
+|----------|------|------|
+| database | SQLAlchemy 数据库 + 自动迁移 | - |
+| redis | Redis 客户端（支持 Sentinel） | - |
+| lock | 分布式锁（优先 Redis，降级文件锁） | redis |
+| celery | Celery 异步任务（使用 REDIS_URL 作为 broker） | redis |
+| permission | 用户鉴权 + API 权限校验 | - |
+| api_log | API 请求日志记录 | database, celery |
+| sentry | Sentry 错误监控 | - |
+| minio | MinIO 文件存储 | - |
+| consul | Consul 服务发现 + KV 配置 | - |
+| loguru | Loguru 日志系统 | lock |
+| marshmallow | Flask-Marshmallow 集成 | - |
+| postgrest | PostgREST 代理（本地/远程） | database |
 
 ## 项目结构
 
 ```
 src/flask_frame/
-	app.py                  # 主应用入口
-	api/                    # 请求/响应/异常处理
-	algorithm/              # 算法相关扩展
-	annotation/             # 注解与元数据
-	extension/              # 插件系统（如 redis、celery、sentry、minio 等）
-		redis.py        # Redis 客户端封装
-		lock.py         # 分布式锁实现
-		celery.py       # Celery 集成
-		sentry.py       # Sentry 错误监控
-		minio.py        # MinIO 文件存储
-		consul.py       # Consul 服务发现
-		api_log/        # API 日志插件（可扩展为子目录）
-	permission_context.py   # 权限上下文
-	schema/                 # 数据模型
-	sql/                    # SQL 脚本
-	thread/                 # 线程相关工具
-	util/                   # 工具类
+├── app.py                     # 应用工厂 create_app()
+├── api/                       # 请求/响应/异常处理
+│   ├── request.py             #   get_request_param(), proxy()
+│   ├── response.py            #   Response.make_flask_response()
+│   └── exception.py           #   ResourceError, CallException, BusiError(deprecated)
+├── annotation/                # @deprecated, @profile 装饰器
+├── extension/                 # 插件系统
+│   ├── __init__.py            #   遍历 ENABLED_EXTENSION 动态加载
+│   ├── database/              #   数据库插件（SQLAlchemy + 自动迁移 + reflect）
+│   ├── redis.py               #   Redis 客户端
+│   ├── lock.py                #   分布式锁
+│   ├── celery.py              #   Celery 任务
+│   ├── permission.py          #   权限校验
+│   ├── api_log/               #   API 日志
+│   ├── sentry.py              #   Sentry 监控
+│   ├── minio.py               #   MinIO 文件存储
+│   ├── consul.py              #   Consul 服务发现
+│   ├── loguru/                #   Loguru 日志
+│   ├── marshmallow.py         #   Marshmallow 集成
+│   └── postgrest/             #   PostgREST 代理
+├── schema/                    # BaseSchema（自动剔除空值字段）
+├── algorithm/                 # 算法扩展
+├── sql/                       # 内置 SQL 脚本（api_log, param）
+├── util/                      # 工具类（db, file, json, lock, rsa, sql, fernet）
+└── thread/                    # 线程相关
 ```
 
-## 插件开发与扩展
+### 其他目录
 
-所有插件均放置于 `src/flask_frame/extension/` 目录下，按需启用。
-
-典型插件目录结构：
-
-```
-src/flask_frame/extension/
-	redis.py        # Redis 客户端封装
-	lock.py         # 分布式锁实现
-	celery.py       # Celery 集成
-	sentry.py       # Sentry 错误监控
-	minio.py        # MinIO 文件存储
-	consul.py       # Consul 服务发现
-	api_log/        # API 日志插件（可扩展为子目录）
-```
-
-插件启用方式：在配置文件 `ENABLED_EXTENSION` 列表中添加插件名称。
-
-插件开发建议：
-
-- 每个插件建议实现 `init_app(app)` 方法，供主应用统一加载。
-- 插件可通过读取 app.config 获取所需配置。
-
----
+- `tasks/` — 应用层代码，含权限初始化逻辑（`tasks/database.py`），非框架核心
+- `docker/` — Docker 构建文件
+- `test/` — 测试目录（当前测试引用的模块已不存在，需修复）
+- `doc/` — 迁移文档
