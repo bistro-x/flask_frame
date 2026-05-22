@@ -1,9 +1,19 @@
 # -*- coding:utf-8 -*-
-# flask api 的日志记录模块
+"""
+API 请求日志插件。
+通过 after_request 钩子记录非 GET 请求的调用信息。
+提供 Celery 定时任务 api_log_clean 清理过期日志。
+"""
 flask_app = None
 
 
 def init_app(app):
+    """
+    初始化 API 日志记录，注册 after_request 钩子。
+    
+    Args:
+        app: Flask 应用实例，需配置 DB_SCHEMA 和 API_LOG_RETENTION_DAYS。
+    """
     global flask_app
     flask_app = app
 
@@ -44,6 +54,10 @@ def init_app(app):
 
 
 def _register_celery_task():
+    """
+    注册 API 日志清理定时任务（需 Celery 插件）。
+    若 Celery 未启用则静默跳过。
+    """
     try:
         from ..celery import celery
     except ImportError:

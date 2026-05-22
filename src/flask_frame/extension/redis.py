@@ -1,3 +1,10 @@
+"""
+Redis 客户端插件。
+支持两种部署模式：
+  - 单机模式：REDIS_URL 格式为 redis://host:port
+  - Sentinel 高可用模式：REDIS_URL 格式为 sentinel://host:port;sentinel://host:port
+  Sentinel 模式需额外配置 REDIS_MASTER_NAME 指定 master 名称。
+"""
 import platform
 import redis
 from redis.sentinel import Sentinel
@@ -7,16 +14,13 @@ redis_client = None
 
 
 def init_app(app):
-    """redis 客户端
-
-    Args:
-        app (_type_): _description_
-    """
+    """初始化 Redis 客户端，根据 URL 前缀自动选择单机或 Sentinel 模式。"""
     global redis_client
 
     redis_cache_server_url = app.config.get("REDIS_URL")
     import socket
 
+    # Linux 下启用 TCP Keepalive，防止长时间空闲连接被防火墙断开
     if platform.system() == "Linux":
         socket_keepalive_options = {
             socket.TCP_KEEPIDLE: 60,

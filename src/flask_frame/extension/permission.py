@@ -1,3 +1,19 @@
+"""
+权限校验插件。
+通过 before_request 钩子在每次请求前执行鉴权流程：
+  1. 从 Authorization 头获取 token
+  2. 检查是否为 ADMIN_TOKEN（跳过校验）
+  3. 调用用户认证服务获取用户信息（依赖 USER_AUTH_URL 配置）
+  4. 校验用户是否有当前接口的访问权限
+
+权限判定规则（按优先级）：
+  - CHECK_API=False 时跳过所有权限校验
+  - 静态文件（/static/）不校验
+  - admin 用户拥有全部权限
+  - 客户端模式（有 client_id 无 id）通过
+  - 在 no_permissions 列表中的接口拒绝访问
+  - 其余情况默认允许
+"""
 from http import HTTPStatus
 import os
 
@@ -8,17 +24,13 @@ from flask import request, abort, g
 app = None
 
 # 配置参数
-fetch_user = True  # 是否获取用户
-check_api = True  # 检查API权限
+fetch_user = True
+check_api = True
 
 
 def init_app(flask_app):
-    """初始化 extension
-
-    Args:
-        flask_app (_type_): _description_
-    """
-    global app, check_api, fetch_user, get_user_extend_info
+    """初始化权限校验，注册 before_request 钩子"""
+    global app, check_api, fetch_user
 
     app = flask_app
     check_api = app.config.get("CHECK_API", True)
@@ -47,11 +59,10 @@ def init_app(flask_app):
                     abort(HTTPStatus.FORBIDDEN, {"message": "API未授权"})
 
 
-def fetch_current_user(token_string,params={}):
+def fetch_current_user(token_string, params={}):
     """
-    查询当前用户
-    :param token_string:
-    :return:
+    调用用户认证服务获取当前用户信息，结果缓存到 g.current_user。
+    依赖 USER_AUTH_URL 配置指向用户认证服务地址。
     """
     global app
 
@@ -88,7 +99,7 @@ def fetch_current_user(token_string,params={}):
 
 
 def get_current_user():
-    """获取当前用户"""
+    """从请求上下文获取当前用户（由 fetch_current_user 缓存在 g 中）"""
     if not flask.has_request_context():
         return None
 
@@ -99,11 +110,7 @@ def get_current_user():
 
 
 def license_check():
-    """检测 license
-
-    Returns:
-        _type_: _description_
-    """
+    """调用用户认证服务检查 License 是否有效"""
     global app
 
     user_auth_url = app.config.get("USER_AUTH_URL")
@@ -136,13 +143,11 @@ def check_user_permission(token_string=None):
 
 
 def check_url_permission(user, product_key=None):
-    """检测是否有相关接口权限
-
-
-    Args:
-        user (_type_): 检测用户
-    Returns:
-        _type_: 是否通过
+    """
+    校验用户是否有当前请求路径的访问权限。
+    权限白名单：admin 用户、客户端模式、静态文件路径。
+    权限黑名单：no_permissions 列表中精确匹配的接口会被拒绝。
+    未在黑名单中的接口默认允许访问。
     """
     global check_api
     
@@ -189,9 +194,9 @@ def check_url_permission(user, product_key=None):
 
 def param_add_department_filter(params={}):
     """
-    添加组织权限过滤
-    :param params: 当前参数
-    :return: 过滤参数
+    为查询参数添加组织权限过滤条件。
+    根据当前用户的 department_key 列表生成 PostgREST 风格的 like 过滤条件。
+    无部门信息时过滤 department_key 为 null 的记录。
     """
     user = g.current_user
 

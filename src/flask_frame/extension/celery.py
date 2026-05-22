@@ -1,3 +1,9 @@
+"""
+Celery 异步任务插件。
+使用 REDIS_URL 同时作为 broker 和 backend（无需单独配置 CELERY_BROKER_URL）。
+支持 Redis Sentinel 模式和 redbeat 定时任务调度。
+提供 BaseTask 基类，自动管理数据库事务（成功提交、失败回滚）。
+"""
 from urllib.parse import urlparse
 
 from sqlalchemy.exc import InvalidRequestError, OperationalError
@@ -84,7 +90,8 @@ def init_app(app):
             }
         )
 
-    # 定义上下文任务类，确保在Flask应用上下文中运行
+    # 定义上下文任务类，确保任务在 Flask 应用上下文中运行
+    # 这样任务中可以正常访问 db、app.config 等 Flask 资源
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():
@@ -95,10 +102,12 @@ def init_app(app):
 
 
 class BaseTask(Task):
-    """基础任务类
-
-    Args:
-        Task (_type_): Celery Task基类
+    """
+    Celery 任务基类，自动管理数据库事务。
+    - 任务成功：自动 commit 并释放 session
+    - 任务失败/重试（数据库连接异常）：dispose 引擎，防止连接池污染
+    - 任务失败/重试（其他异常）：回滚事务
+    使用方式：@celery.task(base=BaseTask)
     """
 
     def run(self, *args, **kwargs):

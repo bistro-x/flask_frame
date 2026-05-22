@@ -1,12 +1,27 @@
+"""
+Consul 服务发现和配置中心插件。
+功能：
+  - 启动时从 Consul KV 读取配置（config/common/ 和 config/{PRODUCT_KEY}/ 前缀）
+  - 注册服务到 Consul，配置健康检查
+  - 自动探测本机 IP（支持 Docker bridge 模式）
+  - 提供服务发现接口 get_service_url()
+"""
 import consul
 import socket
 import os
 import struct
 
-consul_client = None  # 全局 Consul 客户端实例
+consul_client = None
 
 
 def init_app(app):
+    """
+    初始化 Consul 客户端，从 KV 加载配置并注册服务。
+    
+    Args:
+        app: Flask 应用实例，需配置 CONSUL_HOST、CONSUL_PORT、CONSUL_TOKEN。
+             服务注册依赖 PRODUCT_KEY 和 RUN_PORT 配置。
+    """
     global consul_client
 
     # 简化：从 app.config 或环境读取，"None"/空字符串视为缺失
@@ -102,7 +117,18 @@ def init_app(app):
 
 
 def get_local_ip():
-    """自动获取本机 IP 地址（Docker bridge 模式下获取宿主机内网 IP）"""
+    """
+    自动探测本机 IP 地址，支持多种部署环境。
+    探测优先级：
+      1. HOST_IP 环境变量
+      2. host.docker.internal DNS 解析（Docker Desktop）
+      3. /proc/net/route 网关探测（Linux bridge 模式）
+      4. DOCKER_HOST 环境变量解析
+      5. UDP 连接探测（兜底方案）
+    
+    Returns:
+        str: 本机 IP 地址，兜底返回 "127.0.0.1"。
+    """
 
     # 方法1: 优先从环境变量获取宿主机 IP（推荐方式）
     host_ip = os.environ.get("HOST_IP")
@@ -178,7 +204,18 @@ def get_local_ip():
 
 
 def get_service_url(service_name):
-    """获取指定服务的健康实例地址"""
+    """
+    从 Consul 获取指定服务的健康实例地址。
+    
+    Args:
+        service_name: 服务名称（对应注册时的 PRODUCT_KEY）。
+    
+    Returns:
+        str: 第一个健康实例的完整 URL，如 http://host:port/，无健康实例时返回 None。
+    
+    Raises:
+        RuntimeError: Consul 客户端未初始化。
+    """
     global consul_client
     if not consul_client:
         raise RuntimeError("Consul 客户端未初始化，请先调用 init_app。")  # 中文报错

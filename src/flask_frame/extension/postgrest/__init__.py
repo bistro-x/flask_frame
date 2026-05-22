@@ -1,15 +1,29 @@
+"""
+PostgREST 代理插件。
+将未匹配路由的请求转发到 PostgREST 服务（远程或本地数据库）。
+支持三种模式：
+  - PROXY_LOCAL=True: 本地模式，直接查询数据库（绕过 PostgREST）
+  - PROXY_CUSTOM=True: 自定义模式，不自动拦截请求
+  - 默认: 远程模式，转发到 PROXY_SERVICE_URL
+"""
 from flask import request
 import requests
 from ...api.response import Response
 from ...api.request import proxy
 import os
 
-flask_app = None  # 全局应用
-server_url = None  # 服务地址
-proxy_local = None  # 指定代理地址
+flask_app = None
+server_url = None
+proxy_local = None
 
 
 def init_app(app):
+    """
+    初始化 PostgREST 代理，根据配置选择代理模式并注册 before_request 钩子。
+    
+    Args:
+        app: Flask 应用实例，需配置 PROXY_SERVICE_URL 或 PROXY_LOCAL。
+    """
     global flask_app, server_url, proxy_local
     flask_app = app
     server_url = flask_app.config.get("PROXY_SERVICE_URL") or os.environ.get("PROXY_SERVICE_URL", "http://postgrest:3000")  # 代理服务地址
@@ -46,15 +60,19 @@ def init_app(app):
 
 def proxy_request(method="GET", url="", headers=None, params=None, includ_schema_prefix=True, custom_server_url=None, **kwargs):
     """
-    创建代理请求
-    :param method:
-    :param url:
-    :param headers:
-    :param params:
-    :param includ_schema_prefix: 是否在 URL 中包含 schema 前缀，并设置相应的 Profile 报头
-    :param server_url: 可选的服务器地址，默认使用全局配置的 server_url
-    :param kwargs:
-    :return:
+    发送请求到 PostgREST 服务（远程或本地）。
+    
+    Args:
+        method: HTTP 方法，默认 GET。
+        url: 请求路径，如 /table。
+        headers: 请求头字典。
+        params: URL 查询参数字典。
+        includ_schema_prefix: 是否从 URL 提取 schema 前缀并设置 Profile 头。
+        custom_server_url: 自定义服务地址，为空时使用全局配置。
+        **kwargs: 其他 requests.request 参数（如 json, data）。
+    
+    Returns:
+        Response: 标准响应封装对象。
     """
     global flask_app
 
@@ -140,13 +158,14 @@ def proxy_request(method="GET", url="", headers=None, params=None, includ_schema
     )
 
 def proxy_response(response):
-    """转换代理回应
-
+    """
+    将 requests.Response 转换为 (content, status_code, headers) 元组，过滤传输编码头。
+    
     Args:
-        response (_type_): _description_
-
+        response: requests.Response 对象。
+    
     Returns:
-        _type_: _description_
+        tuple: (响应内容, 状态码, 过滤后的头部字典)。
     """
 
     headers = {
@@ -159,10 +178,12 @@ def proxy_response(response):
 
 
 def is_send_proxy():
-    """是否发送请求到代理服务
-
+    """
+    判断当前请求是否应转发到代理服务。
+    规则：有 url_rule 且未设置 proxy 头的请求不转发（表示已匹配到应用路由）。
+    
     Returns:
-        boolean: 判断结果
+        bool: 需要转发返回 True，否则返回 False。
     """
     global flask_app, server_url
 
@@ -173,13 +194,22 @@ def is_send_proxy():
     return True
 
 
-def local_run(
-    schema=None, method="GET", url="", headers=None, params=None, data=[], **kwargs
-):
-    """本地运行数据库操作
-
+def local_run(schema=None, method="GET", url="", headers=None, params=None, data=[], **kwargs):
+    """
+    本地模式：直接将 PostgREST 风格的查询转换为 SQL 并执行。
+    支持 SELECT（含分页、计数）、INSERT/UPDATE/DELETE（含 RETURNING）。
+    
+    Args:
+        schema: 数据库 schema，为空时使用 PRODUCT_KEY。
+        method: HTTP 方法。
+        url: 请求路径，如 /table。
+        headers: 请求头（用于判断 Accept 类型）。
+        params: URL 查询参数（PostgREST 风格）。
+        data: 请求体（JSON 数据）。
+        **kwargs: 其他参数（未使用）。
+    
     Returns:
-        _type_: data, headers
+        tuple: (数据列表或字典, 响应头字典)，响应头可能包含 Content-Range。
     """
     global flask_app
 

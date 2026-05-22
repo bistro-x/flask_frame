@@ -1,3 +1,12 @@
+"""
+自定义异常模块。
+提供三种异常类型：
+  - ResourceError: 服务调用异常，用于 HTTP 错误响应
+  - CallException: 第三方调用异常
+  - BusiError: 已废弃，请使用 ResourceError 替代
+
+所有异常均继承 HTTPException，可直接被 Flask 的 errorhandler 捕获。
+"""
 from flask import request, json
 from werkzeug.exceptions import HTTPException
 from flask_frame.annotation import deprecated
@@ -5,13 +14,28 @@ from flask_frame.annotation import deprecated
 
 class ResourceError(HTTPException):
     """
-    服务调用异常
-    用于处理服务端调用错误，返回标准化的错误信息和错误码。
+    服务调用异常，用于返回标准化的错误响应。
+    
+    Attributes:
+        code: HTTP 状态码，默认 500。
+        error_code: 业务错误码，默认与 HTTP 状态码相同。
+        data: 附加数据（可选）。
     """
-    code = 500  # http代码
-    error_code = 500  # 标准错误代码
+
+    code = 500
+    error_code = 500
 
     def __init__(self, description=None, response=None, error_code=None, code=None, data=None):
+        """
+        初始化异常。
+        
+        Args:
+            description: 错误描述信息。
+            response: 原始响应对象（可从中提取 error_code）。
+            error_code: 业务错误码（覆盖默认值）。
+            code: HTTP 状态码（覆盖默认值）。
+            data: 附加数据，会包含在响应体中。
+        """
         super(ResourceError, self).__init__(description, response)
         self.code = code or self.code
         self.error_code = self.code
@@ -41,7 +65,12 @@ class ResourceError(HTTPException):
     
 class CallException(HTTPException):
     """
-    第三方调用异常
+    第三方服务调用异常。
+    
+    Attributes:
+        code: HTTP 状态码，默认 500。
+        msg: 错误信息。
+        error_code: 业务错误码，默认 1001。
     """
 
     code = 500
@@ -49,6 +78,15 @@ class CallException(HTTPException):
     error_code = 1001
 
     def __init__(self, msg=None, error_code=None, code=None, **kwargs):
+        """
+        初始化异常。
+        
+        Args:
+            msg: 错误信息。
+            error_code: 业务错误码。
+            code: HTTP 状态码。
+            **kwargs: 其他参数。
+        """
         if code:
             self.code = code
         if error_code:
@@ -67,7 +105,15 @@ class CallException(HTTPException):
         return [("Content-Type", "application/json")]
 
 class BusiError(HTTPException):
-    """deprecated"""
+    """
+    已废弃：业务异常类，请使用 ResourceError 替代。
+    
+    Attributes:
+        code: HTTP 状态码，默认 500。
+        msg: 错误信息。
+        traceback: 堆栈追踪信息。
+        error_code: 业务错误码，默认 1001。
+    """
 
     code = 500
     msg = "this is message!"
@@ -75,6 +121,16 @@ class BusiError(HTTPException):
     error_code = 1001
 
     def __init__(self, msg=None, traceback=None, error_code=None, code=None, **kwargs):
+        """
+        初始化异常。
+        
+        Args:
+            msg: 错误信息。
+            traceback: 堆栈追踪。
+            error_code: 业务错误码。
+            code: HTTP 状态码。
+            **kwargs: 其他参数。
+        """
         if code:
             self.code = code
         if error_code:

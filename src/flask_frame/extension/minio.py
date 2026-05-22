@@ -1,16 +1,31 @@
+"""
+MinIO 文件存储插件。
+提供文件上传、下载、删除、存在性检查等功能。
+支持两种上传方式：
+  - upload_file_to_minio: 从本地文件上传
+  - upload_bytes_to_minio: 从内存字节流上传
+"""
 import os
+from io import BytesIO
 from urllib.parse import urljoin, urlparse
 from minio import Minio
 
-# MinIO 客户端实例
 client = None
-# MinIO 文件访问基础 URL
 access_url = None
-# MinIO 服务基础 URL
 service_url = None
 
 
 def init_app(app):
+    """
+    初始化 MinIO 客户端。
+    
+    Args:
+        app: Flask 应用实例，需配置 MINIO_SERVER、MINIO_ACCESS_KEY、MINIO_SECRET_KEY。
+             可选配置：MINIO_USE_HTTPS、MINIO_ACCESS_URL。
+    
+    Raises:
+        Exception: 缺少必要配置时抛出。
+    """
     """
     初始化 MinIO 客户端，读取 Flask 配置中的 MinIO 相关参数。
     优先从 app.config 获取，若未设置则从环境变量读取。
@@ -61,28 +76,19 @@ def init_app(app):
 
 def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None):
     """
-    上传文件到 MinIO 指定存储桶。
-
+    上传本地文件到 MinIO。
+    
     Args:
-        bucket_name (_type_): 存储桶名称
-        file_path (_type_): 本地文件路径
-        object_name (_type_): 存储到 MinIO 的对象名
-        content_type (str, optional): 文件 MIME 类型
-            # 常见选项:
-            # - "application/pdf"
-            # - "image/png"
-            # - "image/jpeg"
-            # - "application/msword"
-            # - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            # - "application/vnd.ms-excel"
-            # - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            # - "application/zip"
-            # - "text/plain"
-            # - "application/octet-stream"
-            # 也可用 mimetypes.guess_type(file_path)[0] 自动推断
-
+        bucket_name: 存储桶名称，不存在时自动创建。
+        file_path: 本地文件路径。
+        object_name: MinIO 中的对象名（路径）。
+        content_type: MIME 类型，为空时自动推断。
+    
     Returns:
-        str: 文件在 MinIO 的相对路径
+        str: 文件相对路径，格式为 /{bucket_name}/{object_name}。
+    
+    Raises:
+        Exception: 上传失败时抛出。
     """
     global client
 
@@ -113,13 +119,13 @@ def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None)
 
 def get_access_url(file_path):
     """
-    获取文件的完整访问地址
-
+    获取文件的完整访问 URL。
+    
     Args:
-        file_path (_type_): 文件的路径地址（相对路径）
-
+        file_path: 文件相对路径，如 /bucket/object 或 bucket/object。
+    
     Returns:
-        str: 完整访问 URL
+        str: 完整的 HTTP/HTTPS 访问地址。
     """
     # 去掉前导 /，避免覆盖 access_url 的路径前缀
     path = (file_path or "").lstrip("/")
@@ -128,14 +134,14 @@ def get_access_url(file_path):
 
 def convert_to_access_url(full_url: str) -> str:
     """
-    将任意完整URL的域名替换为配置的 access_url，保留原 path 与 query。
-    常用于将 MinIO 预签名URL（原服务域名）转换为代理域名访问。
-
+    将任意 MinIO URL 的域名替换为配置的 access_url。
+    常用于将 MinIO 预签名 URL（内网域名）转换为外网可访问的代理域名。
+    
     Args:
-        full_url (str): 原始完整URL
-
+        full_url: 原始完整 URL。
+    
     Returns:
-        str: 使用 access_url 作为域名的完整URL
+        str: 替换域名后的完整 URL。
     """
     if not full_url:
         return full_url
@@ -150,13 +156,16 @@ def convert_to_access_url(full_url: str) -> str:
 
 def delete_file_from_minio(file_path):
     """
-    从 MinIO 删除指定对象文件
-
+    从 MinIO 删除指定文件。
+    
     Args:
-        file_path (str): MinIO 文件路径（格式: /bucket_name/object_name 或 bucket_name/object_name）
-
+        file_path: 文件路径，格式为 /bucket/object 或 bucket/object。
+    
     Returns:
-        bool: 删除成功返回 True，否则抛出异常
+        bool: 删除成功返回 True。
+    
+    Raises:
+        Exception: 删除失败或路径格式错误时抛出。
     """
     global client
 
@@ -175,25 +184,21 @@ def delete_file_from_minio(file_path):
         raise Exception("从 MinIO 删除文件失败:" + str(e))
 
 
-def upload_bytes_to_minio(
-    data_bytes,
-    object_name,
-    bucket_name="datacenter",
-    content_type=None,
-):
-    """上传字节流到MinIO
-
+def upload_bytes_to_minio(data_bytes, object_name, bucket_name="datacenter", content_type=None):
+    """
+    上传字节流到 MinIO。
+    
     Args:
-        data_bytes (bytes): 要上传的字节数据
-        object_name (str): 对象名称
-        bucket_name (str): 存储桶名称，默认为 'datacenter'
-        content_type (str): 内容类型，可选
-
+        data_bytes: 要上传的字节数据（bytes 类型）。
+        object_name: MinIO 中的对象名（路径）。
+        bucket_name: 存储桶名称，默认为 'datacenter'。
+        content_type: MIME 类型，可选。
+    
     Returns:
-        str: 相对URL路径
-
+        str: 文件相对路径，格式为 /{bucket_name}/{object_name}。
+    
     Raises:
-        Exception: 上传失败时抛出异常
+        Exception: 上传失败时抛出。
     """
     global client
     from io import BytesIO
@@ -226,17 +231,17 @@ def upload_bytes_to_minio(
 
 def download_file_from_minio(file_path, target_file_path=None):
     """
-    根据 MinIO 路径下载文件内容并保存到本地
-
+    从 MinIO 下载文件到本地。
+    
     Args:
-        file_path (str): MinIO 文件路径（格式: /bucket_name/object_name 或 bucket_name/object_name）
-        target_file_path (str): 本地保存路径，若为 None 则自动生成临时文件
-
+        file_path: MinIO 文件路径，格式为 /bucket/object 或 bucket/object。
+        target_file_path: 本地保存路径，为空时自动生成临时文件。
+    
     Returns:
-        str: 本地文件路径
-
+        str: 本地文件路径。
+    
     Raises:
-        Exception: 下载失败时抛出异常
+        Exception: 下载失败或路径格式错误时抛出。
     """
     global client
     from flask_frame.util.file import create_temp_file_path
@@ -278,13 +283,16 @@ def download_file_from_minio(file_path, target_file_path=None):
 
 def file_exists(file_path):
     """
-    检查 MinIO 文件是否存在
-
+    检查 MinIO 文件是否存在。
+    
     Args:
-        file_path (str): MinIO 文件路径（格式: /bucket_name/object_name 或 bucket_name/object_name）
-
+        file_path: 文件路径，格式为 /bucket/object 或 bucket/object。
+    
     Returns:
-        bool: 存在返回 True，否则 False
+        bool: 存在返回 True，否则返回 False。
+    
+    Raises:
+        Exception: 路径格式错误或非 "不存在" 类型的 S3 错误时抛出。
     """
     global client
     from minio.error import S3Error

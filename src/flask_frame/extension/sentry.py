@@ -1,3 +1,8 @@
+"""
+Sentry 错误监控插件。
+同时支持 SENTRY_DSN（推荐）和 SENTRY_DS（兼容旧版）两个配置键名。
+会自动扫描所有 SENTRY_ 前缀的配置项作为初始化参数传入 sentry_sdk.init()。
+"""
 # -*- coding:utf-8 -*-
 import logging
 import sentry_sdk
@@ -6,6 +11,8 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 
 def init_app(flask_app):
+    """初始化 Sentry SDK，未配置 DSN 时静默跳过"""
+    # 优先使用标准键名 SENTRY_DSN，兼容旧版 SENTRY_DS
     dsn = flask_app.config.get("SENTRY_DSN") or flask_app.config.get("SENTRY_DS")
 
     if not dsn:

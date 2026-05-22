@@ -1,3 +1,12 @@
+"""
+数据库插件（SQLAlchemy + 自动迁移）。
+核心功能：
+  - 自动 URL 编码密码中的特殊字符
+  - 支持 GaussDB 版本兼容
+  - 启动时自动执行 SQL 迁移脚本（版本号通过文件名管理）
+  - 自动 reflect 数据库表结构到 db.Model
+  - 支持多 schema（逗号分隔）
+"""
 import json
 import os
 import random
@@ -18,14 +27,16 @@ current_app = None
 
 
 def json_dumps(*data, **kwargs):
+    """JSON 序列化，确保非 ASCII 字符正确输出"""
     return json.dumps(*data, ensure_ascii=False, **kwargs)
 
 
 def init_app(app):
-    """初始化数据库
-
+    """
+    初始化数据库连接和自动迁移。
+    
     Args:
-        app (flask app): _description_
+        app: Flask 应用实例，需配置 SQLALCHEMY_DATABASE_URI 和 DB_SCHEMA。
     """
 
     global db, db_schema, BaseModel, AutoMapModel, current_app
@@ -157,10 +168,14 @@ def init_app(app):
 
 def compare_version(version1: str, version2: str) -> int:
     """
-    版本号管理 版本1 - 版本2
-    :param version1: 版本1
-    :param version2: 版本2
-    :return: 版本距离
+    比较两个版本号的大小。
+    
+    Args:
+        version1: 版本号1，如 "1.0.0" 或文件路径（自动提取文件名）。
+        version2: 版本号2。
+    
+    Returns:
+        int: 大于返回 1，小于返回 -1，相等返回 0。
     """
     version1 = version1.split("/")[-1]
 
@@ -172,6 +187,16 @@ def compare_version(version1: str, version2: str) -> int:
 
 
 def file_compare_version(file1: str, file2: str) -> int:
+    """
+    比较两个 SQL 文件名对应的版本号。
+    
+    Args:
+        file1: 文件路径1。
+        file2: 文件路径2。
+    
+    Returns:
+        int: 版本比较结果。
+    """
     return compare_version(
         os.path.splitext(os.path.split(file1)[1])[0],
         os.path.splitext(os.path.split(file2)[1])[0],
@@ -180,11 +205,14 @@ def file_compare_version(file1: str, file2: str) -> int:
 
 def init_db(db, schema, file_list, version_file_list):
     """
-    初始化数据库到当前
-    :param db: 数据库实例
-    :param schema: schema
-    :param file_list: 文件列表
-    :param version_file_list: 版本文件列表
+    初始化数据库结构，执行初始化脚本和版本迁移脚本。
+    使用分布式锁保证多实例部署时只执行一次。
+    
+    Args:
+        db: SQLAlchemy 实例。
+        schema: 数据库 schema 名称。
+        file_list: 初始化 SQL 脚本路径列表（DB_INIT_FILE）。
+        version_file_list: 版本迁移脚本路径列表，按文件名版本号排序执行。
     """
     with current_app.app_context():
 
@@ -275,10 +303,13 @@ def init_db(db, schema, file_list, version_file_list):
 
 def update_db(db, schema, file_list):
     """
-    初始化数据库到当前
-    :param db: 数据库实例
-    :param schema: schema
-    :param file_list: 文件列表
+    执行开发阶段的更新脚本（DB_UPDATE_FILE）。
+    通过分布式锁 + 文件锁双重保护，确保多实例环境中仅执行一次。
+    
+    Args:
+        db: SQLAlchemy 实例。
+        schema: 数据库 schema 名称。
+        file_list: 更新 SQL 脚本路径列表。
     """
     with current_app.app_context():  # 添加这一行
         lock = get_lock("update-db")
@@ -331,12 +362,16 @@ def update_db(db, schema, file_list):
 @retry(reraise=True, stop=stop_after_attempt(2))
 def run_sql(file_path, db, first_sql):
     """
-    对数据库云信脚本文件
-    :param file_path: 文件路径
-    :param db: 数据库对象
-    :param first_sql: 估计头部语句
+    执行 SQL 脚本文件，支持存储函数（$$...$$）的完整解析。
+    
+    Args:
+        file_path: SQL 脚本文件路径。
+        db: SQLAlchemy 实例。
+        first_sql: 执行前预设的 SQL 语句（如设置 search_path）。
+    
+    Raises:
+        Exception: 脚本执行失败时抛出，自动回滚事务。
     """
-    # Create an empty command string
     db.session.execute(text(first_sql))
 
     sql_command = ""
@@ -372,11 +407,14 @@ def run_sql(file_path, db, first_sql):
 
 
 def sql_concat(file_path, param):
-    """
-    sql 语句拼接
-    :param file_path: 文件路径
-    :param param: 传入参数
-    :return: 返回完整的 sql 语句
+    """SQL 语句模板拼接, 支持 --{变量名} 格式的条件插入.
+
+    Args:
+        file_path: SQL 模板文件路径.
+        param: 参数字典, 键名对应模板中的 --{变量名} 标记.
+
+    Returns:
+        str: 拼接后的完整 SQL 语句.
     """
     sql_command = ""
 

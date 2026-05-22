@@ -1,3 +1,12 @@
+"""
+Flask 应用工厂模块。
+create_app(config) 是框架的入口函数，负责：
+  - 创建 Flask 应用实例
+  - 加载配置
+  - 初始化插件
+  - 注册全局钩子（teardown_request、errorhandler）
+  - 添加默认路由（健康检查、日志下载、性能分析）
+"""
 import os
 from http import HTTPStatus
 import flask
@@ -12,13 +21,16 @@ from .util.json import AppEncoder
 
 def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     """
-    创建并初始化 Flask 应用实例。
-
-    :param config: 配置字典，包含所有环境的配置。
-    :param flask_config_name: 选用的配置名称，默认为 "default"。
-    :param config_custom: 额外的自定义配置。
-    :param kwargs: 其他可选参数。
-    :return: Flask 应用实例。
+    Flask 应用工厂函数。
+    
+    Args:
+        config: 配置字典，包含多环境配置（如 {"default": {...}, "production": {...}}）。
+        flask_config_name: 要加载的配置键名，为空时读取 FLASK_CONFIG 环境变量或 "default"。
+        config_custom: 额外的自定义配置，会合并到已加载配置中。
+        **kwargs: 其他参数（暂未使用）。
+    
+    Returns:
+        Flask: 已初始化的 Flask 应用实例。
     """
     # 创建 Flask 应用实例
     app = Flask(__name__, root_path=os.getcwd())  # root_path 指定应用根目录

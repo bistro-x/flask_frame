@@ -1,4 +1,8 @@
-# 当结果为result对象列表时，result有key()方法
+"""
+请求参数提取和代理转发模块。
+get_request_param(): 统一合并 JSON、form、files、URL 参数。
+proxy(): 代理请求到远程服务，支持 PostgREST 风格的 schema 前缀。
+"""
 from flask import request
 import requests
 
@@ -7,19 +11,19 @@ from .response import Response
 
 def get_request_param():
     """
-    获取请求发送的所有参数，支持 JSON、表单、文件和 URL 参数。
-
-    参数说明：
-      无（从 flask.request 中读取当前请求）
-
-    返回值：
-      tuple: (params_dict, json_list_or_none)
-        - params_dict (dict): 合并后的参数，优先包含 JSON(body) 内容（若存在且非列表），然后合并 form、files、query params。
-        - json_list_or_none (list|None): 当请求体本身是一个 JSON 列表时返回该列表（用于批量场景），否则返回 None。
-
-    说明：
-      - 当请求体是一个 JSON 列表时，函数把 JSON 列表作为第二返回值，并把表单/文件/URL 参数作为第一个返回值。
-      - 当请求体是普通 JSON 对象或无 JSON 时，返回合并后的参数字典，第二个返回值为 None。
+    提取当前请求的所有参数，合并为一个字典。
+    
+    支持的参数来源（按优先级合并）：
+      - JSON body（如果存在且不是列表）
+      - form data
+      - files
+      - URL query 参数
+    
+    特殊处理：当 JSON body 是列表时（批量请求场景），返回 (参数字典, 列表) 元组。
+    
+    Returns:
+        tuple: (合并后的参数字典, JSON 列表或 None)。
+            当请求体是 JSON 列表时，第二个元素为该列表，否则为 None。
     """
     json_data = request.get_json(silent=True)
 
@@ -41,28 +45,18 @@ def get_request_param():
 
 
 def proxy(server_url, response_standard=True, includ_schema_prefix=False):
-    """代理请求到另一个服务
-
-    参数说明：
-      server_url (str): 目标服务的基础 URL（例如 "http://localhost:3000"），在转发时会与 path 拼接。
-      response_standard (bool): 是否使用本服务的标准响应封装。
-          - True: 返回统一的 Response.make_flask_response()（包含 code/message/data 等结构）。
-          - False: 直接返回目标服务的原始 (text, status_code) 元组，便于简单透传。
-      includ_schema_prefix (bool): 是否从请求路径中提取 schema 前缀并注入对应的 Profile 报头。
-          - True: 从请求路径的第一个段提取 schema（例如 /schema/items -> schema）。
-              * GET/HEAD 请求会把该 schema 放入 Accept-Profile。
-              * 其他方法会把该 schema 放入 Content-Profile。
-            同时转发时会把路径中的 schema 前缀去掉（/schema/items -> /items）。
-          - False: 不做 schema 前缀提取或自动注入。
-
-    返回值：
-      Flask Response 或 tuple:
-        - 若 response_standard=True：返回 Response.make_flask_response()（Flask Response 对象）。
-        - 若 response_standard=False：返回 (response.text, response.status_code)。
-
-    说明（中文）：
-      - 函数会基于 incoming request 构建要转发的 headers（并可在 includ_schema_prefix 模式下注入 Accept-Profile/Content-Profile），
-        将请求 body（json/data）与 query params 一并转发到目标服务。
+    """
+    代理当前请求到远程服务（如 PostgREST）。
+    
+    Args:
+        server_url: 目标服务基础 URL，如 "http://postgrest:3000"。
+        response_standard: 是否使用 Response 标准封装。True 返回 Flask Response，
+            False 返回 (text, status_code) 元组用于透传。
+        includ_schema_prefix: 是否从 URL 提取 schema 前缀（第一个路径段）。
+            提取后会从转发路径中去掉，并设置 Accept-Profile 或 Content-Profile 头。
+    
+    Returns:
+        flask.Response 或 tuple: 根据 response_standard 返回不同格式。
     """
 
     # 调用远程服务
@@ -143,25 +137,20 @@ def proxy(server_url, response_standard=True, includ_schema_prefix=False):
     ).make_flask_response()
 
 
-def proxy_request(
-    server_url=None, path="", method="GET", headers=None, params=None, **kwargs
-):
-    """创建代理请求
-
-    参数说明：
-      server_url (str): 目标服务基础 URL（例如 "http://localhost:3000"），不应为 None。
-      path (str): 要转发的路径，建议以 '/' 开头（例如 '/items'）。
-      method (str): HTTP 方法名称（'GET','POST' 等）。
-      headers (dict 或 可迭代): 要发送的 HTTP 报头；若为非 dict（例如 headers 列表），函数会转换为 dict。
-      params (dict): URL query 参数（可选）。
-      **kwargs: 其他会直接传给 requests.request 的参数（例如 json, data, files 等）。
-
-    返回值：
-      requests.Response: requests 库返回的响应对象，调用方会根据需要进行标准化封装或直接透传。
-
-    说明（中文）：
-      - 函数会对传入的 headers 做一次拷贝以避免修改原对象（兼容 dict 或 iterable）。
-      - 函数会删除 Authorization 报头（若存在），以避免泄露本地凭据或传递 None 字符串到目标服务。
+def proxy_request(server_url=None, path="", method="GET", headers=None, params=None, **kwargs):
+    """
+    发送代理请求到指定服务。自动移除 Authorization 头以避免泄露凭据。
+    
+    Args:
+        server_url: 目标服务基础 URL。
+        path: 要转发的路径，如 /items。
+        method: HTTP 方法。
+        headers: 请求头（dict 或可迭代键值对），会被拷贝后修改。
+        params: URL 查询参数字典。
+        **kwargs: 直接传给 requests.request 的参数（如 json, data, files）。
+    
+    Returns:
+        requests.Response: 原始响应对象。
     """
     # 本地代理
     send_headers = {}

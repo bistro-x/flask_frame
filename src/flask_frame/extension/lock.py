@@ -1,3 +1,8 @@
+"""
+分布式锁插件：优先使用 Redis 分布式锁，未配置 Redis 时自动降级为本地文件锁。
+降级策略：lock 模块独立初始化 Redis 客户端（与 redis 插件解耦），避免循环依赖。
+使用方式：get_lock(name, timeout) 根据当前锁类型自动返回对应的锁实例。
+"""
 import os
 import time
 import redis
@@ -14,6 +19,7 @@ redis_client = None
 
 
 def init_app(app):
+    """初始化锁服务，配置 Redis 前缀和客户端。未配置 REDIS_URL 时使用文件锁。"""
     global redis_client, lock_type, lock_index
 
     lock_index = app.config.get("PRODUCT_KEY")+":lock"
@@ -36,6 +42,7 @@ def init_app(app):
         # redis 主从集群 master name
         redis_master_name = app.config.get("REDIS_MASTER_NAME", None)
 
+        # 支持 Sentinel 高可用集群，URL 格式：sentinel://host:port;sentinel://host:port
         if redis_url.startswith("sentinel"):
             sentinel_options = {"service_name": redis_master_name}
             sentinels = []
@@ -67,6 +74,8 @@ def init_app(app):
 
 
 class Lock:
+    """锁工具类，提供文件锁和 Redis 锁的统一接口"""
+
     @staticmethod
     def get_file_lock(lock_name="FLASK_LOCK", timeout=600):
 
@@ -74,6 +83,7 @@ class Lock:
 
     @staticmethod
     def get_redis_lock(lock_name, timeout=600):
+        """获取 Redis 分布式锁，自动添加 PRODUCT_KEY 前缀避免冲突"""
         global redis_client, lock_index
 
         if lock_index:
@@ -84,6 +94,7 @@ class Lock:
 
     @staticmethod
     def clear():
+        """清除当前产品下所有锁（扫描并删除匹配 lock_index:* 的键）"""
         global lock_index
 
         cursor = 0  # 初始 cursor 值为整数 0
@@ -101,6 +112,7 @@ class Lock:
 
 
 def get_lock(lock_name, timeout=600):
+    """统一获取锁入口：根据 lock_type 自动选择 Redis 锁或文件锁"""
     global lock_type, redis_client
 
     if lock_type == "redis_lock":

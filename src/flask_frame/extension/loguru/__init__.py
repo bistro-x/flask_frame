@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Loguru 日志系统插件。
+将 Flask/Celery/Gunicorn 的日志统一重定向到 Loguru。
+特性：
+  - 自动拦截标准 logging 并转发到 Loguru
+  - 支持文件日志轮转和保留策略
+  - 使用文件锁替代 enqueue 模式（兼容 gevent）
+"""
 import logging
 import os
 import sys
@@ -7,14 +15,15 @@ from loguru import logger
 
 
 def configure_celery_logging(app, intercept_handler):
-    """配置 Celery 的日志拦截，将 Celery 日志重定向到 Loguru
+    """
+    配置 Celery 日志拦截，将 Celery 的 logging 重定向到 Loguru。
     
     Args:
-        app: Flask 应用实例，用于记录配置状态
-        intercept_handler: 用于拦截日志的处理器实例
+        app: Flask 应用实例。
+        intercept_handler: 拦截处理器实例。
     
     Returns:
-        bool: 配置成功返回True，失败返回False
+        bool: 配置成功返回 True，失败返回 False。
     """
     try:
         # 配置 Celery 主日志记录器
@@ -38,11 +47,12 @@ def configure_celery_logging(app, intercept_handler):
         return False
     
 def _set_logger(app, config):
-    """设置日志记录器的具体配置
+    """
+    配置日志记录器的核心逻辑：设置输出格式、文件路径、轮转策略，并将 Flask/Gunicorn 日志拦截到 Loguru。
     
     Args:
-        app: Flask应用实例
-        config: 日志配置字典
+        app: Flask 应用实例。
+        config: 日志配置字典，包含 LOG_PATH、LOG_NAME、LOG_LEVEL 等键。
     """
     # 导入项目相关模块
     from .compress import zip_logs
@@ -85,9 +95,9 @@ def _set_logger(app, config):
     )
 
     class InterceptHandler(logging.Handler):
-        """拦截标准日志库的日志并转发到Loguru
-        
-        将来自Python标准日志库的日志记录拦截并重定向到Loguru处理
+        """
+        拦截标准 logging 的日志并转发到 Loguru。
+        使用文件锁保证线程安全（替代 Loguru 的 enqueue 模式，避免与 gevent 冲突）。
         """
         def emit(self, record):
             """处理拦截的日志记录
@@ -146,12 +156,11 @@ def _set_logger(app, config):
     configure_celery_logging(app, intercept_handler)
     
 def init_app(app):
-    """初始化Flask应用的Loguru日志系统
-    
-    配置日志系统，设置适当的处理程序、格式和轮转策略
+    """
+    初始化 Loguru 日志系统，合并默认配置和 app.config 中的自定义配置。
     
     Args:
-        app: 需要配置日志的Flask应用实例
+        app: Flask 应用实例，可通过配置覆盖 LOG_LEVEL、LOG_PATH、LOG_NAME 等默认值。
     """
     # 导入项目特定模块
     from .compress import zip_logs

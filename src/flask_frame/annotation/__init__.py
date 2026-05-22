@@ -1,12 +1,24 @@
+"""
+装饰器模块。
+提供两种装饰器：
+  - deprecated: 标记已废弃的函数，调用时发出 DeprecationWarning
+  - profile: 性能分析装饰器，超过阈值时生成调用报告文件
+"""
 import warnings
 import functools
 from pyinstrument import Profiler
 
 
 def deprecated(func):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    """
+    标记函数已废弃的装饰器。调用时会发出 DeprecationWarning 提醒迁移。
+    
+    Args:
+        func: 要标记的函数。
+    
+    Returns:
+        function: 包装后的函数，调用时会发出警告。
+    """
 
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -25,8 +37,14 @@ def deprecated(func):
 
 def profile(timeout=1000):
     """
-    生成方法的调用性能报告
-    路径在 log下 prifle_方法名_时间搓
+    性能分析装饰器。当函数执行时间超过阈值时，生成调用报告文件。
+    仅在请求上下文中且 URL 参数不含 profile、且 PROFILE 配置为真时生效。
+    
+    Args:
+        timeout: 超时阈值（毫秒），超过此值才会生成报告。
+    
+    Returns:
+        function: 装饰器函数。
     """
 
     def decorate(func):

@@ -1,6 +1,12 @@
+"""
+响应封装模块。
+提供统一的 API 响应结构：{result, code, message, data, create_time}。
+Response.make_flask_response() 是标准的响应生成方法。
+JsonResult 及相关函数已废弃，请使用 Response 类替代。
+"""
 import decimal
 from datetime import date, time
-from datetime import datetime as cdatetime  # 有时候会返回datatime类型
+from datetime import datetime as cdatetime
 from http import HTTPStatus
 
 import flask
@@ -9,9 +15,8 @@ from flask_sqlalchemy.model import Model
 from marshmallow import fields, post_dump, INCLUDE
 from sqlalchemy import DateTime, Numeric, Date, Time
 
-from flask_frame.util.db import result_to_dict  # 有时又是DateTime
+from flask_frame.util.db import result_to_dict
 
-# 返回结果： 成功code=100； 失败：code=-1
 from ..annotation import deprecated
 from ..schema import BaseSchema
 
@@ -20,6 +25,8 @@ ERROR_CODE = -1
 
 
 class JsonResult:
+    """已废弃：旧版响应封装类，请使用 Response 类替代。"""
+    
     @deprecated
     def custom(code=None, msg=None, result=None):
         # 返回自定义结构的 JSON 响应
@@ -67,6 +74,15 @@ class JsonResult:
 
 @deprecated
 def queryToDict(models):
+    """
+    已废弃：将数据库查询结果转换为字典列表。请使用 util.db.result_to_dict 替代。
+    
+    Args:
+        models: 查询结果（Model 对象、列表或 Row 类型）。
+    
+    Returns:
+        dict 或 list: 转换后的字典或字典列表。
+    """
     if isinstance(models, list):
         if len(models) == 0:
             return []
@@ -94,7 +110,16 @@ def queryToDict(models):
 
 
 @deprecated
-def model_to_dict(model):  # 这段来自于参考资源
+def model_to_dict(model):
+    """
+    已废弃：将 SQLAlchemy Model 对象转换为生成器（键值对）。
+    
+    Args:
+        model: SQLAlchemy Model 实例。
+    
+    Yields:
+        tuple: (列名, 值)，datetime 和 Decimal 类型已序列化。
+    """
     for col in model.__table__.columns:
         if getattr(model, col.name) == None:
             value = None
@@ -134,29 +159,34 @@ def convert_datetime(value):
 
 
 class HttpResponseSchema(BaseSchema):
-    """错误格式"""
+    """响应数据的 Schema 定义，用于序列化 Response 对象。"""
 
-    data = fields.Raw()  # 数据 json or string or Boolean
-    code = fields.Str(missing="0")  # 统一编码 来自数据库 dict
+    data = fields.Raw()
+    code = fields.Str(missing="0")
     provider_code = fields.Str()
     service_id = fields.Integer()
-    message = fields.Str(missing="操作成功")  # 说明信息
-    detail = fields.Str()  # 说明信息
+    message = fields.Str(missing="操作成功")
+    detail = fields.Str()
     create_time = fields.DateTime()
 
     class Meta:
         unknown = INCLUDE
 
-    def load_by_key(
-        self,
-        code=0,
-        data=None,
-        message=None,
-        provider_code=None,
-        create_time=None,
-        **kwargs
-    ):
-        """构造函数"""
+    def load_by_key(self, code=0, data=None, message=None, provider_code=None, create_time=None, **kwargs):
+        """
+        通过关键字参数构造响应数据。
+        
+        Args:
+            code: 业务状态码。
+            data: 响应数据。
+            message: 提示信息。
+            provider_code: 提供商标识。
+            create_time: 创建时间。
+            **kwargs: 其他扩展字段。
+        
+        Returns:
+            dict: 加载后的数据字典。
+        """
         return self.load(
             {
                 code: code,
@@ -177,7 +207,20 @@ http_response_schema = HttpResponseSchema()
 
 
 class Response(object):
-    """返回对应"""
+    """
+    标准 API 响应封装类。
+    使用方式：Response(result=True, data={...}).make_flask_response()
+    
+    Attributes:
+        result: 操作是否成功（True/False）。
+        code: 业务状态码（成功默认 "0"）。
+        message: 提示信息（成功时默认"操作成功"）。
+        data: 响应数据（任意类型）。
+        detail: 详细信息（通常用于错误详情）。
+        http_status: HTTP 状态码（可选，失败时默认 500）。
+        headers: 响应头字典（可选）。
+        create_time: 响应生成时间（自动填充）。
+    """
 
     def __init__(
         self,
@@ -195,15 +238,21 @@ class Response(object):
         detail=None,
     ):
         """
-        构造函数
-        :param result:
-        :param data:
-        :param code:
-        :param message:
-        :param service_id: 服务ID
-        :param headers: 文件报头
-        :param http_status: 指定返回http代码
-        :param kwargs:
+        构造响应对象。
+        
+        Args:
+            result: 操作是否成功。
+            data: 响应数据。
+            code: 业务状态码。
+            message: 提示信息，为空时根据 result 自动填充。
+            provider_code: 提供商业务码。
+            task_id: 异步任务 ID。
+            response_time: 响应耗时。
+            service_id: 服务标识。
+            headers: 响应头字典。
+            create_time: 创建时间。
+            http_status: HTTP 状态码。
+            detail: 错误详情。
         """
 
         self.task_id = task_id  # 结果 True or False
@@ -235,12 +284,12 @@ class Response(object):
 
     def make_flask_response(self) -> flask.Response:
         """
-        创建flask相关的返回对象
-        :return:
-        """
-        """
-        创建flask相关的返回对象
-        :return:
+        生成标准 Flask Response 对象。
+        自动序列化 datetime 为北京时间字符串，Decimal 为 float。
+        失败时 http_status 默认 500，成功时默认 200。
+        
+        Returns:
+            flask.Response: 可直接返回给客户端的响应对象。
         """
         import json
         import pytz
