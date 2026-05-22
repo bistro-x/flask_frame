@@ -219,7 +219,7 @@ def init_db(db, schema, file_list, version_file_list):
                 current_app.logger.info("初始化数据库")
 
                 # 重新构建schema
-                from util.com_tool import str_to_bool
+                from flask_frame.util.com_tool import str_to_bool
 
                 # 获取配置数据
                 recreate_schema = False

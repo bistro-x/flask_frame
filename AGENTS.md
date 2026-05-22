@@ -21,7 +21,7 @@ python3.12 setup.py sdist bdist_wheel && twine upload dist/*   # PyPI 发布
 python3.12 -m pytest test/ -q
 ```
 
-> 注意：`test/` 目录下现有测试导入的模块（如 `src.flask_frame.util.algorithm`、`src.flask_frame.util.txt_compare`）已不存在，测试目前无法通过。运行前需确认模块是否存在。
+> 注意：`test/` 目录下的失效测试文件已清理。当前无可运行的测试用例。
 
 ## 架构要点
 
@@ -40,4 +40,5 @@ python3.12 -m pytest test/ -q
 - `DB_SCHEMA` 配置支持逗号分隔的多 schema（如 `"public,user_auth"`）。
 - `extension/database/__init__.py` 会自动 reflect 数据库表到 `db.Model`，无需手动定义所有 Model。
 - 数据库密码中的特殊字符会被自动 URL 编码。
+- `SENTRY_DSN`（兼容旧配置键 `SENTRY_DS`）配置同时支持两个键名
 - `lock` 插件优先使用 Redis 分布式锁，无 Redis 时降级为文件锁。

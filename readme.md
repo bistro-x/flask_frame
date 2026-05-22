@@ -71,7 +71,7 @@ nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuh
 |--------|----------|------|
 | REDIS_URL | redis, lock, celery | Redis 连接地址，支持 Sentinel 模式（`sentinel://...`） |
 | REDIS_MASTER_NAME | redis, lock, celery | Sentinel 模式的 master 名称 |
-| SENTRY_DS | sentry | Sentry DSN 地址 |
+| SENTRY_DSN / SENTRY_DS | sentry | Sentry DSN 地址（优先 SENTRY_DSN，兼容 SENTRY_DS） |
 | LOG_LEVEL | sentry, loguru | 日志级别 |
 | MINIO_SERVER | minio | MinIO 服务地址（host:port） |
 | MINIO_ACCESS_KEY | minio | MinIO Access Key |
@@ -146,5 +146,5 @@ src/flask_frame/
 
 - `tasks/` — 应用层代码，含权限初始化逻辑（`tasks/database.py`），非框架核心
 - `docker/` — Docker 构建文件
-- `test/` — 测试目录（当前测试引用的模块已不存在，需修复）
+- `test/` — 测试目录（失效测试已清理，当前无可运行用例）
 - `doc/` — 迁移文档
