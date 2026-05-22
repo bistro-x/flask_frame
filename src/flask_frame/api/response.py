@@ -316,7 +316,7 @@ class Response(object):
         return self.make_flask_response()
 
     @classmethod
-    def force_type(self, rv, environ=None):
+    def force_type(cls, rv, environ=None):
         if isinstance(rv, dict):
             rv = jsonify(rv)
-        return self.make_flask_response()
+        return cls.make_flask_response()

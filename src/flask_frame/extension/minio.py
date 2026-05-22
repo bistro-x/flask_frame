@@ -196,6 +196,7 @@ def upload_bytes_to_minio(
         Exception: 上传失败时抛出异常
     """
     global client
+    from io import BytesIO
 
     try:
         # 检查存储桶是否存在

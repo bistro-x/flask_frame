@@ -192,4 +192,4 @@ def get_service_url(service_name):
     address = node["Service"]["Address"]
     port = node["Service"]["Port"]
 
-    return f"http://{address}:{port}/"  # 返回完整的 URL    return f"http://{address}:{port}"
+    return f"http://{address}:{port}/"

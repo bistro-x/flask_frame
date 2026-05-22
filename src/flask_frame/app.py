@@ -29,7 +29,7 @@ def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
     app.config.from_object(config[config_name])  # 从配置字典中加载环境配置
     if config_custom:
         app.config.update(config_custom)  # 加载额外的自定义配置
-    app.config.FLASK_CONFIG = config_name
+    app.config["FLASK_CONFIG"] = config_name
 
     # 配置环境变量，允许不安全的传输（用于开发环境）
     os.environ["AUTHLIB_INSECURE_TRANSPORT"] = "1"

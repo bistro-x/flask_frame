@@ -1,7 +1,5 @@
 # -*- coding:utf-8 -*-
 # flask api 的日志记录模块
-from ..celery import celery
-
 flask_app = None
 
 
@@ -42,18 +40,31 @@ def init_app(app):
 
         return response
 
+    _register_celery_task()
 
-if celery:
+
+def _register_celery_task():
+    try:
+        from ..celery import celery
+    except ImportError:
+        return
+
+    if not celery:
+        return
 
     @celery.task(name="api_log_clean")
     def api_log_clean():
         """API日志清理"""
         from ..database import db
+        from sqlalchemy import text
 
         api_log_retention_days = flask_app.config.get("API_LOG_RETENTION_DAYS", 30)
-
-        # 日志保留时间
         schema = flask_app.config.get("DB_SCHEMA")
+
         db.session.execute(
-            f"delete from {schema}.api_log where create_time < (now() - interval '{api_log_retention_days} day');"
+            text(
+                f"DELETE FROM {schema}.api_log "
+                "WHERE create_time < now() - :days * interval '1 day'"
+            ),
+            {"days": api_log_retention_days},
         )
