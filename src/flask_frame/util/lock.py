@@ -1,3 +1,33 @@
+"""
+文件锁实现（跨平台），用于多进程/多线程场景下的互斥控制。
+
+锁机制说明：
+
+**Linux/macOS (POSIX 系统)：**
+    使用 fcntl.flock() 系统调用，这是内核级的文件锁：
+    - LOCK_EX: 排他锁，同一时间只有一个进程能持有
+    - 锁绑定到文件描述符，进程退出时内核自动释放（防止死锁）
+    - 多进程安全：不同进程竞争同一锁文件时，内核保证只有一个成功
+
+**Windows 系统：**
+    通过文件存在性模拟锁（非原子操作，存在短暂竞争窗口）：
+    - acquire(): 创建锁文件表示持有锁
+    - release(): 删除锁文件表示释放锁
+    - 防死锁机制：timeout 超时后自动释放，防止进程崩溃导致锁永久占用
+
+**多线程场景：**
+    本锁主要用于多进程互斥。同一进程内的多线程共享同一个 FileLock 实例时，
+    需要额外加 threading.Lock() 包装，否则线程间无法互斥。
+
+使用示例：
+    lock = FileLock("my_operation", timeout=60)
+    lock.acquire()
+    try:
+        # 执行需要互斥的操作
+        ...
+    finally:
+        lock.release()
+"""
 import os
 import time
 
@@ -7,109 +37,182 @@ SYSTEM = WINDOWS
 
 try:
     import fcntl
-
-    # 如果能导入 fcntl，说明运行环境为类 Unix（如 Linux / macOS）
-    # If fcntl is importable, treat the system as POSIX-like (Linux/macOS).
+    # fcntl 是 POSIX 系统特有的模块，导入成功说明运行在 Linux/macOS
     SYSTEM = LINUX
 except ModuleNotFoundError:
-    # Windows 系统没有 fcntl 模块；保留 SYSTEM 为 WINDOWS
-    # On Windows fcntl is not available; keep SYSTEM as WINDOWS.
+    # Windows 没有 fcntl，使用文件存在性模拟锁
     ...
 
 
 class FileLock(object):
     """
-    文件锁实现（跨平台），根据平台选择不同的锁实现策略。
+    跨平台文件锁，用于多进程互斥控制。
 
-    - Windows: 通过创建/删除锁文件表示持有锁（简单但存在短时竞争窗口）。
-    - Linux/类 Unix: 使用 fcntl.flock 对文件描述符加排他锁（更安全的进程间锁）。
+    实现原理：
+        Linux/macOS: fcntl.flock() 内核级锁，进程退出自动释放
+        Windows: 文件存在性模拟锁，timeout 防死锁
 
-    参数:
-        lock_file (str): 锁文件名（相对路径或文件名）。
-        timeout (int|float): 超时时间（秒），超过该时间会认为锁已过期并可重试获取。
+    Args:
+        lock_file: 锁文件名，建议使用操作名作为文件名（如 "init-db"、"update-cache"）。
+        timeout: 超时时间（秒），超过此时间视为锁过期可重新获取。
+                 用于防止进程崩溃后锁永久占用。
+
+    Example:
+        lock = FileLock("database_init", timeout=120)
+        if not lock.locked():
+            lock.acquire()
+            try:
+                init_database()
+            finally:
+                lock.release()
     """
 
-    def __init__(self, lock_file="FLASK_LOCK", timeout=600):
-        # 根据运行系统选择锁文件目录（Windows 使用环境变量 tmp，否则使用当前目录）
+    def __init__(self, lock_file: str = "FLASK_LOCK", timeout: int | float = 600):
+        # Windows 使用临时目录，Linux 使用当前目录
         if SYSTEM == WINDOWS:
-            lock_dir = os.environ["tmp"]
+            lock_dir = os.environ.get("tmp", "./")
         else:
             lock_dir = "./"
 
         self.lock_dir = lock_dir
         self.file = os.path.join(lock_dir, lock_file)
         self.timeout = timeout
-        self._fn = None
+        self._fn = None  # Linux 下持有文件描述符
 
-    def locked(self):
-        """判断锁是否已经被持有（存在且未超时）。返回 True/False。
+    def locked(self) -> bool:
+        """
+        判断锁是否被占用。
 
-        如果锁文件不存在则返回 False。
-        如果存在但已超过超时时间，则会尝试释放该锁并返回 False。
+        检查逻辑：
+            1. 锁文件不存在 → 未被占用
+            2. 锁文件存在但超过 timeout → 视为过期，自动释放后返回未被占用
+            3. 锁文件存在且未超时 → 被占用
+
+        Returns:
+            True: 锁被占用（其他进程持有）
+            False: 锁未被占用（可尝试 acquire）
+
+        Note:
+            超时机制防止进程崩溃导致的死锁：如果持有锁的进程崩溃未能 release，
+            超时后其他进程可重新获取锁。
         """
         if not os.path.exists(self.file):
             return False
 
-        # 检查锁文件是否超时，超时则释放并视为未被占用
         exist_seconds = get_file_exist_seconds(self.file)
         if exist_seconds > self.timeout:
+            # 锁已超时，强制释放（防止死锁）
             self.release()
             return False
 
-        # 锁文件存在且未超时，认为被占用
         return True
 
-    def acquire(self):
-        """请求并持有锁。阻塞直到获取到锁。"""
+    def acquire(self, blocking: bool = True) -> bool:
+        """
+        获取锁。
+
+        Args:
+            blocking: True 阻塞等待直到获取锁；False 立即返回结果。
+
+        Returns:
+            True: 成功获取锁
+            False: 获取失败（blocking=False 且锁被占用）
+
+        多进程竞争行为：
+            Linux (fcntl): 内核保证只有一个进程成功获取排他锁，
+                          其他进程阻塞等待或返回失败（LOCK_NB）
+            Windows: 轮询等待锁文件消失，存在短暂竞争窗口（非原子操作）
+
+        Example:
+            # 阻塞模式
+            lock.acquire()
+            # 非阻塞模式
+            if lock.acquire(blocking=False):
+                # 获取成功
+            else:
+                # 锁被占用，跳过操作
+        """
         if SYSTEM == WINDOWS:
-            # Windows 通过文件是否存在来判断锁
-            while self.locked():
-                time.sleep(1)  # 等待 1 秒后重试
-                continue
+            # Windows: 文件存在性模拟锁（非原子，有竞争窗口）
+            if blocking:
+                # 阻塞模式：轮询等待锁文件消失
+                while self.locked():
+                    time.sleep(1)
 
-            # 创建锁文件表示占用
+            # 创建锁文件表示持有锁
             with open(self.file, "w") as f:
-                f.write("1")
-        else:
-            # Linux/类 Unix 使用 fcntl 排他锁（fcntl.flock）
-            self._fn = open(self.file, "w")
-            fcntl.flock(self._fn.fileno(), fcntl.LOCK_EX)
-            # 标记文件内容（可选）
-            self._fn.write("1")
+                f.write("locked")
+            return True
 
-    def release(self):
-        """释放锁：关闭文件描述符（若有）并删除锁文件。"""
+        else:
+            # Linux/macOS: fcntl 内核级锁（原子操作，多进程安全）
+            self._fn = open(self.file, "w")
+            flag = fcntl.LOCK_EX if blocking else fcntl.LOCK_EX | fcntl.LOCK_NB
+            try:
+                # LOCK_EX: 排他锁，同一时间只有一个进程能持有
+                # LOCK_NB: 非阻塞模式，锁被占用时立即抛出 BlockingIOError
+                fcntl.flock(self._fn.fileno(), flag)
+            except (BlockingIOError, OSError):
+                # 非阻塞模式下锁被占用，返回 False
+                self._fn.close()
+                self._fn = None
+                return False
+            self._fn.write("locked")
+            return True
+
+    def release(self) -> None:
+        """
+        释放锁。
+
+        释放机制：
+            Linux: 关闭文件描述符，内核自动释放 fcntl 锁
+            Windows: 删除锁文件
+
+        Note:
+            进程退出时 Linux 内核会自动释放 fcntl 锁，即使未调用 release()。
+            这是 fcntl 相比 Windows 文件锁的关键优势——防止进程崩溃导致死锁。
+
+        Example:
+            lock.acquire()
+            try:
+                do_something()
+            finally:
+                lock.release()  # 确保释放
+        """
         try:
             if SYSTEM == WINDOWS:
-                # Windows 通过删除锁文件释放锁
                 if os.path.exists(self.file):
                     os.remove(self.file)
             else:
-                # POSIX：关闭文件句柄并删除锁文件（fcntl 锁随文件描述符关闭而释放）
+                # fcntl 锁随文件描述符关闭自动释放
                 if self._fn:
                     self._fn.close()
+                    self._fn = None
                 if os.path.exists(self.file):
                     os.remove(self.file)
-        except:
-            # 捕获并忽略任何清理时的异常（确保调用方不会因释放失败而崩溃）
+        except Exception:
+            # 忽略释放异常，防止调用方崩溃
             ...
 
-def get_file_exist_seconds(file_path):
+
+def get_file_exist_seconds(file_path: str) -> float:
     """
-    返回文件最后修改时间距现在的秒数（time.time() - mtime）。
+    计算文件存在时间（秒）。
 
-    在文件不存在或无法读取修改时间的情况下，返回 float('inf') 表示无法获取存在时间，
-    这样上层逻辑（例如 locked()）会认为锁已过期并可释放/重试获取。
+    Args:
+        file_path: 文件路径。
 
-    注意:
-    - 在多线程或并发情况下，文件可能瞬间被删除，调用 os.path.getmtime 时会抛出异常；
-      本函数捕获此类异常并返回 float('inf')，以增强鲁棒性。
+    Returns:
+        文件从最后修改到现在的秒数。
+        文件不存在或读取失败时返回 float('inf')（视为已过期）。
+
+    Note:
+        多进程并发场景下，文件可能被其他进程删除，导致 getmtime 抛异常。
+        返回 inf 可让上层 locked() 触发超时释放逻辑。
     """
     try:
         if not os.path.exists(file_path):
-            # 文件已不存在，视为超时（返回无穷大）
             return float("inf")
         return time.time() - os.path.getmtime(file_path)
     except (FileNotFoundError, PermissionError, OSError):
-        # 文件在检查或读取时被删除或不可访问，视为已过期
         return float("inf")
