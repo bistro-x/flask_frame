@@ -4,6 +4,8 @@ import requests
 from flask import request, Response
 from urllib.parse import urljoin
 
+__all__ = ["proxy"]
+
 
 def proxy(server_url):
     """

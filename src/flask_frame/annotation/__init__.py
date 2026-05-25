@@ -8,6 +8,8 @@ import warnings
 import functools
 from pyinstrument import Profiler
 
+__all__ = ["deprecated", "profile"]
+
 
 def deprecated(func):
     """

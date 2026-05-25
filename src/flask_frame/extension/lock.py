@@ -5,20 +5,29 @@
 """
 import os
 import time
-import redis
 import platform
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
+import redis
 from redis.sentinel import Sentinel
 
 from ..util.lock import FileLock
 
-lock_type = "file_lock"
-lock_index = None
-redis_client = None
+__all__ = ["Lock", "get_lock", "lock_type", "init_app"]
+
+if TYPE_CHECKING:
+    import redis as redis_module
+    from flask import Flask
+    redis_client: redis_module.Redis
+else:
+    redis_client = None
+
+lock_type: str = "file_lock"
+lock_index: str | None = None
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """初始化锁服务，配置 Redis 前缀和客户端。未配置 REDIS_URL 时使用文件锁。"""
     global redis_client, lock_type, lock_index
 
@@ -77,12 +86,11 @@ class Lock:
     """锁工具类，提供文件锁和 Redis 锁的统一接口"""
 
     @staticmethod
-    def get_file_lock(lock_name="FLASK_LOCK", timeout=600):
-
+    def get_file_lock(lock_name: str = "FLASK_LOCK", timeout: int = 600) -> FileLock:
         return FileLock(lock_name, timeout)
 
     @staticmethod
-    def get_redis_lock(lock_name, timeout=600):
+    def get_redis_lock(lock_name: str, timeout: int = 600) -> redis.lock.Lock:
         """获取 Redis 分布式锁，自动添加 PRODUCT_KEY 前缀避免冲突"""
         global redis_client, lock_index
 
@@ -91,13 +99,12 @@ class Lock:
 
         return redis_client.lock(lock_name, timeout=timeout)
 
-
     @staticmethod
-    def clear():
+    def clear() -> None:
         """清除当前产品下所有锁（扫描并删除匹配 lock_index:* 的键）"""
         global lock_index
 
-        cursor = 0  # 初始 cursor 值为整数 0
+        cursor = 0
         while True:
             cursor, keys = redis_client.scan(cursor=cursor, match=f"{lock_index}:*")
             if keys:
@@ -106,12 +113,12 @@ class Lock:
                 break
 
     @staticmethod
-    def lock_type():
+    def lock_type() -> str:
         global lock_type
         return lock_type
 
 
-def get_lock(lock_name, timeout=600):
+def get_lock(lock_name: str, timeout: int = 600) -> FileLock | redis.lock.Lock:
     """统一获取锁入口：根据 lock_type 自动选择 Redis 锁或文件锁"""
     global lock_type, redis_client
 

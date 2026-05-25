@@ -3,13 +3,16 @@
 get_request_param(): 统一合并 JSON、form、files、URL 参数。
 proxy(): 代理请求到远程服务，支持 PostgREST 风格的 schema 前缀。
 """
+from typing import Any
+
+import flask
 from flask import request
 import requests
 
 from .response import Response
 
 
-def get_request_param():
+def get_request_param() -> tuple[dict[str, Any], list[Any] | None]:
     """
     提取当前请求的所有参数，合并为一个字典。
     
@@ -44,7 +47,11 @@ def get_request_param():
         }, None
 
 
-def proxy(server_url, response_standard=True, includ_schema_prefix=False):
+def proxy(
+    server_url: str,
+    response_standard: bool = True,
+    includ_schema_prefix: bool = False,
+) -> flask.Response | tuple[str, int]:
     """
     代理当前请求到远程服务（如 PostgREST）。
     
@@ -137,7 +144,14 @@ def proxy(server_url, response_standard=True, includ_schema_prefix=False):
     ).make_flask_response()
 
 
-def proxy_request(server_url=None, path="", method="GET", headers=None, params=None, **kwargs):
+def proxy_request(
+    server_url: str | None = None,
+    path: str = "",
+    method: str = "GET",
+    headers: dict[str, str] | list[tuple[str, str]] | None = None,
+    params: dict[str, str] | None = None,
+    **kwargs: Any,
+) -> requests.Response:
     """
     发送代理请求到指定服务。自动移除 Authorization 头以避免泄露凭据。
     

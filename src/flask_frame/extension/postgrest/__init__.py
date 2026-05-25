@@ -6,18 +6,35 @@ PostgREST 代理插件。
   - PROXY_CUSTOM=True: 自定义模式，不自动拦截请求
   - 默认: 远程模式，转发到 PROXY_SERVICE_URL
 """
-from flask import request
+import os
+from typing import Any, TYPE_CHECKING
+
 import requests
+from flask import request
+
 from ...api.response import Response
 from ...api.request import proxy
-import os
 
-flask_app = None
-server_url = None
-proxy_local = None
+__all__ = [
+    "init_app",
+    "proxy_request",
+    "proxy_response",
+    "is_send_proxy",
+    "local_run",
+]
+
+if TYPE_CHECKING:
+    from flask import Flask
+    flask_app: Flask
+    server_url: str
+    proxy_local: bool
+else:
+    flask_app = None
+    server_url = None
+    proxy_local = None
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """
     初始化 PostgREST 代理，根据配置选择代理模式并注册 before_request 钩子。
     
@@ -58,7 +75,15 @@ def init_app(app):
             # 代理为远程服务查询
             return proxy(server_url)
 
-def proxy_request(method="GET", url="", headers=None, params=None, includ_schema_prefix=True, custom_server_url=None, **kwargs):
+def proxy_request(
+    method: str = "GET",
+    url: str = "",
+    headers: dict[str, str] | list[tuple[str, str]] | None = None,
+    params: dict[str, str] | None = None,
+    includ_schema_prefix: bool = True,
+    custom_server_url: str | None = None,
+    **kwargs: Any,
+) -> Response:
     """
     发送请求到 PostgREST 服务（远程或本地）。
     
@@ -157,7 +182,7 @@ def proxy_request(method="GET", url="", headers=None, params=None, includ_schema
         headers=response.headers,
     )
 
-def proxy_response(response):
+def proxy_response(response: requests.Response) -> tuple[bytes, int, dict[str, str]]:
     """
     将 requests.Response 转换为 (content, status_code, headers) 元组，过滤传输编码头。
     
@@ -177,7 +202,7 @@ def proxy_response(response):
     return response.content, response.status_code, headers
 
 
-def is_send_proxy():
+def is_send_proxy() -> bool:
     """
     判断当前请求是否应转发到代理服务。
     规则：有 url_rule 且未设置 proxy 头的请求不转发（表示已匹配到应用路由）。
@@ -194,7 +219,15 @@ def is_send_proxy():
     return True
 
 
-def local_run(schema=None, method="GET", url="", headers=None, params=None, data=[], **kwargs):
+def local_run(
+    schema: str | None = None,
+    method: str = "GET",
+    url: str = "",
+    headers: dict[str, str] | None = None,
+    params: dict[str, str] | None = None,
+    data: list[Any] = [],
+    **kwargs: Any,
+) -> tuple[Any, dict[str, str]]:
     """
     本地模式：直接将 PostgREST 风格的查询转换为 SQL 并执行。
     支持 SELECT（含分页、计数）、INSERT/UPDATE/DELETE（含 RETURNING）。

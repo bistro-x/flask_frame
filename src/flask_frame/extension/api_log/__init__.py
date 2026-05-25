@@ -4,10 +4,18 @@ API 请求日志插件。
 通过 after_request 钩子记录非 GET 请求的调用信息。
 提供 Celery 定时任务 api_log_clean 清理过期日志。
 """
-flask_app = None
+from typing import TYPE_CHECKING
+
+__all__ = ["init_app"]
+
+if TYPE_CHECKING:
+    from flask import Flask
+    flask_app: Flask
+else:
+    flask_app = None
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """
     初始化 API 日志记录，注册 after_request 钩子。
     

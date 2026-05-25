@@ -7,9 +7,13 @@
 
 所有异常均继承 HTTPException，可直接被 Flask 的 errorhandler 捕获。
 """
+from typing import Any
+
 from flask import request, json
 from werkzeug.exceptions import HTTPException
 from flask_frame.annotation import deprecated
+
+__all__ = ["ResourceError", "CallException", "BusiError"]
 
 
 class ResourceError(HTTPException):
@@ -22,10 +26,17 @@ class ResourceError(HTTPException):
         data: 附加数据（可选）。
     """
 
-    code = 500
-    error_code = 500
+    code: int = 500
+    error_code: int = 500
 
-    def __init__(self, description=None, response=None, error_code=None, code=None, data=None):
+    def __init__(
+        self,
+        description: str | None = None,
+        response: Any = None,
+        error_code: int | None = None,
+        code: int | None = None,
+        data: Any = None,
+    ):
         """
         初始化异常。
         
@@ -73,11 +84,17 @@ class CallException(HTTPException):
         error_code: 业务错误码，默认 1001。
     """
 
-    code = 500
-    msg = "调用异常"
-    error_code = 1001
+    code: int = 500
+    msg: str = "调用异常"
+    error_code: int = 1001
 
-    def __init__(self, msg=None, error_code=None, code=None, **kwargs):
+    def __init__(
+        self,
+        msg: str | None = None,
+        error_code: int | None = None,
+        code: int | None = None,
+        **kwargs: Any,
+    ):
         """
         初始化异常。
         
@@ -115,12 +132,19 @@ class BusiError(HTTPException):
         error_code: 业务错误码，默认 1001。
     """
 
-    code = 500
-    msg = "this is message!"
-    traceback = None
-    error_code = 1001
+    code: int = 500
+    msg: str = "this is message!"
+    traceback: str | None = None
+    error_code: int = 1001
 
-    def __init__(self, msg=None, traceback=None, error_code=None, code=None, **kwargs):
+    def __init__(
+        self,
+        msg: str | None = None,
+        traceback: str | None = None,
+        error_code: int | None = None,
+        code: int | None = None,
+        **kwargs: Any,
+    ):
         """
         初始化异常。
         

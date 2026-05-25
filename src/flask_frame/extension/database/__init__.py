@@ -13,25 +13,54 @@ import random
 import time
 from itertools import zip_longest
 import functools
+from typing import TYPE_CHECKING
+
 import sqlalchemy
 from flask_sqlalchemy import SQLAlchemy
 from tenacity import retry, stop_after_attempt
 from sqlalchemy import text
 from ..lock import get_lock, Lock
 
-db = None
-db_schema = "public"
-BaseModel = None
-AutoMapModel = None
-current_app = None
+__all__ = [
+    "db",
+    "db_schema",
+    "BaseModel",
+    "AutoMapModel",
+    "current_app",
+    "json_dumps",
+    "init_app",
+    "compare_version",
+    "file_compare_version",
+    "init_db",
+    "update_db",
+    "run_sql",
+    "sql_concat",
+]
+
+if TYPE_CHECKING:
+    from flask import Flask
+    from flask_sqlalchemy.model import Model
+    from flask_sqlalchemy import SQLAlchemy
+
+    db: SQLAlchemy
+    BaseModel: type[Model]
+    AutoMapModel: type
+    current_app: Flask
+    db_schema: str | list[str]
+else:
+    db = None
+    BaseModel = None
+    AutoMapModel = None
+    current_app = None
+    db_schema = "public"
 
 
-def json_dumps(*data, **kwargs):
+def json_dumps(*data, **kwargs) -> str:
     """JSON 序列化，确保非 ASCII 字符正确输出"""
     return json.dumps(*data, ensure_ascii=False, **kwargs)
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """
     初始化数据库连接和自动迁移。
     
@@ -360,7 +389,7 @@ def update_db(db, schema, file_list):
 
 
 @retry(reraise=True, stop=stop_after_attempt(2))
-def run_sql(file_path, db, first_sql):
+def run_sql(file_path: str, db: "SQLAlchemy", first_sql: str) -> None:
     """
     执行 SQL 脚本文件，支持存储函数（$$...$$）的完整解析。
     
@@ -406,7 +435,7 @@ def run_sql(file_path, db, first_sql):
             raise Exception("脚本执行出错" + str(e))
 
 
-def sql_concat(file_path, param):
+def sql_concat(file_path: str, param: dict[str, str]) -> str:
     """SQL 语句模板拼接, 支持 --{变量名} 格式的条件插入.
 
     Args:

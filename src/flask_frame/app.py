@@ -9,6 +9,8 @@ create_app(config) 是框架的入口函数，负责：
 """
 import os
 from http import HTTPStatus
+from typing import Any
+
 import flask
 from flask import Flask, g, make_response, send_file
 from flask import request
@@ -19,7 +21,12 @@ from .util.file import zip_path
 from .util.json import AppEncoder
 
 
-def create_app(config, flask_config_name=None, config_custom=None, **kwargs):
+def create_app(
+    config: dict[str, dict[str, Any]],
+    flask_config_name: str | None = None,
+    config_custom: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> Flask:
     """
     Flask 应用工厂函数。
     

@@ -10,11 +10,18 @@ import consul
 import socket
 import os
 import struct
+from typing import TYPE_CHECKING
 
-consul_client = None
+__all__ = ["consul_client", "init_app", "get_local_ip", "get_service_url"]
+
+if TYPE_CHECKING:
+    from flask import Flask
+    consul_client: consul.Consul
+else:
+    consul_client = None
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """
     初始化 Consul 客户端，从 KV 加载配置并注册服务。
     
@@ -116,7 +123,7 @@ def init_app(app):
     print(f"Health check URL: {check_url}")
 
 
-def get_local_ip():
+def get_local_ip() -> str:
     """
     自动探测本机 IP 地址，支持多种部署环境。
     探测优先级：
@@ -203,7 +210,7 @@ def get_local_ip():
         s.close()
 
 
-def get_service_url(service_name):
+def get_service_url(service_name: str) -> str | None:
     """
     从 Consul 获取指定服务的健康实例地址。
     

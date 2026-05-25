@@ -5,6 +5,7 @@ Celery 异步任务插件。
 提供 BaseTask 基类，自动管理数据库事务（成功提交、失败回滚）。
 """
 from urllib.parse import urlparse
+from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import InvalidRequestError, OperationalError
 
@@ -12,13 +13,21 @@ from celery import Celery, Task
 from celery.signals import task_prerun, worker_init
 from celery.utils.log import get_task_logger
 
+__all__ = ["celery", "BaseTask", "init_app"]
+
+if TYPE_CHECKING:
+    from celery import Celery as CeleryType
+    from flask import Flask
+    celery: CeleryType
+    flask_app: Flask
+else:
+    celery = None
+    flask_app = None
+
 logger = get_task_logger("celery_info")
 
-celery = None
-flask_app = None
 
-
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """初始化模块
 
     Args:

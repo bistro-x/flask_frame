@@ -7,9 +7,9 @@
             "command": "bash",
             "args": [
                 "-c",
-                "git push  && source ~/.bashrc && rm -rf dist && python3.12 setup.py sdist bdist_wheel && twine upload dist/*"
+                "git push && rm -rf dist build *.egg-info && python3.12 -m build && twine upload dist/*"
             ],
-            "problemMatcher": [],
+            "problemMatcher": []
         }
     ]
 }

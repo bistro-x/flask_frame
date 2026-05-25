@@ -16,19 +16,33 @@
 """
 from http import HTTPStatus
 import os
+from typing import Any, TYPE_CHECKING
 
 import flask
 import requests
 from flask import request, abort, g
 
-app = None
+__all__ = [
+    "init_app",
+    "fetch_current_user",
+    "get_current_user",
+    "license_check",
+    "check_user_permission",
+    "check_url_permission",
+    "param_add_department_filter",
+]
 
-# 配置参数
-fetch_user = True
-check_api = True
+if TYPE_CHECKING:
+    from flask import Flask
+    app: Flask
+else:
+    app = None
+
+fetch_user: bool = True
+check_api: bool = True
 
 
-def init_app(flask_app):
+def init_app(flask_app: "Flask") -> None:
     """初始化权限校验，注册 before_request 钩子"""
     global app, check_api, fetch_user
 
@@ -59,7 +73,7 @@ def init_app(flask_app):
                     abort(HTTPStatus.FORBIDDEN, {"message": "API未授权"})
 
 
-def fetch_current_user(token_string, params={}):
+def fetch_current_user(token_string: str | None, params: dict[str, Any] = {}) -> dict[str, Any] | None:
     """
     调用用户认证服务获取当前用户信息，结果缓存到 g.current_user。
     依赖 USER_AUTH_URL 配置指向用户认证服务地址。
@@ -98,7 +112,7 @@ def fetch_current_user(token_string, params={}):
         app.logger.exception(e)
 
 
-def get_current_user():
+def get_current_user() -> dict[str, Any] | None:
     """从请求上下文获取当前用户（由 fetch_current_user 缓存在 g 中）"""
     if not flask.has_request_context():
         return None
@@ -109,7 +123,7 @@ def get_current_user():
     return None
 
 
-def license_check():
+def license_check() -> bool:
     """调用用户认证服务检查 License 是否有效"""
     global app
 
@@ -128,7 +142,7 @@ def license_check():
         app.logger.exception(e)
 
 
-def check_user_permission(token_string=None):
+def check_user_permission(token_string: str | None = None) -> bool:
     """
     权限检测
     :param token_string: token信息
@@ -142,7 +156,7 @@ def check_user_permission(token_string=None):
     return check_url_permission(user)
 
 
-def check_url_permission(user, product_key=None):
+def check_url_permission(user: dict[str, Any] | None, product_key: str | None = None) -> bool:
     """
     校验用户是否有当前请求路径的访问权限。
     权限白名单：admin 用户、客户端模式、静态文件路径。
@@ -192,7 +206,7 @@ def check_url_permission(user, product_key=None):
     return True
 
 
-def param_add_department_filter(params={}):
+def param_add_department_filter(params: dict[str, Any] = {}) -> dict[str, Any]:
     """
     为查询参数添加组织权限过滤条件。
     根据当前用户的 department_key 列表生成 PostgREST 风格的 like 过滤条件。

@@ -6,11 +6,18 @@ Redis 客户端插件。
   Sentinel 模式需额外配置 REDIS_MASTER_NAME 指定 master 名称。
 """
 import platform
+from typing import TYPE_CHECKING
+
 import redis
 from redis.sentinel import Sentinel
 from urllib.parse import urlparse
 
-redis_client = None
+__all__ = ["redis_client", "init_app"]
+
+if TYPE_CHECKING:
+    redis_client: redis.Redis
+else:
+    redis_client = None
 
 
 def init_app(app):

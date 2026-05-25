@@ -8,6 +8,7 @@ import decimal
 from datetime import date, time
 from datetime import datetime as cdatetime
 from http import HTTPStatus
+from typing import Any
 
 import flask
 from flask import jsonify
@@ -224,18 +225,18 @@ class Response(object):
 
     def __init__(
         self,
-        result=True,
-        data=None,
-        code=0,
-        message=None,
-        provider_code=None,
-        task_id=None,
-        response_time=None,
-        service_id=None,
-        headers=None,
-        create_time=None,
-        http_status=None,
-        detail=None,
+        result: bool = True,
+        data: Any = None,
+        code: int | str = 0,
+        message: str | None = None,
+        provider_code: str | None = None,
+        task_id: str | None = None,
+        response_time: float | None = None,
+        service_id: int | None = None,
+        headers: dict[str, str] | None = None,
+        create_time: cdatetime | None = None,
+        http_status: int | HTTPStatus | None = None,
+        detail: str | None = None,
     ):
         """
         构造响应对象。

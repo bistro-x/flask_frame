@@ -13,6 +13,8 @@ import sys
 
 from loguru import logger
 
+__all__ = ["init_app", "configure_celery_logging"]
+
 
 def configure_celery_logging(app, intercept_handler):
     """

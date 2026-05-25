@@ -7,15 +7,34 @@ MinIO 文件存储插件。
 """
 import os
 from io import BytesIO
+from typing import TYPE_CHECKING
 from urllib.parse import urljoin, urlparse
+
 from minio import Minio
 
-client = None
-access_url = None
-service_url = None
+__all__ = [
+    "init_app",
+    "upload_file_to_minio",
+    "get_access_url",
+    "convert_to_access_url",
+    "delete_file_from_minio",
+    "upload_bytes_to_minio",
+    "download_file_from_minio",
+    "file_exists",
+]
+
+if TYPE_CHECKING:
+    from flask import Flask
+    client: Minio
+    access_url: str
+    service_url: str
+else:
+    client = None
+    access_url = None
+    service_url = None
 
 
-def init_app(app):
+def init_app(app: "Flask") -> None:
     """
     初始化 MinIO 客户端。
     
@@ -74,7 +93,12 @@ def init_app(app):
         access_url = access_url + "/"
 
 
-def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None):
+def upload_file_to_minio(
+    bucket_name: str,
+    file_path: str,
+    object_name: str,
+    content_type: str | None = None,
+) -> str:
     """
     上传本地文件到 MinIO。
     
@@ -117,7 +141,7 @@ def upload_file_to_minio(bucket_name, file_path, object_name, content_type=None)
         raise Exception("上传文件到 MinIO 失败:" + str(e))
 
 
-def get_access_url(file_path):
+def get_access_url(file_path: str | None) -> str:
     """
     获取文件的完整访问 URL。
     
@@ -154,7 +178,7 @@ def convert_to_access_url(full_url: str) -> str:
     return base
 
 
-def delete_file_from_minio(file_path):
+def delete_file_from_minio(file_path: str) -> bool:
     """
     从 MinIO 删除指定文件。
     
@@ -184,7 +208,12 @@ def delete_file_from_minio(file_path):
         raise Exception("从 MinIO 删除文件失败:" + str(e))
 
 
-def upload_bytes_to_minio(data_bytes, object_name, bucket_name="datacenter", content_type=None):
+def upload_bytes_to_minio(
+    data_bytes: bytes,
+    object_name: str,
+    bucket_name: str = "datacenter",
+    content_type: str | None = None,
+) -> str:
     """
     上传字节流到 MinIO。
     
@@ -229,7 +258,10 @@ def upload_bytes_to_minio(data_bytes, object_name, bucket_name="datacenter", con
         raise Exception("上传字节流到 MinIO 失败:" + str(e))
 
 
-def download_file_from_minio(file_path, target_file_path=None):
+def download_file_from_minio(
+    file_path: str,
+    target_file_path: str | None = None,
+) -> str:
     """
     从 MinIO 下载文件到本地。
     
@@ -281,7 +313,7 @@ def download_file_from_minio(file_path, target_file_path=None):
         raise Exception("从 MinIO 下载文件失败:" + str(e))
 
 
-def file_exists(file_path):
+def file_exists(file_path: str) -> bool:
     """
     检查 MinIO 文件是否存在。
     
