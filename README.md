@@ -7,7 +7,7 @@
 ### 本地开发
 
 ```bash
-pip install -e .
+pip3 install -e .
 ```
 
 ### 发布到 PyPI
