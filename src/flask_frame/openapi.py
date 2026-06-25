@@ -424,16 +424,12 @@ def sync_to_apifox(
             if last_hashes.get(path) != h:
                 changed_paths[path] = methods
 
-        deleted = set(last_hashes.keys()) - set(paths.keys())
+        deleted = set(last_hashes.keys()) - set(paths.keys()) - {"__definitions__"}
 
         # 检测 definitions 变化
         defs_hash = _compute_hash(definitions)
         last_defs_hash = last_hashes.get("__definitions__", "")
         defs_changed = defs_hash != last_defs_hash
-
-        if not changed_paths and not deleted and not defs_hash:
-            print("API 无变化，跳过同步")
-            return True
 
         if not changed_paths and not deleted and not defs_changed:
             print("API 无变化，跳过同步")
