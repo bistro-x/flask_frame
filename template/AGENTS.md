@@ -12,6 +12,9 @@
 # 入口函数
 from flask_frame import create_app, Response, FlaskFrameConfig
 
+# OpenAPI 文档生成
+from flask_frame import generate_openapi
+
 # 数据库
 from flask_frame.extension.database import db, run_sql, sql_concat
 
@@ -95,6 +98,31 @@ def process_data(data_id):
     # 任务逻辑
     # BaseTask 自动处理事务：成功 commit，失败 rollback
     ...
+```
+
+### OpenAPI 文档生成
+
+```python
+from flask_frame.openapi import generate_openapi, sync_to_apifox
+from flasgger import Swagger
+
+# 直接解析模式（无需 flasgger，元数据较少）
+generate_openapi(app, title="My API", output_dir="./api_json")
+
+# Flasgger 模式同步（推荐，完整元数据）
+swagger = Swagger(app)
+with app.app_context():
+    swagger_spec = swagger.get_apispecs()
+sync_to_apifox(app, token="xxx", project_id="xxx", swagger_spec=swagger_spec)
+
+# 按模块过滤
+sync_to_apifox(app, token="xxx", project_id="xxx", swagger_spec=swagger_spec, modules=["inquiry", "quotation"])
+```
+
+CLI 同步（按约定自动创建应用，无需额外配置）：
+
+```bash
+python -m flask_frame sync_apifox --token xxx --project-id xxx
 ```
 
 ### 配置参考

@@ -31,6 +31,7 @@ from .api.exception import ResourceError, CallException, BusiError
 from .schema import BaseSchema, DateTimeField
 from .annotation import deprecated, profile
 from .config import FlaskFrameConfig
+from .openapi import generate_openapi, sync_to_apifox
 
 __all__ = [
     "create_app",
@@ -45,4 +46,6 @@ __all__ = [
     "deprecated",
     "profile",
     "FlaskFrameConfig",
+    "generate_openapi",
+    "sync_to_apifox",
 ]

@@ -41,6 +41,54 @@ nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuh
 - `GET /debug-sentry` - 触发错误（调试 Sentry）
 - 任意接口加 `?profile` 参数可获取性能分析报告
 
+## OpenAPI 文档生成
+
+从 Flask 路由自动生成 API 规范，支持导入 Apifox 或通过 API 自动推送（增量同步）。
+
+### VS Code Task 配置
+
+在业务项目中创建 `.vscode/tasks.json`：
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "sync_to_apifox",
+      "type": "shell",
+      "command": "/usr/bin/python3.12",
+      "args": [
+        "-m", "flask_frame", "sync_apifox",
+        "--token", "afxp_xxx",
+        "--project-id", "xxx"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
+```
+
+`Ctrl+Shift+B` 选择 `sync_to_apifox` 即可推送。
+
+**约定**：框架自动检测业务项目结构创建应用——导入 `config` 调 `create_app(config)`，检测 `module`/`context` 包自动初始化，最后用 flasgger 生成 swagger spec。项目只需有 `config.py`（含 `config` 变量）和标准的 `module`、`context` 模块即可。
+
+如需自定义 app 创建逻辑，可传 `--app` 参数指定工厂函数：
+
+```bash
+python -m flask_frame sync_apifox --app "app:create_app" --token xxx --project-id xxx
+```
+
+获取凭据：Apifox 项目设置 → API 认证获取 Token，项目设置 → 基本信息获取项目 ID。
+
 ## 配置项
 
 ### 基础配置
@@ -116,6 +164,7 @@ nohup docker build . --force-rm=true -f docker/Dockerfile.alpine_continue -t wuh
 ```
 src/flask_frame/
 ├── app.py                     # 应用工厂 create_app()
+├── openapi.py                 # OpenAPI 文档生成（generate_openapi）
 ├── api/                       # 请求/响应/异常处理
 │   ├── request.py             #   get_request_param(), proxy()
 │   ├── response.py            #   Response.make_flask_response()

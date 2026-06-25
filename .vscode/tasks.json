@@ -1,15 +1,23 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "pypi_push",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-c",
-                "git push && rm -rf dist build *.egg-info && python3.12 -m build && twine upload dist/*"
-            ],
-            "problemMatcher": []
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "generate_api_json",
+      "type": "shell",
+      "command": "/usr/bin/python3.12",
+      "args": [
+        "script/generate_openapi.py"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ]
 }

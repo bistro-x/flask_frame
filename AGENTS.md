@@ -32,74 +32,24 @@ python3.12 -m pytest test/ -q
 - **请求事务**: `app.py` 中 `teardown_request` 自动 commit，全局异常处理自动 rollback。
 - **自定义异常**: `BusiError`（已 deprecated）、`ResourceError`、`CallException`，均继承 `HTTPException`。
 - **响应封装**: `Response.make_flask_response()` 返回标准 Flask Response，包含 `result/code/message/data/create_time` 结构。
+- **默认路由**: `GET /` 健康检查、`GET /healthy` JSON 健康状态、`GET /flask/log` 日志列表、`GET /flask/log/download` 日志压缩包、`GET /debug-sentry` 触发错误（调试 Sentry）。
+- **性能分析**: 任意接口加 `?profile` 参数可获取性能分析报告。
+- **OpenAPI 文档生成**: `generate_openapi(app)` 从路由自动生成 OpenAPI 3.0 JSON，可直接导入 Apifox。支持 `group_by="blueprint"` 按蓝图分组。`sync_to_apifox(app, token, project_id, swagger_spec=...)` 通过 Apifox API 自动推送，支持增量同步（paths + definitions）。推荐传入 flasgger 的 `swagger.get_apispecs()` 以获取完整元数据。CLI: `python -m flask_frame sync_apifox --app module:factory --token xxx --project-id xxx`。
 
 ## AI 友好特性
 
-### 类型注解
-
-所有公开 API 已添加类型注解，AI 可通过 Language Server 获取完整类型信息：
-
-```python
-from flask_frame import create_app, Response, FlaskFrameConfig
-from flask_frame.extension.database import db, run_sql
-from flask_frame.extension.minio import upload_file_to_minio
-
-# AI 知道 create_app 的参数类型
-app = create_app(config: dict[str, dict[str, Any]], ...)
-
-# AI 知道 Response 的所有参数
-resp = Response(result=True, data={"items": []}, message="success")
-
-# AI 知道 run_sql 的参数
-run_sql(file_path: str, db: SQLAlchemy, first_sql: str) -> None
-
-# AI 知道 upload_file_to_minio 的参数和返回值
-url: str = upload_file_to_minio(bucket_name: str, file_path: str, object_name: str, ...)
-```
-
-### FlaskFrameConfig
-
-`flask_frame.config.FlaskFrameConfig` 是 TypedDict，定义所有配置项及其类型：
-
-```python
-from flask_frame import FlaskFrameConfig
-
-config: FlaskFrameConfig = {
-    "PRODUCT_KEY": "my_service",
-    "SQLALCHEMY_DATABASE_URI": "postgresql://...",
-    "ENABLED_EXTENSION": ["database", "redis", "lock"],
-}
-```
-
-### 公共 API 导出
-
-所有模块通过 `__all__` 明确导出公共 API：
-
-- `flask_frame` — `create_app`, `Response`, `FlaskFrameConfig` 等
-- `flask_frame.extension.database` — `db`, `run_sql`, `sql_concat` 等
-- `flask_frame.extension.minio` — 所有 7 个公开函数
-- 其他 extension 模块同理
-
-### TYPE_CHECKING 全局变量
-
-运行时初始化的全局变量（如 `db`、`redis_client`）使用 `TYPE_CHECKING` 区分：
-
-```python
-if TYPE_CHECKING:
-    db: SQLAlchemy
-else:
-    db = None  # 运行时为 None，init_app 后赋值
-```
-
-AI 在静态分析时看到正确类型，运行时行为不变。
+- 所有公开 API 已添加类型注解，AI 可通过 Language Server 获取完整类型信息。
+- `flask_frame.config.FlaskFrameConfig` 是 TypedDict，定义所有配置项及其类型。
+- 所有模块通过 `__all__` 明确导出公共 API。
+- 运行时初始化的全局变量（如 `db`、`redis_client`）使用 `TYPE_CHECKING` 区分：静态分析时看到正确类型，运行时为 `None`（`init_app` 后赋值）。
 
 ## 容易踩坑的地方
 
 - `BaseSchema`（`schema/__init__.py`）在 `pre_load` 阶段会自动剔除 `None`、`''`、`[]`、`{}` 值的字段，调试反序列化问题时需注意。
-- `pyproject.toml` 版本号是唯一的版本来源，当前为 `1.2.0`。
+- `pyproject.toml` 版本号是唯一的版本来源，当前为 `1.2.2`。
 - `tasks/` 目录是应用层代码（非框架核心），含权限初始化逻辑，依赖使用方自行调用。
 - `DB_SCHEMA` 配置支持逗号分隔的多 schema（如 `"public,user_auth"`）。
 - `extension/database/__init__.py` 会自动 reflect 数据库表到 `db.Model`，无需手动定义所有 Model。
 - 数据库密码中的特殊字符会被自动 URL 编码。
-- `SENTRY_DSN`（兼容旧配置键 `SENTRY_DS`）配置同时支持两个键名
+- `SENTRY_DSN`（兼容旧配置键 `SENTRY_DS`）配置同时支持两个键名。
 - `lock` 插件优先使用 Redis 分布式锁，无 Redis 时降级为文件锁。
