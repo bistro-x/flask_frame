@@ -460,8 +460,23 @@ def sync_to_apifox(
         "X-Apifox-Api-Version": "2024-03-28",
         "Content-Type": "application/json",
     }
+
+    # 增量模式只发变更的 paths + definitions，全量模式发完整 spec
+    if incremental:
+        minimal_paths = dict(changed_paths)
+        for p in deleted:
+            minimal_paths[p] = {}
+        push_input = {
+            "swagger": "2.0",
+            "info": push_spec.get("info", {}),
+            "paths": minimal_paths,
+            "definitions": definitions,
+        }
+    else:
+        push_input = push_spec
+
     payload = {
-        "input": json.dumps(push_spec, ensure_ascii=False),
+        "input": json.dumps(push_input, ensure_ascii=False),
         "options": {
             "endpointOverwriteBehavior": "OVERWRITE_EXISTING",
             "schemaOverwriteBehavior": "OVERWRITE_EXISTING",
