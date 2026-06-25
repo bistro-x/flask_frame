@@ -432,23 +432,33 @@ def sync_to_apifox(
         defs_changed = defs_hash != last_defs_hash
 
         if not changed_paths and not deleted and not defs_changed:
-            print("API 无变化，跳过同步")
+            print(f"总接口数: {len(paths)}")
+            print("检测到变更: 0")
+            print("跳过同步")
             return True
 
         if defs_changed and not changed_paths and not deleted:
-            print("检测到 definitions 变化，全量同步")
+            print(f"总接口数: {len(paths)}")
+            print("检测到变更: definitions 变化")
+            print(f"推送到 Apifox: 全量 ({len(paths)} 个接口)")
             incremental = False
         else:
-            label = f"检测到 {len(changed_paths)} 个接口变更"
+            print(f"总接口数: {len(paths)}")
+            label = f"检测到变更: {len(changed_paths)} 个接口"
             if deleted:
-                label += f"，{len(deleted)} 个接口删除"
+                label += f"，{len(deleted)} 个删除"
             if defs_changed:
                 label += "，definitions 变化"
             print(label)
+            push_count = len(changed_paths) + len(deleted)
+            print(f"推送到 Apifox: {push_count} 个接口")
             incremental = True
 
         new_hashes["__definitions__"] = defs_hash
     else:
+        print(f"总接口数: {len(paths)}")
+        print("强制全量同步")
+        print(f"推送到 Apifox: {len(paths)} 个接口")
         incremental = False
         new_hashes = {p: _compute_hash(m) for p, m in paths.items()}
         new_hashes["__definitions__"] = _compute_hash(definitions)
