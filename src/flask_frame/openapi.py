@@ -223,15 +223,18 @@ def _extract_from_swagger(
         if filter_prefix and not path.startswith(filter_prefix):
             continue
 
+        # 将 Flask 路径参数 <name> 转为 OpenAPI {name}（flasgger 使用此格式）
+        openapi_path = re.sub(r"<(?:\w+:)?(\w+)>", r"{\1}", path)
+
         methods = [m for m in rule.methods if m in ("GET", "POST", "PUT", "DELETE", "PATCH")]
         if not methods:
             continue
 
-        # 从 swagger spec 获取对应的 API 信息
-        swagger_path = swagger_spec.get("paths", {}).get(path, {})
+        # 从 swagger spec 获取对应的 API 信息（flasgger 用 OpenAPI 格式路径）
+        swagger_path = swagger_spec.get("paths", {}).get(openapi_path, {})
 
-        if path not in result["paths"]:
-            result["paths"][path] = {}
+        if openapi_path not in result["paths"]:
+            result["paths"][openapi_path] = {}
 
         for method in methods:
             method_lower = method.lower()
@@ -253,7 +256,7 @@ def _extract_from_swagger(
             if "parameters" in swagger_method:
                 method_spec["parameters"] = swagger_method["parameters"]
 
-            result["paths"][path][method_lower] = method_spec
+            result["paths"][openapi_path][method_lower] = method_spec
 
     # 提取 definitions（模型定义）
     for name, schema in swagger_spec.get("definitions", {}).items():
@@ -373,6 +376,7 @@ def sync_to_apifox(
     swagger_spec: dict | None = None,
     snapshot_dir: str | None = None,
     force: bool = False,
+    verbose: bool = False,
 ) -> bool:
     """
     生成 API 规范并同步到 Apifox，支持增量同步。
@@ -393,6 +397,7 @@ def sync_to_apifox(
         swagger_spec: flasgger 生成的 Swagger 2.0 spec。传入时使用 flasgger 数据，否则降级为直接解析。
         snapshot_dir: 增量快照目录，默认为当前工作目录下的 .sync_snapshot。
         force: 强制全量同步，忽略增量检测。
+        verbose: 输出详细调试信息。
 
     Returns:
         bool: 同步是否成功。
@@ -471,7 +476,7 @@ def sync_to_apifox(
         "Content-Type": "application/json",
     }
 
-    # 增量模式只发变更的 paths + definitions，全量模式发完整 spec
+    # 增量模式只发变更的 paths，definitions 仅在变化时发送
     if incremental:
         minimal_paths = dict(changed_paths)
         for p in deleted:
@@ -480,8 +485,9 @@ def sync_to_apifox(
             "swagger": "2.0",
             "info": push_spec.get("info", {}),
             "paths": minimal_paths,
-            "definitions": definitions,
         }
+        if defs_changed:
+            push_input["definitions"] = definitions
     else:
         push_input = push_spec
 
