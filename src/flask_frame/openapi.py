@@ -253,6 +253,8 @@ def _extract_from_swagger(
                 "tags": swagger_method.get("tags", [endpoint_parts[0] if len(endpoint_parts) > 1 else "default"]),
                 "responses": swagger_method.get("responses", {}),
             }
+            if swagger_method.get("deprecated"):
+                method_spec["deprecated"] = True
             if "parameters" in swagger_method:
                 method_spec["parameters"] = swagger_method["parameters"]
 
@@ -404,92 +406,84 @@ def sync_to_apifox(
     """
     import requests
 
-    # 根据是否有 swagger_spec 选择生成方式
     if swagger_spec is not None:
         extracted = _extract_from_swagger(app, swagger_spec, modules=modules, filter_prefix=filter_prefix)
-        push_spec = extracted
+        local_spec = extracted
     else:
-        push_spec = generate_openapi(app, title=title, version=version, description=description, filter_prefix=filter_prefix)
+        local_spec = generate_openapi(app, title=title, version=version, description=description, filter_prefix=filter_prefix)
 
-    paths = push_spec.get("paths", {})
-    definitions = push_spec.get("definitions", {})
+    local_paths = local_spec.get("paths", {})
+    local_definitions = local_spec.get("definitions", {})
 
-    # 增量同步检测
     if snapshot_dir is None:
         snapshot_dir = os.path.join(os.getcwd(), ".sync_snapshot")
 
-    if not force:
-        last_hashes = _load_snapshot(snapshot_dir)
-        new_hashes = {}
-        changed_paths = {}
+    last_hashes = _load_snapshot(snapshot_dir)
+    new_hashes = {}
+    changed_by_snapshot = set()
 
-        for path, methods in paths.items():
-            h = _compute_hash(methods)
-            new_hashes[path] = h
-            if last_hashes.get(path) != h:
-                changed_paths[path] = methods
+    for path, methods in local_paths.items():
+        h = _compute_hash(methods)
+        new_hashes[path] = h
+        if last_hashes.get(path) != h:
+            changed_by_snapshot.add(path)
 
-        deleted = set(last_hashes.keys()) - set(paths.keys()) - {"__definitions__"}
+    new_hashes["__definitions__"] = _compute_hash(local_definitions)
 
-        # 检测 definitions 变化
-        defs_hash = _compute_hash(definitions)
-        last_defs_hash = last_hashes.get("__definitions__", "")
-        defs_changed = defs_hash != last_defs_hash
-
-        if not changed_paths and not deleted and not defs_changed:
-            print(f"总接口数: {len(paths)}")
-            print("检测到变更: 0")
-            print("跳过同步")
-            return True
-
-        if defs_changed and not changed_paths and not deleted:
-            print(f"总接口数: {len(paths)}")
-            print("检测到变更: definitions 变化")
-            print(f"推送到 Apifox: 全量 ({len(paths)} 个接口)")
-            incremental = False
-        else:
-            print(f"总接口数: {len(paths)}")
-            label = f"检测到变更: {len(changed_paths)} 个接口"
-            if deleted:
-                label += f"，{len(deleted)} 个删除"
-            if defs_changed:
-                label += "，definitions 变化"
-            print(label)
-            push_count = len(changed_paths) + len(deleted)
-            print(f"推送到 Apifox: {push_count} 个接口")
-            incremental = True
-
-        new_hashes["__definitions__"] = defs_hash
-    else:
-        print(f"总接口数: {len(paths)}")
-        print("强制全量同步")
-        print(f"推送到 Apifox: {len(paths)} 个接口")
-        incremental = False
-        new_hashes = {p: _compute_hash(m) for p, m in paths.items()}
-        new_hashes["__definitions__"] = _compute_hash(definitions)
-
-    # 调用 Apifox API
-    url = f"https://api.apifox.com/v1/projects/{project_id}/import-openapi?locale=zh-CN"
+    export_url = f"https://api.apifox.com/v1/projects/{project_id}/export-openapi?locale=zh-CN"
     headers = {
         "Authorization": f"Bearer {token}",
         "X-Apifox-Api-Version": "2024-03-28",
-        "Content-Type": "application/json",
     }
 
-    # 增量模式只发变更的 paths，definitions 仅在变化时发送
-    if incremental:
-        minimal_paths = dict(changed_paths)
-        for p in deleted:
-            minimal_paths[p] = {}
-        push_input = {
-            "swagger": "2.0",
-            "info": push_spec.get("info", {}),
-            "paths": minimal_paths,
-        }
-        if defs_changed:
-            push_input["definitions"] = definitions
-    else:
-        push_input = push_spec
+    apifox_paths = {}
+    export_ok = False
+    try:
+        resp = requests.post(export_url, headers=headers, json={}, timeout=30)
+        print(f"Apifox export API: {resp.status_code}")
+        if resp.status_code == 200 and resp.text.strip():
+            try:
+                apifox_spec = resp.json()
+                apifox_paths = apifox_spec.get("paths", {})
+                export_ok = True
+                print(f"Apifox 现有接口数: {len(apifox_paths)}")
+            except (json.JSONDecodeError, Exception):
+                print(f"响应非 JSON: {resp.text[:200]}")
+        elif resp.status_code != 200:
+            print(f"错误响应: {resp.text[:200]}")
+        else:
+            print("响应为空")
+    except requests.exceptions.RequestException as e:
+        print(f"请求失败: {e}")
+
+    to_push = changed_by_snapshot
+    if export_ok:
+        missing_in_apifox = set(local_paths.keys()) - set(apifox_paths.keys())
+        to_push = changed_by_snapshot | missing_in_apifox
+
+    print(f"本地接口数: {len(local_paths)}")
+    print(f"本地变更: {len(changed_by_snapshot)}")
+    if export_ok:
+        print(f"Apifox 现有: {len(apifox_paths)}")
+        print(f"Apifox 缺失: {len(missing_in_apifox)}")
+
+    if not to_push:
+        print("无变更，跳过同步")
+        return True
+
+    print(f"待同步: {len(to_push)} 个接口")
+
+    push_paths = {p: local_paths[p] for p in to_push}
+
+    push_input = {
+        "swagger": "2.0",
+        "info": local_spec.get("info", {}),
+        "paths": push_paths,
+        "definitions": local_definitions,
+    }
+
+    import_url = f"https://api.apifox.com/v1/projects/{project_id}/import-openapi?locale=zh-CN"
+    headers["Content-Type"] = "application/json"
 
     payload = {
         "input": json.dumps(push_input, ensure_ascii=False),
@@ -497,12 +491,12 @@ def sync_to_apifox(
             "endpointOverwriteBehavior": "OVERWRITE_EXISTING",
             "schemaOverwriteBehavior": "OVERWRITE_EXISTING",
             "updateFolderOfChangedEndpoint": True,
-            "deleteUnmatchedResources": not incremental,
+            "deleteUnmatchedResources": True if force else False,
         },
     }
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        response = requests.post(import_url, headers=headers, json=payload, timeout=60)
         if response.status_code == 200:
             result = response.json()
             counters = result.get("data", {}).get("counters", {})
@@ -510,8 +504,6 @@ def sync_to_apifox(
             updated = counters.get("endpointUpdated", 0)
             failed = counters.get("endpointFailed", 0)
             print(f"同步成功！创建: {created}, 更新: {updated}, 失败: {failed}")
-
-            # 保存快照
             _save_snapshot(snapshot_dir, new_hashes)
             return True
         else:

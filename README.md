@@ -138,6 +138,44 @@ python -m flask_frame sync_apifox --app "app:create_app" --token xxx --project-i
 | USER_AUTH_URL | permission | 用户认证服务地址 |
 | LICENSE_CHECK | permission | 是否检查 License |
 
+## 工具类
+
+框架提供常用工具函数，位于 `src/flask_frame/util/`。
+
+### 数据转换
+
+| 函数 | 导入路径 | 说明 |
+|------|----------|------|
+| `result_to_dict` | `flask_frame.util.db` | 数据库原始查询结果（有 `.keys()` 方法的 Result 对象）→ dict 列表 |
+| `model_to_dict` | `flask_frame.util.param_tool` | SQLAlchemy Model 实例 → dict，自动剔除 `_sa_instance_state` |
+
+```python
+from flask_frame.util.db import result_to_dict
+from flask_frame.util.param_tool import model_to_dict
+
+# 原始 SQL 查询
+result = db.session.execute(text("SELECT * FROM users"))
+data = result_to_dict(result)  # [{"id": 1, "name": "张三"}, ...]
+
+# Model 实例
+user = User.query.first()
+data = model_to_dict(user)  # {"id": 1, "name": "张三", "_sa_instance_state": 已剔除}
+```
+
+> **推荐**：复杂序列化场景使用 Marshmallow Schema（`extension/marshmallow`），支持字段过滤、嵌套关系、验证等。
+
+### 其他工具
+
+| 模块 | 说明 |
+|------|------|
+| `util.db` | 数据库操作（`result_to_dict`、批量插入等） |
+| `util.file` | 文件操作 |
+| `util.json` | JSON 处理 |
+| `util.lock` | 锁工具 |
+| `util.rsa` | RSA 加解密 |
+| `util.sql` | SQL 工具 |
+| `util.fernet` | Fernet 对称加密 |
+
 ## 插件系统
 
 插件目录：`src/flask_frame/extension/`
