@@ -260,6 +260,11 @@ def _extract_from_swagger(
 
             result["paths"][openapi_path][method_lower] = method_spec
 
+    # 删除空路径（所有方法都被过滤掉）
+    empty_paths = [p for p, methods in result["paths"].items() if not methods]
+    for p in empty_paths:
+        del result["paths"][p]
+
     # 提取 definitions（模型定义）
     for name, schema in swagger_spec.get("definitions", {}).items():
         result["definitions"][name] = schema
@@ -446,7 +451,8 @@ def sync_to_apifox(
                 apifox_spec = resp.json()
                 apifox_paths = apifox_spec.get("paths", {})
                 export_ok = True
-                print(f"Apifox 现有接口数: {len(apifox_paths)}")
+                apifox_endpoint_count = sum(len(methods) for methods in apifox_paths.values())
+                print(f"Apifox 现有端点数: {apifox_endpoint_count} (路径数: {len(apifox_paths)})")
             except (json.JSONDecodeError, Exception):
                 print(f"响应非 JSON: {resp.text[:200]}")
         elif resp.status_code != 200:
@@ -461,17 +467,19 @@ def sync_to_apifox(
         missing_in_apifox = set(local_paths.keys()) - set(apifox_paths.keys())
         to_push = changed_by_snapshot | missing_in_apifox
 
-    print(f"本地接口数: {len(local_paths)}")
+    local_endpoint_count = sum(len(methods) for methods in local_paths.values())
+    print(f"本地端点数: {local_endpoint_count} (路径数: {len(local_paths)})")
     print(f"本地变更: {len(changed_by_snapshot)}")
     if export_ok:
-        print(f"Apifox 现有: {len(apifox_paths)}")
-        print(f"Apifox 缺失: {len(missing_in_apifox)}")
+        print(f"Apifox 现有路径数: {len(apifox_paths)}")
+        print(f"Apifox 缺失路径: {len(missing_in_apifox)}")
 
     if not to_push:
         print("无变更，跳过同步")
         return True
 
-    print(f"待同步: {len(to_push)} 个接口")
+    to_push_endpoint_count = sum(len(local_paths[p]) for p in to_push)
+    print(f"待同步: {len(to_push)} 个路径 ({to_push_endpoint_count} 个端点)")
 
     push_paths = {p: local_paths[p] for p in to_push}
 
