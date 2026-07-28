@@ -435,6 +435,13 @@ def sync_to_apifox(
 
     new_hashes["__definitions__"] = _compute_hash(local_definitions)
 
+    deleted_locally = set(last_hashes.keys()) - set(local_paths.keys()) - {"__definitions__"}
+
+    if filter_prefix:
+        deleted_locally = {p for p in deleted_locally if p.startswith(filter_prefix)}
+    if modules:
+        deleted_locally = {p for p in deleted_locally if any(m in p for m in modules)}
+
     export_url = f"https://api.apifox.com/v1/projects/{project_id}/export-openapi?locale=zh-CN"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -463,25 +470,42 @@ def sync_to_apifox(
         print(f"请求失败: {e}")
 
     to_push = changed_by_snapshot
+    deleted_in_apifox = set()
     if export_ok:
         missing_in_apifox = set(local_paths.keys()) - set(apifox_paths.keys())
         to_push = changed_by_snapshot | missing_in_apifox
+        # Apifox 中存在但本地不存在（需要删除）
+        deleted_in_apifox = set(apifox_paths.keys()) - set(local_paths.keys())
+        if filter_prefix:
+            deleted_in_apifox = {p for p in deleted_in_apifox if p.startswith(filter_prefix)}
+        if modules:
+            deleted_in_apifox = {p for p in deleted_in_apifox if any(m in p for m in modules)}
 
     local_endpoint_count = sum(len(methods) for methods in local_paths.values())
     print(f"本地端点数: {local_endpoint_count} (路径数: {len(local_paths)})")
     print(f"本地变更: {len(changed_by_snapshot)}")
+    if deleted_locally:
+        print(f"本地已删除: {len(deleted_locally)}")
     if export_ok:
         print(f"Apifox 现有路径数: {len(apifox_paths)}")
         print(f"Apifox 缺失路径: {len(missing_in_apifox)}")
+        if deleted_in_apifox:
+            print(f"Apifox 待删除路径: {len(deleted_in_apifox)}")
 
-    if not to_push:
+    if not to_push and not deleted_locally and not deleted_in_apifox:
         print("无变更，跳过同步")
         return True
 
-    to_push_endpoint_count = sum(len(local_paths[p]) for p in to_push)
-    print(f"待同步: {len(to_push)} 个路径 ({to_push_endpoint_count} 个端点)")
-
-    push_paths = {p: local_paths[p] for p in to_push}
+    has_delete = bool(deleted_locally) or bool(deleted_in_apifox) or force
+    if has_delete:
+        print(f"待同步: 全量 ({len(local_paths)} 个路径)，删除本地已移除的接口")
+        push_paths = local_paths
+        delete_flag = True
+    else:
+        to_push_endpoint_count = sum(len(local_paths[p]) for p in to_push)
+        print(f"待同步: {len(to_push)} 个路径 ({to_push_endpoint_count} 个端点)")
+        push_paths = {p: local_paths[p] for p in to_push}
+        delete_flag = False
 
     push_input = {
         "swagger": "2.0",
@@ -499,7 +523,7 @@ def sync_to_apifox(
             "endpointOverwriteBehavior": "OVERWRITE_EXISTING",
             "schemaOverwriteBehavior": "OVERWRITE_EXISTING",
             "updateFolderOfChangedEndpoint": True,
-            "deleteUnmatchedResources": True if force else False,
+            "deleteUnmatchedResources": delete_flag,
         },
     }
 

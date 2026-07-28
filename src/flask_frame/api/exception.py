@@ -67,7 +67,7 @@ class ResourceError(HTTPException):
         body = dict(message=self.description, code=self.error_code)
         if self.data is not None:
             body["data"] = self.data  # 如果有 data，添加到返回体
-        text = json.dumps(body)
+        text = json.dumps(body, ensure_ascii=False)
         return text
 
     def get_headers(self, environ=None, scope=None):
@@ -114,7 +114,7 @@ class CallException(HTTPException):
 
     def get_body(self, environ=None, scope=None):
         body = dict(msg=self.msg, error_code=self.error_code)
-        text = json.dumps(body)
+        text = json.dumps(body, ensure_ascii=False)
         return text
 
     def get_headers(self, environ=None, scope=None):
@@ -172,7 +172,7 @@ class BusiError(HTTPException):
             request=request.method + " " + self.get_url_no_param(),
             traceback=self.traceback,
         )
-        text = json.dumps(body)
+        text = json.dumps(body, ensure_ascii=False)
         return text
 
     def get_headers(self, environ=None, scope=None):
