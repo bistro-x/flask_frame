@@ -471,6 +471,7 @@ def sync_to_apifox(
 
     to_push = changed_by_snapshot
     deleted_in_apifox = set()
+    method_changed_paths = set()
     if export_ok:
         missing_in_apifox = set(local_paths.keys()) - set(apifox_paths.keys())
         to_push = changed_by_snapshot | missing_in_apifox
@@ -480,6 +481,13 @@ def sync_to_apifox(
             deleted_in_apifox = {p for p in deleted_in_apifox if p.startswith(filter_prefix)}
         if modules:
             deleted_in_apifox = {p for p in deleted_in_apifox if any(m in p for m in modules)}
+        # 检测方法变更（同一路径但方法不同）
+        common_paths = set(local_paths.keys()) & set(apifox_paths.keys())
+        for p in common_paths:
+            local_methods = set(local_paths[p].keys())
+            apifox_methods = set(apifox_paths[p].keys())
+            if local_methods != apifox_methods:
+                method_changed_paths.add(p)
 
     local_endpoint_count = sum(len(methods) for methods in local_paths.values())
     print(f"本地端点数: {local_endpoint_count} (路径数: {len(local_paths)})")
@@ -491,12 +499,14 @@ def sync_to_apifox(
         print(f"Apifox 缺失路径: {len(missing_in_apifox)}")
         if deleted_in_apifox:
             print(f"Apifox 待删除路径: {len(deleted_in_apifox)}")
+        if method_changed_paths:
+            print(f"方法变更路径: {len(method_changed_paths)}")
 
-    if not to_push and not deleted_locally and not deleted_in_apifox:
+    if not to_push and not deleted_locally and not deleted_in_apifox and not method_changed_paths:
         print("无变更，跳过同步")
         return True
 
-    has_delete = bool(deleted_locally) or bool(deleted_in_apifox) or force
+    has_delete = bool(deleted_locally) or bool(deleted_in_apifox) or bool(method_changed_paths) or force
     if has_delete:
         print(f"待同步: 全量 ({len(local_paths)} 个路径)，删除本地已移除的接口")
         push_paths = local_paths
