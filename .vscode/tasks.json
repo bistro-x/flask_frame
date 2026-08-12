@@ -4,7 +4,7 @@
     {
       "label": "pypi push",
       "type": "shell",
-      "command": "python3.12 -m build && twine upload dist/*",
+      "command": "rm -rf dist/ && python3.12 -m build && twine upload dist/*",
       "options": {
         "cwd": "${workspaceFolder}"
       },
