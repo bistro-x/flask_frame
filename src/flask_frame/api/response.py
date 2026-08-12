@@ -309,15 +309,15 @@ class Response(object):
                 beijing_tz = pytz.timezone("Asia/Shanghai")
 
                 if isinstance(obj, cdatetime):
-                    # 处理 datetime 对象：转换为北京时区并格式化为字符串
+                    # 处理 datetime 对象
                     if obj.tzinfo is None:
-                        # 无时区信息，假设为UTC，转换为北京时间
-                        obj = obj.replace(tzinfo=pytz.UTC).astimezone(beijing_tz)
+                        # 无时区信息，直接格式化（不转换）
+                        return obj.strftime("%Y-%m-%d %H:%M:%S")
                     else:
-                        # 有时区信息，直接转换
+                        # 有时区信息，转换为北京时区
                         obj = obj.astimezone(beijing_tz)
-                    # 包含时区信息的时间格式 (例如: 2023-05-15 14:30:45+08:00)
-                    return obj.strftime("%Y-%m-%d %H:%M:%S%z")
+                        # 包含时区信息的时间格式 (例如: 2023-05-15 14:30:45+08:00)
+                        return obj.strftime("%Y-%m-%d %H:%M:%S%z")
                 elif isinstance(obj, date):
                     # 处理 date 对象：格式化为 YYYY-MM-DD
                     return obj.strftime("%Y-%m-%d")
