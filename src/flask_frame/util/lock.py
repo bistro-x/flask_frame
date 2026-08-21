@@ -75,7 +75,8 @@ class FileLock(object):
             lock_dir = "./"
 
         self.lock_dir = lock_dir
-        self.file = os.path.join(lock_dir, lock_file)
+        # 锁文件统一加 .lock 后缀，便于识别（如 k3_sync_BD_Supplier.lock）
+        self.file = os.path.join(lock_dir, f"{lock_file}.lock")
         self.timeout = timeout
         self._fn = None  # Linux 下持有文件描述符
 
