@@ -42,6 +42,7 @@ def create_app(
     # 创建 Flask 应用实例
     app = Flask(__name__, root_path=os.getcwd())  # root_path 指定应用根目录
     app.json_encoder = AppEncoder  # 设置自定义的 JSON 编码器
+    app.json.ensure_ascii = False  # JSON 响应中文直接输出，不转义为 \uXXXX
 
     # 加载配置
     config_name = flask_config_name or os.getenv("FLASK_CONFIG", "default")
