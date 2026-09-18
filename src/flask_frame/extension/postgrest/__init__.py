@@ -252,6 +252,7 @@ def local_run(
 
     from .sql_generator import generate_sql
     from ...extension.database import db
+    from sqlalchemy import text
 
     # 调用本地转换
     exec_sql, count_sql = generate_sql(
@@ -271,22 +272,22 @@ def local_run(
     if isinstance(exec_sql, list):
         for item_sql in exec_sql:
             if "returning" in item_sql:
-                item = db.session.execute(first_sql + item_sql).fetchone()
+                item = db.session.execute(text(first_sql + item_sql)).fetchone()
                 data = data or []
-                item and data.append(dict(item))
+                item and data.append(dict(item._mapping))
             else:
-                db.session.execute(first_sql + item_sql)
-                
+                db.session.execute(text(first_sql + item_sql))
+
     elif "select" in exec_sql:
         if "application/vnd.pgrst.object+json" in request.headers.get("Accept"):
-            query_result = db.session.execute(first_sql + exec_sql).fetchone()
-            data = dict(query_result)
+            query_result = db.session.execute(text(first_sql + exec_sql)).fetchone()
+            data = dict(query_result._mapping)
         else:
-            query_result = db.session.execute(first_sql + exec_sql).fetchall()
-            count_result = db.session.execute(first_sql + count_sql).fetchone()
+            query_result = db.session.execute(text(first_sql + exec_sql)).fetchall()
+            count_result = db.session.execute(text(first_sql + count_sql)).fetchone()
 
             if query_result is not None:
-                data = [dict(row) for row in query_result]
+                data = [dict(row._mapping) for row in query_result]
             else:
                 data = []
 
@@ -304,12 +305,12 @@ def local_run(
                     "Content-Range"
                 ] = f"{str(index_begin)}-{str(index_end)}/{count_result}"
     else:
-        
+
         if "returning" in exec_sql:
-            query_result = db.session.execute(first_sql + exec_sql).fetchall()
-            data = [dict(row) for row in query_result]
+            query_result = db.session.execute(text(first_sql + exec_sql)).fetchall()
+            data = [dict(row._mapping) for row in query_result]
         else:
-            db.session.execute(first_sql + exec_sql)
+            db.session.execute(text(first_sql + exec_sql))
     
     return data, headers
 
