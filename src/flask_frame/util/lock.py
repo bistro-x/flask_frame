@@ -96,6 +96,9 @@ class FileLock(object):
         Note:
             超时机制防止进程崩溃导致的死锁：如果持有锁的进程崩溃未能 release，
             超时后其他进程可重新获取锁。
+
+        注意：database 扩展依赖「文件存在 + mtime」的持久标记语义
+        （had-update-db 用 timeout=999999 表示「已更新过」），不能改成 flock 探测。
         """
         if not os.path.exists(self.file):
             return False
@@ -165,30 +168,21 @@ class FileLock(object):
         """
         释放锁。
 
-        释放机制：
-            Linux: 关闭文件描述符，内核自动释放 fcntl 锁
-            Windows: 删除锁文件
-
-        Note:
-            进程退出时 Linux 内核会自动释放 fcntl 锁，即使未调用 release()。
-            这是 fcntl 相比 Windows 文件锁的关键优势——防止进程崩溃导致死锁。
-
-        Example:
-            lock.acquire()
-            try:
-                do_something()
-            finally:
-                lock.release()  # 确保释放
+        Linux: 关闭文件描述符，内核自动释放 fcntl 锁，随后删除锁文件。
+               未持有锁（_fn 为 None，如 acquire 失败）时直接返回，
+               避免误删其他进程正在持有的锁文件。
+        Windows: 删除锁文件。
         """
         try:
             if SYSTEM == WINDOWS:
                 if os.path.exists(self.file):
                     os.remove(self.file)
             else:
-                # fcntl 锁随文件描述符关闭自动释放
-                if self._fn:
-                    self._fn.close()
-                    self._fn = None
+                if not self._fn:
+                    # acquire 失败时 _fn 为 None，此时绝不能动锁文件
+                    return
+                self._fn.close()
+                self._fn = None
                 if os.path.exists(self.file):
                     os.remove(self.file)
         except Exception:
